@@ -33,6 +33,19 @@ body {
   @apply bg-appbg text-ink antialiased dark:bg-slate-950 dark:text-slate-100;
 }
 
+.auth-backdrop {
+  background-image:
+    linear-gradient(rgba(20, 40, 175, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 40, 175, 0.025) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.dark .auth-backdrop {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+}
+
 .hc body {
   @apply bg-white text-black dark:bg-black dark:text-white;
 }

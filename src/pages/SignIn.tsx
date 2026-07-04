@@ -23,7 +23,7 @@ export default function SignIn() {
   }
 
   return (
-    <AuthShell title="GENR8 Pipeline" subtitle="Sign in to the shop floor">
+    <AuthShell title="Welcome back" subtitle="Sign in to the shop floor">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="mb-1 block text-sm font-medium">Email</label>

@@ -25,6 +25,13 @@ The six `VITE_FIREBASE_*` values come from the Firebase Console
 | `npm run build` | typecheck + production build to `dist/` |
 | `npm run preview` | serve the production build locally |
 
+## Brand assets
+
+The supplied GENR8 artwork is preserved at `public/brand/g3d-logo.png`. Product
+surfaces use a tightly cropped derivative through the shared `BrandMark`
+component; browser, Apple touch, and installable-app icons are generated from
+the same source so the identity stays consistent.
+
 ## How it works
 
 - **Auth** — sign up / sign in / forgot password via Firebase Auth. New
