@@ -1,0 +1,35 @@
+{
+  "name": "genr8-pipeline-web",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Genr83d/g3dpipeline_web.git"
+  },
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Genr83d/g3dpipeline_web/issues"
+  },
+  "homepage": "https://github.com/Genr83d/g3dpipeline_web#readme",
+  "dependencies": {
+    "firebase": "^12.15.0",
+    "framer-motion": "^12.42.2",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.18.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "tailwindcss": "^4.3.2",
+    "typescript": "^6.0.3",
+    "vite": "^8.1.3"
+  },
+  "private": true
+}
