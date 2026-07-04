@@ -1,15 +1,14 @@
 import { SettingsShell } from './SettingsShell';
+import { BrandMark } from '../../components/BrandMark';
 
 export default function About() {
   return (
     <SettingsShell title="About & privacy">
       <div className="surface space-y-3 p-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary font-display text-lg font-black text-white">
-            G8
-          </div>
+          <BrandMark className="h-14 w-14" alt="" />
           <div>
-            <p className="font-display text-lg font-bold">GENR8 Pipeline</p>
+            <p className="font-display text-lg font-bold tracking-tight">GENR8 Pipeline</p>
             <p className="text-sm text-slate-500 dark:text-slate-400">Web client · v0.1.0</p>
           </div>
         </div>

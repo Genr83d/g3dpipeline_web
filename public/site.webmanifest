@@ -1,0 +1,21 @@
+{
+  "name": "GENR8 Pipeline",
+  "short_name": "GENR8",
+  "description": "Live production tracking for the GENR8 3D print shop.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f6fb",
+  "theme_color": "#1b1a1a",
+  "icons": [
+    {
+      "src": "/brand/g3d-mark-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand/g3d-mark-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

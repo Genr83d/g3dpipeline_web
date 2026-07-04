@@ -1,9 +1,10 @@
-import { NavLink, Outlet, useOutletContext } from 'react-router-dom';
+import { Link, NavLink, Outlet, useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useJobs, type JobsState } from '../hooks/useJobs';
 import { useAuth } from '../context/AuthProvider';
 import { useAppearance } from '../context/AppearanceProvider';
 import { AccountMenu } from '../components/AccountMenu';
+import { BrandMark } from '../components/BrandMark';
 
 const tabs = [
   { to: '/', label: 'Jobs', end: true },
@@ -20,16 +21,18 @@ export function Workspace() {
   return (
     <div className="min-h-dvh">
       <header className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/80 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary font-display text-sm font-black text-white">
-              G8
-            </div>
-            <span className="hidden font-display text-lg font-bold sm:block">GENR8 Pipeline</span>
-          </div>
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 py-3 sm:gap-4 sm:px-4">
+          <Link
+            to="/"
+            aria-label="GENR8 Pipeline home"
+            className="flex shrink-0 items-center gap-2.5 rounded-xl focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+          >
+            <BrandMark className="h-9 w-9" alt="" />
+            <span className="hidden font-display text-lg font-bold tracking-tight sm:block">GENR8 Pipeline</span>
+          </Link>
           <nav className="flex items-center gap-1 rounded-full bg-slate-100 p-1 dark:bg-slate-800" aria-label="Workspace tabs">
             {tabs.map((tab) => (
-              <NavLink key={tab.to} to={tab.to} end={tab.end} className="relative rounded-full px-4 py-1.5 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">
+              <NavLink key={tab.to} to={tab.to} end={tab.end} className="relative rounded-full px-2.5 py-1.5 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none sm:px-4">
                 {({ isActive: active }) => (
                   <>
                     {active && (

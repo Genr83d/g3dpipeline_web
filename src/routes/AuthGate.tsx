@@ -2,12 +2,13 @@ import type { ReactNode } from 'react';
 import { useAuth } from '../context/AuthProvider';
 import { PendingApproval, AccountInactive } from '../pages/AccountStatus';
 import { Skeleton } from '../components/Skeleton';
+import { BrandMark } from '../components/BrandMark';
 
 function FullPageLoader() {
   return (
     <div className="flex min-h-dvh items-center justify-center">
       <div className="w-full max-w-sm space-y-3 p-6">
-        <Skeleton className="h-10 w-10 rounded-xl" />
+        <BrandMark className="h-10 w-10" />
         <Skeleton className="h-6 w-48" />
         <Skeleton className="h-4 w-64" />
       </div>
