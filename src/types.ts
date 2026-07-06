@@ -16,6 +16,10 @@ export interface Job {
   createdByEmail: string;
   assignedToUid: string;
   assignedToName: string;
+  assignedToRole: UserRole | '';
+  assignedByUid: string;
+  assignedByName: string;
+  assignedAt: Date | null;
   createdAt: Date | null;
   updatedAt: Date | null;
   startedAt: Date | null;
@@ -56,6 +60,10 @@ export function toDate(v: unknown): Date | null {
   const ts = v as Timestamp;
   if (typeof ts.toDate === 'function') return ts.toDate();
   return null;
+}
+
+export function parseAssignedRole(v: unknown): UserRole | '' {
+  return v === 'staff' || v === 'manager' || v === 'admin' ? v : '';
 }
 
 export function parseJobStatus(v: unknown): JobStatus {

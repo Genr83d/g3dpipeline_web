@@ -4,6 +4,7 @@ import {
   onSnapshot,
   query,
   orderBy,
+  where,
   updateDoc,
   serverTimestamp,
   type Unsubscribe,
@@ -56,6 +57,31 @@ export function watchAllUsers(
   return onSnapshot(
     q,
     (snap) => onUsers(snap.docs.map((d) => parseUser(d.id, d.data()))),
+    onError,
+  );
+}
+
+/** Assignment picker: active users of one role. Rules require exactly this
+ *  constrained query for Managers (status == active, role == staff); Admins
+ *  may pick any role. Sorted by display name in the client — no index needed. */
+export function watchAssignableUsers(
+  role: UserRole,
+  onUsers: (users: AppUser[]) => void,
+  onError: (err: Error) => void,
+): Unsubscribe {
+  const q = query(
+    collection(db, 'users'),
+    where('status', '==', 'active'),
+    where('role', '==', role),
+  );
+  return onSnapshot(
+    q,
+    (snap) =>
+      onUsers(
+        snap.docs
+          .map((d) => parseUser(d.id, d.data()))
+          .sort((a, b) => a.name.localeCompare(b.name) || a.email.localeCompare(b.email)),
+      ),
     onError,
   );
 }
