@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { isOverdue, type Job } from '../types';
 import { formatDate } from '../lib/format';
 import { StatusPill } from './StatusPill';
-import { IconBox, IconCalendar, IconCheck, IconEdit, IconPlay, IconRestore, IconTrash, IconUser } from './icons';
+import { IconBox, IconCalendar, IconCheck, IconEdit, IconPlay, IconRestore, IconTrash, IconUser, IconUserPlus } from './icons';
 import { useAuth } from '../context/AuthProvider';
 import { useAppearance } from '../context/AppearanceProvider';
 
@@ -13,6 +13,7 @@ export function JobCard({
   onEdit,
   onDelete,
   onRestore,
+  onAssign,
 }: {
   job: Job;
   onStart?: (job: Job) => void;
@@ -20,11 +21,16 @@ export function JobCard({
   onEdit?: (job: Job) => void;
   onDelete?: (job: Job) => void;
   onRestore?: (job: Job) => void;
+  onAssign?: (job: Job) => void;
 }) {
   const { authUser, isAdmin, isManagerOrAdmin } = useAuth();
   const { motionReduced } = useAppearance();
   const overdue = isOverdue(job);
   const mine = job.assignedToUid === authUser?.uid;
+  const isManager = isManagerOrAdmin && !isAdmin;
+  // Starting an unassigned job self-assigns it — Managers may only assign Staff,
+  // so they get no Start shortcut until a job is assigned to them.
+  const canStart = job.assignedToUid === '' ? !isManager : mine;
 
   return (
     <motion.article
@@ -55,14 +61,15 @@ export function JobCard({
         {job.assignedToName && (
           <span className="inline-flex items-center gap-1.5">
             <IconUser className="h-4 w-4 text-slate-400" />
-            {job.status === 'completed' ? 'Done by' : 'Started by'} {job.assignedToName}
+            {job.status === 'completed' ? 'Done by' : job.status === 'started' ? 'Started by' : 'Assigned to'}{' '}
+            {job.assignedToName}
             {mine ? ' (you)' : ''}
           </span>
         )}
       </div>
 
       <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
-        {job.status === 'pending' && onStart && (
+        {job.status === 'pending' && onStart && canStart && (
           <button className="btn-primary flex-1" onClick={() => onStart(job)}>
             <IconPlay className="h-4 w-4" /> Start
           </button>
@@ -75,6 +82,11 @@ export function JobCard({
         {job.status === 'completed' && isManagerOrAdmin && onRestore && (
           <button className="btn-secondary flex-1" onClick={() => onRestore(job)}>
             <IconRestore className="h-4 w-4" /> Restore
+          </button>
+        )}
+        {job.status !== 'completed' && isManagerOrAdmin && onAssign && (
+          <button className="btn-secondary" onClick={() => onAssign(job)} aria-label={`Assign ${job.name}`}>
+            <IconUserPlus className="h-4 w-4" /> {job.assignedToUid ? 'Reassign' : 'Assign'}
           </button>
         )}
         {isManagerOrAdmin && onEdit && (

@@ -14,12 +14,26 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { parseJobStatus, toDate, type Job } from '../types';
+import { parseAssignedRole, parseJobStatus, toDate, type Job, type UserRole } from '../types';
 
 export interface Actor {
   uid: string;
   firstName: string;
   email: string;
+}
+
+/** Caller identity as stored in their live /users doc — rules verify these exactly. */
+export interface Assigner {
+  uid: string;
+  name: string;
+  role: UserRole;
+}
+
+/** Assignment target, snapshotted from the picked /users doc. */
+export interface AssignTarget {
+  uid: string;
+  name: string;
+  role: UserRole;
 }
 
 const jobsCol = collection(db, 'jobs');
@@ -37,6 +51,10 @@ function parseJob(id: string, data: Record<string, unknown>): Job {
     createdByEmail: (data.createdByEmail as string) ?? '',
     assignedToUid: (data.assignedToUid as string) ?? '',
     assignedToName: (data.assignedToName as string) ?? '',
+    assignedToRole: parseAssignedRole(data.assignedToRole),
+    assignedByUid: (data.assignedByUid as string) ?? '',
+    assignedByName: (data.assignedByName as string) ?? '',
+    assignedAt: toDate(data.assignedAt),
     createdAt: toDate(data.createdAt),
     updatedAt: toDate(data.updatedAt),
     startedAt: toDate(data.startedAt),
@@ -73,6 +91,7 @@ export async function addJob(
     createdByEmail: actor.email,
     assignedToUid: '',
     assignedToName: '',
+    assignedToRole: '',
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     updatedByUid: actor.uid,
@@ -80,24 +99,74 @@ export async function addJob(
   });
 }
 
-/** Transactional claim — fails if someone else grabbed the job first. */
-export async function startJob(actor: Actor, jobId: string): Promise<void> {
+/** Transactional claim — fails if someone else grabbed the job first.
+ *  An unassigned job is atomically self-assigned; a job already assigned
+ *  to the caller starts without touching its assignment audit trail. */
+export async function startJob(actor: Actor, self: Assigner, jobId: string): Promise<void> {
   const ref = doc(db, 'jobs', jobId);
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists()) throw new Error('This job no longer exists.');
-    if (parseJobStatus(snap.data().status) !== 'pending') {
+    const data = snap.data();
+    if (parseJobStatus(data.status) !== 'pending') {
       throw new Error('Someone else already started this job.');
     }
-    tx.update(ref, {
+    const assignedToUid = (data.assignedToUid as string) ?? '';
+    if (assignedToUid && assignedToUid !== actor.uid) {
+      throw new Error('This job is assigned to someone else.');
+    }
+    const patch: Record<string, unknown> = {
       status: 'started',
-      assignedToUid: actor.uid,
-      assignedToName: actor.firstName,
       startedAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       updatedByUid: actor.uid,
       updatedByName: actor.firstName,
-    });
+    };
+    if (!assignedToUid) {
+      patch.assignedToUid = self.uid;
+      patch.assignedToName = self.name;
+      patch.assignedToRole = self.role;
+      patch.assignedByUid = self.uid;
+      patch.assignedByName = self.name;
+      patch.assignedAt = serverTimestamp();
+    }
+    tx.update(ref, patch);
+  });
+}
+
+/** Manager/admin: assign or reassign a pending/in-progress job.
+ *  Names and roles must exactly mirror the live /users docs — rules verify them. */
+export async function assignJob(
+  actor: Actor,
+  assigner: Assigner,
+  jobId: string,
+  target: AssignTarget,
+): Promise<void> {
+  await updateDoc(doc(db, 'jobs', jobId), {
+    assignedToUid: target.uid,
+    assignedToName: target.name,
+    assignedToRole: target.role,
+    assignedByUid: assigner.uid,
+    assignedByName: assigner.name,
+    assignedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    updatedByUid: actor.uid,
+    updatedByName: actor.firstName,
+  });
+}
+
+/** Manager/admin: clear a pending job's assignment. Rules reject this on started jobs. */
+export async function unassignJob(actor: Actor, jobId: string): Promise<void> {
+  await updateDoc(doc(db, 'jobs', jobId), {
+    assignedToUid: '',
+    assignedToName: '',
+    assignedToRole: '',
+    assignedByUid: deleteField(),
+    assignedByName: deleteField(),
+    assignedAt: deleteField(),
+    updatedAt: serverTimestamp(),
+    updatedByUid: actor.uid,
+    updatedByName: actor.firstName,
   });
 }
 
@@ -117,6 +186,10 @@ export async function restoreJob(actor: Actor, jobId: string): Promise<void> {
     status: 'pending',
     assignedToUid: '',
     assignedToName: '',
+    assignedToRole: '',
+    assignedByUid: deleteField(),
+    assignedByName: deleteField(),
+    assignedAt: deleteField(),
     startedAt: deleteField(),
     completedAt: deleteField(),
     updatedAt: serverTimestamp(),

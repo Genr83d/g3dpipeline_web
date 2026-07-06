@@ -4,7 +4,7 @@ import { auth } from '../lib/firebase';
 import { watchUser } from '../services/userService';
 import { deriveFirstName } from '../services/authService';
 import type { AppUser } from '../types';
-import type { Actor } from '../services/jobService';
+import type { Actor, Assigner } from '../services/jobService';
 
 export interface AuthState {
   /** undefined = still resolving */
@@ -16,6 +16,8 @@ export interface AuthState {
   isAdmin: boolean;
   isManagerOrAdmin: boolean;
   actor: Actor | null;
+  /** Identity as stored in the live /users doc — the exact values assignment rules verify. */
+  assigner: Assigner | null;
 }
 
 const AuthContext = createContext<AuthState>({
@@ -26,6 +28,7 @@ const AuthContext = createContext<AuthState>({
   isAdmin: false,
   isManagerOrAdmin: false,
   actor: null,
+  assigner: null,
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -54,7 +57,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const isManagerOrAdmin = isActive && (profile?.role === 'manager' || profile?.role === 'admin');
     const actor: Actor | null =
       authUser && isActive ? { uid: authUser.uid, firstName, email: authUser.email ?? '' } : null;
-    return { authUser, profile, firstName, isActive, isAdmin, isManagerOrAdmin, actor };
+    const assigner: Assigner | null =
+      profile && isActive ? { uid: profile.uid, name: profile.name, role: profile.role } : null;
+    return { authUser, profile, firstName, isActive, isAdmin, isManagerOrAdmin, actor, assigner };
   }, [authUser, profile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

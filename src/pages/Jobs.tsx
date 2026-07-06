@@ -6,11 +6,12 @@ import { useToast } from '../components/Toast';
 import { JobCard } from '../components/JobCard';
 import { JobForm, type JobFormValues } from '../components/JobForm';
 import { Modal } from '../components/Modal';
+import { AssignJobModal } from '../components/AssignJobModal';
 import { EmptyState } from '../components/EmptyState';
 import { JobCardSkeleton } from '../components/Skeleton';
 import { IconBox, IconPlus } from '../components/icons';
 import { errorMessage } from '../lib/format';
-import type { Job } from '../types';
+import type { AppUser, Job } from '../types';
 import * as jobService from '../services/jobService';
 
 type SortKey = 'due-asc' | 'due-desc' | 'qty-asc' | 'qty-desc';
@@ -24,12 +25,13 @@ const sortOptions: { value: SortKey; label: string }[] = [
 
 export default function Jobs() {
   const { jobs, loading, error } = useJobsOutlet();
-  const { actor, isAdmin } = useAuth();
+  const { actor, assigner, isAdmin, isManagerOrAdmin } = useAuth();
   const { toast } = useToast();
   const [sort, setSort] = useState<SortKey>('due-asc');
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<Job | null>(null);
   const [deleting, setDeleting] = useState<Job | null>(null);
+  const [assigning, setAssigning] = useState<Job | null>(null);
 
   const pipeline = useMemo(() => {
     const active = jobs.filter((j) => j.status !== 'completed');
@@ -52,7 +54,7 @@ export default function Jobs() {
     }
   }
 
-  if (!actor) return null;
+  if (!actor || !assigner) return null;
 
   async function handleAdd(values: JobFormValues) {
     await run(() => jobService.addJob(actor!, values), 'Job added to the pipeline.');
@@ -63,6 +65,42 @@ export default function Jobs() {
     if (!editing) return;
     await run(() => jobService.editJob(actor!, editing.id, values), 'Job updated.');
     setEditing(null);
+  }
+
+  /** Assignment writes get the handoff-specified permission-denied message. */
+  async function runAssign(action: () => Promise<void>, success: string) {
+    try {
+      await action();
+      toast(success, 'success');
+    } catch (err) {
+      const code = (err as { code?: string }).code ?? '';
+      toast(
+        code === 'permission-denied'
+          ? 'You no longer have permission to assign this job.'
+          : errorMessage(err),
+        'error',
+      );
+    }
+    setAssigning(null);
+  }
+
+  function handleAssign(job: Job, target: AppUser) {
+    void runAssign(
+      () =>
+        jobService.assignJob(actor!, assigner!, job.id, {
+          uid: target.uid,
+          name: target.name,
+          role: target.role,
+        }),
+      `“${job.name}” assigned to ${target.name || target.email}.`,
+    );
+  }
+
+  function handleUnassign(job: Job) {
+    void runAssign(
+      () => jobService.unassignJob(actor!, job.id),
+      `“${job.name}” is unassigned.`,
+    );
   }
 
   return (
@@ -112,15 +150,23 @@ export default function Jobs() {
               <JobCard
                 key={job.id}
                 job={job}
-                onStart={(j) => void run(() => jobService.startJob(actor!, j.id), `You started “${j.name}”.`)}
+                onStart={(j) => void run(() => jobService.startJob(actor!, assigner!, j.id), `You started “${j.name}”.`)}
                 onComplete={(j) => void run(() => jobService.completeJob(actor!, j.id), `“${j.name}” completed. Nice.`)}
                 onEdit={setEditing}
                 onDelete={isAdmin ? setDeleting : undefined}
+                onAssign={isManagerOrAdmin ? setAssigning : undefined}
               />
             ))}
           </AnimatePresence>
         </div>
       )}
+
+      <AssignJobModal
+        job={assigning}
+        onAssign={handleAssign}
+        onUnassign={handleUnassign}
+        onClose={() => setAssigning(null)}
+      />
 
       <Modal open={adding} title="Add job" onClose={() => setAdding(false)}>
         <JobForm submitLabel="Add job" onSubmit={handleAdd} onCancel={() => setAdding(false)} />
