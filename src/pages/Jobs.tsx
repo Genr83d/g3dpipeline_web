@@ -8,7 +8,7 @@ import { JobForm, type JobFormValues } from '../components/JobForm';
 import { Modal } from '../components/Modal';
 import { AssignJobModal } from '../components/AssignJobModal';
 import { EmptyState } from '../components/EmptyState';
-import { JobCardSkeleton } from '../components/Skeleton';
+import { CenteredSpinner } from '../components/Spinner';
 import { IconBox, IconPlus } from '../components/icons';
 import { errorMessage } from '../lib/format';
 import type { AppUser, Job } from '../types';
@@ -129,9 +129,7 @@ export default function Jobs() {
       {error && <p className="text-sm font-medium text-danger" role="alert">{error}</p>}
 
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <JobCardSkeleton /><JobCardSkeleton /><JobCardSkeleton />
-        </div>
+        <CenteredSpinner />
       ) : pipeline.length === 0 ? (
         <EmptyState
           icon={<IconBox className="h-7 w-7" />}

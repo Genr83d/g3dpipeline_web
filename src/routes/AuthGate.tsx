@@ -1,17 +1,14 @@
 import type { ReactNode } from 'react';
 import { useAuth } from '../context/AuthProvider';
 import { PendingApproval, AccountInactive } from '../pages/AccountStatus';
-import { Skeleton } from '../components/Skeleton';
+import { Spinner } from '../components/Spinner';
 import { BrandMark } from '../components/BrandMark';
 
 function FullPageLoader() {
   return (
-    <div className="flex min-h-dvh items-center justify-center">
-      <div className="w-full max-w-sm space-y-3 p-6">
-        <BrandMark className="h-10 w-10" />
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-4 w-64" />
-      </div>
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-4">
+      <BrandMark className="h-10 w-10" />
+      <Spinner className="h-8 w-8" />
     </div>
   );
 }

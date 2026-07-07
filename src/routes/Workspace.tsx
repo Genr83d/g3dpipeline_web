@@ -8,6 +8,7 @@ import { BrandMark } from '../components/BrandMark';
 
 const tabs = [
   { to: '/', label: 'Jobs', end: true },
+  { to: '/inventory', label: 'Inventory', end: false },
   { to: '/summary', label: 'Summary', end: false },
   { to: '/archive', label: 'Archive', end: false },
 ];
@@ -42,7 +43,7 @@ export function Workspace() {
                         transition={{ type: 'spring', stiffness: 450, damping: 35 }}
                       />
                     )}
-                    <span className={`relative ${active ? 'text-primary dark:text-indigo-300' : 'text-slate-600 dark:text-slate-300'}`}>
+                    <span className={`relative ${active ? 'font-bold text-primary dark:text-indigo-300' : 'text-slate-600 dark:text-slate-300'}`}>
                       {tab.label}
                     </span>
                   </>

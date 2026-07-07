@@ -24,6 +24,22 @@ export interface Job {
   updatedAt: Date | null;
   startedAt: Date | null;
   completedAt: Date | null;
+  completedByUid: string;
+  completedByName: string;
+  updatedByUid: string;
+  updatedByName: string;
+}
+
+export interface Material {
+  id: string;
+  name: string;
+  unit: string;
+  quantity: number;
+  totalQuantity: number;
+  createdAt: Date | null;
+  createdByUid: string;
+  createdByName: string;
+  updatedAt: Date | null;
   updatedByUid: string;
   updatedByName: string;
 }
