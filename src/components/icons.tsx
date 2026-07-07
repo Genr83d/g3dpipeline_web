@@ -54,5 +54,10 @@ export const IconHelp = (p: IconProps = {}) =>
   base(<path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01" />, p);
 export const IconChevron = (p: IconProps = {}) => base(<path d="M9 18l6-6-6-6" />, p);
 export const IconBack = (p: IconProps = {}) => base(<path d="M19 12H5M12 19l-7-7 7-7" />, p);
-export const IconMail = (p: IconProps = {}) =>
+export const IconSearch = (p: IconProps = {}) =>
+  base(<path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.35-4.35" />, p);
+export const IconClose = (p: IconProps = {}) => base(<path d="M18 6L6 18M6 6l12 12" />, p);
+export const IconLayers = (p: IconProps = {}) =>
+  base(<path d="M12 2L2 7l10 5 10-5-10-5zM2 12l10 5 10-5M2 17l10 5 10-5" />, p);
+export const IconMail =(p: IconProps = {}) =>
   base(<path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM22 6l-10 7L2 6" />, p);

@@ -4,9 +4,11 @@ import {
   addDoc,
   deleteDoc,
   updateDoc,
+  getDocs,
   onSnapshot,
   query,
   orderBy,
+  where,
   runTransaction,
   serverTimestamp,
   deleteField,
@@ -14,6 +16,7 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { inventoryCol } from './inventoryService';
 import { parseAssignedRole, parseJobStatus, toDate, type Job, type UserRole } from '../types';
 
 export interface Actor {
@@ -59,6 +62,8 @@ function parseJob(id: string, data: Record<string, unknown>): Job {
     updatedAt: toDate(data.updatedAt),
     startedAt: toDate(data.startedAt),
     completedAt: toDate(data.completedAt),
+    completedByUid: (data.completedByUid as string) ?? '',
+    completedByName: (data.completedByName as string) ?? '',
     updatedByUid: (data.updatedByUid as string) ?? '',
     updatedByName: (data.updatedByName as string) ?? '',
   };
@@ -170,13 +175,110 @@ export async function unassignJob(actor: Actor, jobId: string): Promise<void> {
   });
 }
 
+/** Standalone `pin`/`pins` only — never `pineapple`, `pinstripe`, `spins`, or `flippin`. */
+export function isPinJob(name: string): boolean {
+  return /\bpins?\b/i.test(name);
+}
+
+/** Whole Lamina sheets consumed when a completed pin batch pushes the running
+ *  total across 50-pin boundaries: 58 pins → 1 Lamina, a later 42 → 1 more. */
+export function laminaConsumed(previousCompletedPins: number, quantity: number): number {
+  return Math.floor((previousCompletedPins + quantity) / 50) - Math.floor(previousCompletedPins / 50);
+}
+
+const PIN_BACKS = 'pin backs';
+const LAMINA = 'lamina';
+
+function normalizedName(data: Record<string, unknown>): string {
+  return typeof data.name === 'string' ? data.name.trim().toLowerCase() : '';
+}
+
+/** Marks the job completed; for pin jobs this runs a Firestore transaction that
+ *  also deducts Pin Backs per pin and Lamina per 50-pin boundary crossed.
+ *
+ *  Queries (completed pin totals, inventory doc lookup by name) run before the
+ *  transaction because the web SDK can't query inside one; the transaction
+ *  re-reads the job and inventory docs, so a lost race surfaces as a retry or
+ *  a clean error rather than a double deduction on this job. */
 export async function completeJob(actor: Actor, jobId: string): Promise<void> {
-  await updateDoc(doc(db, 'jobs', jobId), {
+  const jobRef = doc(db, 'jobs', jobId);
+  const completionPatch = {
     status: 'completed',
     completedAt: serverTimestamp(),
+    completedByUid: actor.uid,
+    completedByName: actor.firstName,
     updatedAt: serverTimestamp(),
     updatedByUid: actor.uid,
     updatedByName: actor.firstName,
+  };
+
+  const [completedSnap, inventorySnap] = await Promise.all([
+    getDocs(query(jobsCol, where('status', '==', 'completed'))),
+    getDocs(inventoryCol),
+  ]);
+
+  const previousCompletedPins = completedSnap.docs
+    .filter((d) => d.id !== jobId && isPinJob((d.data().name as string) ?? ''))
+    .reduce((sum, d) => sum + (typeof d.data().quantity === 'number' ? (d.data().quantity as number) : 0), 0);
+
+  const pinBacksRef = inventorySnap.docs.find((d) => normalizedName(d.data()) === PIN_BACKS)?.ref;
+  const laminaRef = inventorySnap.docs.find((d) => normalizedName(d.data()) === LAMINA)?.ref;
+
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(jobRef);
+    if (!snap.exists()) throw new Error('This job no longer exists.');
+    const data = snap.data();
+    if (parseJobStatus(data.status) !== 'started') {
+      throw new Error('Only started jobs can be completed.');
+    }
+    if (((data.assignedToUid as string) ?? '') !== actor.uid) {
+      throw new Error('Only the assigned user can complete this job.');
+    }
+
+    const name = (data.name as string) ?? '';
+    const quantity = typeof data.quantity === 'number' ? data.quantity : 0;
+
+    if (isPinJob(name) && quantity > 0) {
+      if (!pinBacksRef) throw new Error('No “Pin Backs” material found in inventory.');
+      const laminaNeeded = laminaConsumed(previousCompletedPins, quantity);
+      if (laminaNeeded > 0 && !laminaRef) {
+        throw new Error('No “Lamina” material found in inventory.');
+      }
+
+      const pinBacksSnap = await tx.get(pinBacksRef);
+      const pinBacksQty =
+        typeof pinBacksSnap.data()?.quantity === 'number' ? (pinBacksSnap.data()!.quantity as number) : 0;
+      if (pinBacksQty < quantity) {
+        throw new Error(`Not enough Pin Backs in stock (need ${quantity}, have ${pinBacksQty}).`);
+      }
+
+      let laminaQty = 0;
+      if (laminaNeeded > 0 && laminaRef) {
+        const laminaSnap = await tx.get(laminaRef);
+        laminaQty =
+          typeof laminaSnap.data()?.quantity === 'number' ? (laminaSnap.data()!.quantity as number) : 0;
+        if (laminaQty < laminaNeeded) {
+          throw new Error(`Not enough Lamina in stock (need ${laminaNeeded}, have ${laminaQty}).`);
+        }
+      }
+
+      tx.update(pinBacksRef, {
+        quantity: pinBacksQty - quantity,
+        updatedAt: serverTimestamp(),
+        updatedByUid: actor.uid,
+        updatedByName: actor.firstName,
+      });
+      if (laminaNeeded > 0 && laminaRef) {
+        tx.update(laminaRef, {
+          quantity: laminaQty - laminaNeeded,
+          updatedAt: serverTimestamp(),
+          updatedByUid: actor.uid,
+          updatedByName: actor.firstName,
+        });
+      }
+    }
+
+    tx.update(jobRef, completionPatch);
   });
 }
 
@@ -192,6 +294,8 @@ export async function restoreJob(actor: Actor, jobId: string): Promise<void> {
     assignedAt: deleteField(),
     startedAt: deleteField(),
     completedAt: deleteField(),
+    completedByUid: deleteField(),
+    completedByName: deleteField(),
     updatedAt: serverTimestamp(),
     updatedByUid: actor.uid,
     updatedByName: actor.firstName,

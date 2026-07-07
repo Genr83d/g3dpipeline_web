@@ -8,6 +8,7 @@ import { BrandMark } from '../components/BrandMark';
 
 const tabs = [
   { to: '/', label: 'Jobs', end: true },
+  { to: '/materials', label: 'Materials', end: false },
   { to: '/summary', label: 'Summary', end: false },
   { to: '/archive', label: 'Archive', end: false },
 ];
