@@ -8,6 +8,13 @@ export function formatDate(d: Date | null): string {
   return d ? dateFmt.format(d) : '—';
 }
 
+/** Whole numbers without decimals; decimal quantities keep meaningful digits
+ *  without trailing zeroes (12 → "12", 2.5 → "2.5", 0.125 → "0.125"). */
+export function formatQuantity(n: number): string {
+  if (!Number.isFinite(n)) return '0';
+  return String(parseFloat(n.toFixed(4)));
+}
+
 /** Human message for a Firebase error, without leaking raw codes. */
 export function errorMessage(err: unknown): string {
   if (err instanceof Error) {

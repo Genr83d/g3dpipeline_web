@@ -1,12 +1,17 @@
 import {
+  addDoc,
   collection,
+  doc,
   onSnapshot,
   orderBy,
   query,
+  serverTimestamp,
+  updateDoc,
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { toDate, type Material } from '../types';
+import type { Actor } from './jobService';
 
 export const inventoryCol = collection(db, 'inventory');
 
@@ -36,6 +41,45 @@ export function watchInventory(
     (snap) => onMaterials(snap.docs.map((d) => parseMaterial(d.id, d.data()))),
     onError,
   );
+}
+
+/** Low stock is strictly below 30% of full stock. */
+export function isLowStock(m: Material): boolean {
+  return m.totalQuantity > 0 && m.quantity / m.totalQuantity < 0.3;
+}
+
+/** Stock fill ratio clamped to [0, 1] for progress bars and percentages. */
+export function stockRatio(m: Material): number {
+  if (m.totalQuantity <= 0) return 0;
+  return Math.min(1, Math.max(0, m.quantity / m.totalQuantity));
+}
+
+export interface MaterialInput {
+  name: string;
+  unit: string;
+  quantity: number;
+  totalQuantity: number;
+}
+
+export async function addMaterial(actor: Actor, input: MaterialInput): Promise<void> {
+  await addDoc(inventoryCol, {
+    ...input,
+    createdAt: serverTimestamp(),
+    createdByUid: actor.uid,
+    createdByName: actor.firstName,
+    updatedAt: serverTimestamp(),
+    updatedByUid: actor.uid,
+    updatedByName: actor.firstName,
+  });
+}
+
+export async function editMaterial(actor: Actor, id: string, input: MaterialInput): Promise<void> {
+  await updateDoc(doc(db, 'inventory', id), {
+    ...input,
+    updatedAt: serverTimestamp(),
+    updatedByUid: actor.uid,
+    updatedByName: actor.firstName,
+  });
 }
 
 /** Case-insensitive search across material name and unit. */

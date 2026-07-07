@@ -10,7 +10,7 @@ import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import ForgotPassword from './pages/ForgotPassword';
 import Jobs from './pages/Jobs';
-import Materials from './pages/Materials';
+import Inventory from './pages/Inventory';
 import Summary from './pages/Summary';
 import Archive from './pages/Archive';
 
@@ -55,7 +55,7 @@ export default function App() {
               <Routes>
                 <Route element={<Workspace />}>
                   <Route index element={<Jobs />} />
-                  <Route path="materials" element={<Materials />} />
+                  <Route path="inventory" element={<Inventory />} />
                   <Route path="summary" element={<Summary />} />
                   <Route path="archive" element={<Archive />} />
                   <Route
