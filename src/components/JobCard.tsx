@@ -39,7 +39,15 @@ export function JobCard({
       animate={{ opacity: 1, y: 0 }}
       exit={motionReduced ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
       transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-      className={`surface flex flex-col gap-3 p-4 ${overdue ? 'border-danger/40' : ''}`}
+      className={`surface flex flex-col gap-3 p-4 ${
+        overdue
+          ? 'border-danger/40'
+          : job.status === 'started'
+            ? 'border-amber-500/40 dark:border-amber-400/30'
+            : job.status === 'completed'
+              ? 'border-secondary/40 dark:border-emerald-400/30'
+              : ''
+      }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">

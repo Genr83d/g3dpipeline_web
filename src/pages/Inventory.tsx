@@ -10,6 +10,7 @@ import {
   type MaterialInput,
 } from '../services/inventoryService';
 import { EmptyState } from '../components/EmptyState';
+import { CenteredSpinner } from '../components/Spinner';
 import { Modal } from '../components/Modal';
 import { MaterialForm } from '../components/MaterialForm';
 import { useToast } from '../components/Toast';
@@ -126,12 +127,7 @@ export default function Inventory() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-24" role="status" aria-label="Loading inventory">
-          <span
-            aria-hidden
-            className="h-10 w-10 animate-spin rounded-full border-4 border-primary/25 border-t-primary"
-          />
-        </div>
+        <CenteredSpinner />
       ) : error ? (
         <EmptyState
           icon={<IconCloudOff className="h-7 w-7" />}
