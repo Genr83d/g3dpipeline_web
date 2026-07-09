@@ -4,6 +4,12 @@ export type JobStatus = 'pending' | 'started' | 'completed';
 export type UserRole = 'staff' | 'manager' | 'admin';
 export type UserStatus = 'pending' | 'active' | 'disabled' | 'removed';
 
+export interface JobCollaborator {
+  uid: string;
+  name: string;
+  role: UserRole;
+}
+
 export interface Job {
   id: string;
   name: string;
@@ -20,6 +26,8 @@ export interface Job {
   assignedByUid: string;
   assignedByName: string;
   assignedAt: Date | null;
+  collaborators: JobCollaborator[];
+  collaboratorUids: string[];
   createdAt: Date | null;
   updatedAt: Date | null;
   startedAt: Date | null;

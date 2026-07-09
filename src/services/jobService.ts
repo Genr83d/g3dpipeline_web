@@ -17,7 +17,14 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { inventoryCol } from './inventoryService';
-import { parseAssignedRole, parseJobStatus, toDate, type Job, type UserRole } from '../types';
+import {
+  parseAssignedRole,
+  parseJobStatus,
+  toDate,
+  type Job,
+  type JobCollaborator,
+  type UserRole,
+} from '../types';
 
 export interface Actor {
   uid: string;
@@ -46,7 +53,65 @@ export interface AssignTarget {
 
 const jobsCol = collection(db, 'jobs');
 
+function parseCollaboratorRole(value: unknown): UserRole {
+  return value === 'manager' || value === 'admin' ? value : 'staff';
+}
+
+function parseCollaborators(data: Record<string, unknown>): JobCollaborator[] {
+  const collaborators = Array.isArray(data.collaborators)
+    ? data.collaborators
+        .map((value) => {
+          const c = value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+          return {
+            uid: typeof c.uid === 'string' ? c.uid : '',
+            name: typeof c.name === 'string' ? c.name : '',
+            role: parseCollaboratorRole(c.role),
+          };
+        })
+        .filter((c) => c.uid.trim().length > 0)
+    : [];
+
+  if (collaborators.length > 0) return dedupeCollaborators(collaborators);
+
+  const legacyUid = typeof data.assignedToUid === 'string' ? data.assignedToUid : '';
+  if (!legacyUid) return [];
+  return [
+    {
+      uid: legacyUid,
+      name: typeof data.assignedToName === 'string' ? data.assignedToName : '',
+      role: parseCollaboratorRole(data.assignedToRole),
+    },
+  ];
+}
+
+function parseCollaboratorUids(
+  data: Record<string, unknown>,
+  collaborators: JobCollaborator[],
+): string[] {
+  const uids = Array.isArray(data.collaboratorUids)
+    ? data.collaboratorUids.filter((uid): uid is string => typeof uid === 'string' && uid.trim().length > 0)
+    : [];
+  return uids.length > 0 ? Array.from(new Set(uids)) : collaborators.map((c) => c.uid);
+}
+
+function dedupeCollaborators(collaborators: AssignTarget[]): JobCollaborator[] {
+  const seen = new Set<string>();
+  const unique: JobCollaborator[] = [];
+  for (const collaborator of collaborators) {
+    const uid = collaborator.uid.trim();
+    if (!uid || seen.has(uid)) continue;
+    seen.add(uid);
+    unique.push({
+      uid,
+      name: collaborator.name.trim() || 'User',
+      role: collaborator.role,
+    });
+  }
+  return unique;
+}
+
 function parseJob(id: string, data: Record<string, unknown>): Job {
+  const collaborators = parseCollaborators(data);
   return {
     id,
     name: typeof data.name === 'string' ? data.name : '',
@@ -63,6 +128,8 @@ function parseJob(id: string, data: Record<string, unknown>): Job {
     assignedByUid: (data.assignedByUid as string) ?? '',
     assignedByName: (data.assignedByName as string) ?? '',
     assignedAt: toDate(data.assignedAt),
+    collaborators,
+    collaboratorUids: parseCollaboratorUids(data, collaborators),
     createdAt: toDate(data.createdAt),
     updatedAt: toDate(data.updatedAt),
     startedAt: toDate(data.startedAt),
@@ -90,6 +157,7 @@ export async function addJob(
   actor: Actor,
   input: { name: string; customer: string; quantity: number; dueDate: Date },
 ): Promise<void> {
+  const byName = actorDisplayName(actor);
   await addDoc(jobsCol, {
     name: input.name,
     customer: input.customer,
@@ -97,15 +165,17 @@ export async function addJob(
     dueDate: Timestamp.fromDate(input.dueDate),
     status: 'pending',
     createdByUid: actor.uid,
-    createdByName: actor.firstName,
+    createdByName: byName,
     createdByEmail: actor.email,
     assignedToUid: '',
     assignedToName: '',
     assignedToRole: '',
+    collaborators: [],
+    collaboratorUids: [],
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     updatedByUid: actor.uid,
-    updatedByName: actor.firstName,
+    updatedByName: byName,
   });
 }
 
@@ -121,62 +191,78 @@ export async function startJob(actor: Actor, self: Assigner, jobId: string): Pro
     if (parseJobStatus(data.status) !== 'pending') {
       throw new Error('Someone else already started this job.');
     }
-    const assignedToUid = (data.assignedToUid as string) ?? '';
-    if (assignedToUid && assignedToUid !== actor.uid) {
+    const collaborators = parseCollaborators(data);
+    const collaboratorUids = parseCollaboratorUids(data, collaborators);
+    const hasCollaborators = collaboratorUids.length > 0;
+    if (hasCollaborators && !collaboratorUids.includes(actor.uid)) {
       throw new Error('This job is assigned to someone else.');
     }
+    if (!hasCollaborators && self.role === 'manager') {
+      throw new Error('Managers must assign staff before starting this job.');
+    }
+    const byName = actorDisplayName(actor);
     const patch: Record<string, unknown> = {
       status: 'started',
       startedAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       updatedByUid: actor.uid,
-      updatedByName: actor.firstName,
+      updatedByName: byName,
     };
-    if (!assignedToUid) {
+    if (!hasCollaborators) {
+      const selfCollaborator = { uid: self.uid, name: self.name, role: self.role };
       patch.assignedToUid = self.uid;
       patch.assignedToName = self.name;
       patch.assignedToRole = self.role;
-      patch.assignedByUid = self.uid;
-      patch.assignedByName = self.name;
+      patch.collaborators = [selfCollaborator];
+      patch.collaboratorUids = [self.uid];
+      patch.assignedByUid = actor.uid;
+      patch.assignedByName = byName;
       patch.assignedAt = serverTimestamp();
     }
     tx.update(ref, patch);
   });
 }
 
-/** Manager/admin: assign or reassign a pending/in-progress job.
- *  Names and roles must exactly mirror the live /users docs — rules verify them. */
+/** Manager/admin: assign one or more collaborators to a pending/in-progress job. */
 export async function assignJob(
   actor: Actor,
-  assigner: Assigner,
   jobId: string,
-  target: AssignTarget,
+  targets: AssignTarget[],
 ): Promise<void> {
+  const collaborators = dedupeCollaborators(targets);
+  if (collaborators.length === 0) throw new Error('Add at least one collaborator.');
+  const [primary] = collaborators;
+  const byName = actorDisplayName(actor);
   await updateDoc(doc(db, 'jobs', jobId), {
-    assignedToUid: target.uid,
-    assignedToName: target.name,
-    assignedToRole: target.role,
-    assignedByUid: assigner.uid,
-    assignedByName: assigner.name,
+    assignedToUid: primary.uid,
+    assignedToName: primary.name,
+    assignedToRole: primary.role,
+    collaborators,
+    collaboratorUids: collaborators.map((c) => c.uid),
+    assignedByUid: actor.uid,
+    assignedByName: byName,
     assignedAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     updatedByUid: actor.uid,
-    updatedByName: actor.firstName,
+    updatedByName: byName,
   });
 }
 
-/** Manager/admin: clear a pending job's assignment. Rules reject this on started jobs. */
+/** Manager/admin: clear assignment/collaborators. Rules remain the source of truth. */
 export async function unassignJob(actor: Actor, jobId: string): Promise<void> {
+  const byName = actorDisplayName(actor);
   await updateDoc(doc(db, 'jobs', jobId), {
     assignedToUid: '',
     assignedToName: '',
     assignedToRole: '',
+    collaborators: [],
+    collaboratorUids: [],
     assignedByUid: deleteField(),
     assignedByName: deleteField(),
     assignedAt: deleteField(),
     updatedAt: serverTimestamp(),
     updatedByUid: actor.uid,
-    updatedByName: actor.firstName,
+    updatedByName: byName,
   });
 }
 
@@ -205,16 +291,17 @@ function normalizedName(data: Record<string, unknown>): string {
  *  transaction because the web SDK can't query inside one; the transaction
  *  re-reads the job and inventory docs, so a lost race surfaces as a retry or
  *  a clean error rather than a double deduction on this job. */
-export async function completeJob(actor: Actor, jobId: string): Promise<void> {
+export async function completeJob(actor: Actor, self: Assigner, jobId: string): Promise<void> {
   const jobRef = doc(db, 'jobs', jobId);
+  const byName = actorDisplayName(actor);
   const completionPatch = {
     status: 'completed',
     completedAt: serverTimestamp(),
     completedByUid: actor.uid,
-    completedByName: actor.firstName,
+    completedByName: byName,
     updatedAt: serverTimestamp(),
     updatedByUid: actor.uid,
-    updatedByName: actor.firstName,
+    updatedByName: byName,
   };
 
   const [completedSnap, inventorySnap] = await Promise.all([
@@ -236,8 +323,12 @@ export async function completeJob(actor: Actor, jobId: string): Promise<void> {
     if (parseJobStatus(data.status) !== 'started') {
       throw new Error('Only started jobs can be completed.');
     }
-    if (((data.assignedToUid as string) ?? '') !== actor.uid) {
-      throw new Error('Only the assigned user can complete this job.');
+    const collaborators = parseCollaborators(data);
+    const collaboratorUids = parseCollaboratorUids(data, collaborators);
+    const canComplete =
+      collaboratorUids.includes(actor.uid) || self.role === 'manager' || self.role === 'admin';
+    if (!canComplete) {
+      throw new Error('Only a collaborator, manager, or admin can complete this job.');
     }
 
     const name = (data.name as string) ?? '';
@@ -271,14 +362,14 @@ export async function completeJob(actor: Actor, jobId: string): Promise<void> {
         quantity: pinBacksQty - quantity,
         updatedAt: serverTimestamp(),
         updatedByUid: actor.uid,
-        updatedByName: actor.firstName,
+        updatedByName: byName,
       });
       if (laminaNeeded > 0 && laminaRef) {
         tx.update(laminaRef, {
           quantity: laminaQty - laminaNeeded,
           updatedAt: serverTimestamp(),
           updatedByUid: actor.uid,
-          updatedByName: actor.firstName,
+          updatedByName: byName,
         });
       }
     }
@@ -289,11 +380,14 @@ export async function completeJob(actor: Actor, jobId: string): Promise<void> {
 
 /** Manager/admin: send a completed job back into the pipeline. */
 export async function restoreJob(actor: Actor, jobId: string): Promise<void> {
+  const byName = actorDisplayName(actor);
   await updateDoc(doc(db, 'jobs', jobId), {
     status: 'pending',
     assignedToUid: '',
     assignedToName: '',
     assignedToRole: '',
+    collaborators: [],
+    collaboratorUids: [],
     assignedByUid: deleteField(),
     assignedByName: deleteField(),
     assignedAt: deleteField(),
@@ -303,7 +397,7 @@ export async function restoreJob(actor: Actor, jobId: string): Promise<void> {
     completedByName: deleteField(),
     updatedAt: serverTimestamp(),
     updatedByUid: actor.uid,
-    updatedByName: actor.firstName,
+    updatedByName: byName,
   });
 }
 
@@ -319,7 +413,7 @@ export async function editJob(actor: Actor, jobId: string, edit: JobEdit): Promi
   const patch: Record<string, unknown> = {
     updatedAt: serverTimestamp(),
     updatedByUid: actor.uid,
-    updatedByName: actor.firstName,
+    updatedByName: actorDisplayName(actor),
   };
   if (edit.name !== undefined) patch.name = edit.name;
   if (edit.customer !== undefined) patch.customer = edit.customer;

@@ -6,6 +6,12 @@ import { IconBox, IconCalendar, IconCheck, IconEdit, IconPlay, IconRestore, Icon
 import { useAuth } from '../context/AuthProvider';
 import { useAppearance } from '../context/AppearanceProvider';
 
+function collaboratorSummary(job: Job): string {
+  if (job.collaborators.length === 0) return '';
+  const firstName = job.collaborators[0].name || 'User';
+  return job.collaborators.length === 1 ? firstName : `${firstName} + ${job.collaborators.length - 1}`;
+}
+
 export function JobCard({
   job,
   onStart,
@@ -26,11 +32,17 @@ export function JobCard({
   const { authUser, isAdmin, isManagerOrAdmin } = useAuth();
   const { motionReduced } = useAppearance();
   const overdue = isOverdue(job);
-  const mine = job.assignedToUid === authUser?.uid;
+  const mine =
+    authUser !== null &&
+    authUser !== undefined &&
+    (job.collaboratorUids.includes(authUser.uid) || job.assignedToUid === authUser.uid);
+  const hasCollaborators = job.collaboratorUids.length > 0;
+  const collaboration = collaboratorSummary(job);
   const isManager = isManagerOrAdmin && !isAdmin;
   // Starting an unassigned job self-assigns it — Managers may only assign Staff,
   // so they get no Start shortcut until a job is assigned to them.
-  const canStart = job.assignedToUid === '' ? !isManager : mine;
+  const canStart = hasCollaborators ? mine : !isManager;
+  const canComplete = mine || isManagerOrAdmin;
 
   return (
     <motion.article
@@ -66,14 +78,14 @@ export function JobCard({
           <IconCalendar className="h-4 w-4 text-slate-400" />
           Due {formatDate(job.dueDate)}
         </span>
-        {job.assignedToName && (
-          <span className="inline-flex items-center gap-1.5">
-            <IconUser className="h-4 w-4 text-slate-400" />
-            {job.status === 'completed' ? 'Done by' : job.status === 'started' ? 'Started by' : 'Assigned to'}{' '}
-            {job.assignedToName}
-            {mine ? ' (you)' : ''}
-          </span>
-        )}
+        <span className="inline-flex items-center gap-1.5">
+          <IconUser className="h-4 w-4 text-slate-400" />
+          {job.status === 'completed' && job.completedByName
+            ? `Done by ${job.completedByName}`
+            : collaboration
+              ? `Collaborators ${collaboration}${mine ? ' (you)' : ''}`
+              : 'Unassigned'}
+        </span>
       </div>
 
       <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
@@ -82,7 +94,7 @@ export function JobCard({
             <IconPlay className="h-4 w-4" /> Start
           </button>
         )}
-        {job.status === 'started' && mine && onComplete && (
+        {job.status === 'started' && canComplete && onComplete && (
           <button className="btn-secondary flex-1" onClick={() => onComplete(job)}>
             <IconCheck className="h-4 w-4" /> Complete
           </button>
@@ -93,8 +105,8 @@ export function JobCard({
           </button>
         )}
         {job.status !== 'completed' && isManagerOrAdmin && onAssign && (
-          <button className="btn-secondary" onClick={() => onAssign(job)} aria-label={`Assign ${job.name}`}>
-            <IconUserPlus className="h-4 w-4" /> {job.assignedToUid ? 'Reassign' : 'Assign'}
+          <button className="btn-secondary" onClick={() => onAssign(job)} aria-label={`Edit collaborators for ${job.name}`}>
+            <IconUserPlus className="h-4 w-4" /> {hasCollaborators ? 'Edit' : 'Assign'}
           </button>
         )}
         {isManagerOrAdmin && onEdit && (
