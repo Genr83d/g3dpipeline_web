@@ -39,6 +39,7 @@ export function JobCard({
   const hasCollaborators = job.collaboratorUids.length > 0;
   const collaboration = collaboratorSummary(job);
   const isCompleted = job.status === 'completed';
+  const collaborationLabel = collaboration ? `${collaboration}${mine ? ' (you)' : ''}` : '';
   const isManager = isManagerOrAdmin && !isAdmin;
   // Starting an unassigned job self-assigns it — Managers may only assign Staff,
   // so they get no Start shortcut until a job is assigned to them.
@@ -102,7 +103,7 @@ export function JobCard({
               <span className="truncate">Collaborators</span>
             </span>
             <strong className="min-w-0 truncate text-right">
-              {collaboration}${mine ? ' (you)' : ''}
+              {collaborationLabel}
             </strong>
           </span>
         )}
@@ -144,7 +145,7 @@ export function JobCard({
               <span className="truncate">Collaborators</span>
             </span>
             <strong className="min-w-0 truncate text-right">
-              {collaboration ? `${collaboration}${mine ? ' (you)' : ''}` : 'Unassigned'}
+              {collaborationLabel || 'Unassigned'}
             </strong>
           </span>
         )}
