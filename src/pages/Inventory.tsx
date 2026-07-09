@@ -86,7 +86,7 @@ function MaterialCard({ material, onEdit }: { material: Material; onEdit: (m: Ma
 
 export default function Inventory() {
   const { isActive, actor } = useAuth();
-  const { materials, loading, error } = useInventory(isActive);
+  const { materials, loading, error, retry } = useInventory(isActive);
   const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [adding, setAdding] = useState(false);
@@ -133,6 +133,11 @@ export default function Inventory() {
           icon={<IconCloudOff className="h-7 w-7" />}
           title="Unable to Load Inventory"
           subtitle="Check your internet connection and Firestore permissions."
+          action={
+            <button className="btn-secondary" onClick={retry}>
+              Retry
+            </button>
+          }
         />
       ) : (
         <>

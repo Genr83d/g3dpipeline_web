@@ -22,7 +22,12 @@ import { parseAssignedRole, parseJobStatus, toDate, type Job, type UserRole } fr
 export interface Actor {
   uid: string;
   firstName: string;
+  displayName?: string;
   email: string;
+}
+
+export function actorDisplayName(actor: Actor): string {
+  return actor.displayName?.trim() || actor.firstName || actor.email || 'User';
 }
 
 /** Caller identity as stored in their live /users doc — rules verify these exactly. */

@@ -63,3 +63,9 @@ export const IconCloudOff = (p: IconProps = {}) =>
   base(<path d="M22.6 16.7A5 5 0 0 0 18 10h-1.3A8 8 0 0 0 5.6 5.6M3.5 7.4A8 8 0 0 0 3 10a5 5 0 0 0-.6 9.9L18 20M2 2l20 20" />, p);
 export const IconMail =(p: IconProps = {}) =>
   base(<path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM22 6l-10 7L2 6" />, p);
+export const IconWrench = (p: IconProps = {}) =>
+  base(<path d="M14.7 6.3a4 4 0 0 0 4.9 4.9l-8.4 8.4a2.1 2.1 0 0 1-3 0l-3.8-3.8a2.1 2.1 0 0 1 0-3l8.4-8.4a4 4 0 0 0 1.9 1.9zM7 17l-2 2" />, p);
+export const IconMapPin = (p: IconProps = {}) =>
+  base(<path d="M12 22s7-4.9 7-12a7 7 0 1 0-14 0c0 7.1 7 12 7 12zM12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />, p);
+export const IconHistory = (p: IconProps = {}) =>
+  base(<path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5M12 7v5l3 2" />, p);

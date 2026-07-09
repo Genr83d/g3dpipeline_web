@@ -44,6 +44,33 @@ export interface Material {
   updatedByName: string;
 }
 
+export interface MaintenanceProcedure {
+  id: string;
+  title: string;
+  isDone: boolean;
+}
+
+export interface MaintenanceHistoryRecord {
+  completedAt: Date | null;
+  procedureTitles: string[];
+  completedByName: string;
+}
+
+export interface Machine {
+  id: string;
+  name: string;
+  location: string;
+  notes: string;
+  procedures: MaintenanceProcedure[];
+  maintenanceHistory: MaintenanceHistoryRecord[];
+  createdAt: Date | null;
+  createdByUid: string;
+  createdByName: string;
+  updatedAt: Date | null;
+  updatedByUid: string;
+  updatedByName: string;
+}
+
 export interface AppUser {
   uid: string;
   name: string;

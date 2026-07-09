@@ -55,8 +55,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const isActive = profile?.status === 'active';
     const isAdmin = isActive && profile?.role === 'admin';
     const isManagerOrAdmin = isActive && (profile?.role === 'manager' || profile?.role === 'admin');
+    const displayName = profile?.name || authUser?.displayName?.trim() || authUser?.email || firstName;
     const actor: Actor | null =
-      authUser && isActive ? { uid: authUser.uid, firstName, email: authUser.email ?? '' } : null;
+      authUser && isActive
+        ? { uid: authUser.uid, firstName, displayName, email: authUser.email ?? '' }
+        : null;
     const assigner: Assigner | null =
       profile && isActive ? { uid: profile.uid, name: profile.name, role: profile.role } : null;
     return { authUser, profile, firstName, isActive, isAdmin, isManagerOrAdmin, actor, assigner };
