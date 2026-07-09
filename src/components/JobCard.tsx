@@ -38,6 +38,7 @@ export function JobCard({
     (job.collaboratorUids.includes(authUser.uid) || job.assignedToUid === authUser.uid);
   const hasCollaborators = job.collaboratorUids.length > 0;
   const collaboration = collaboratorSummary(job);
+  const isCompleted = job.status === 'completed';
   const isManager = isManagerOrAdmin && !isAdmin;
   // Starting an unassigned job self-assigns it — Managers may only assign Staff,
   // so they get no Start shortcut until a job is assigned to them.
@@ -83,6 +84,39 @@ export function JobCard({
       </div>
 
       <div className="divide-y divide-slate-200/70 border-y border-slate-200/70 text-sm text-slate-700 dark:divide-slate-800/80 dark:border-slate-800/80 dark:text-slate-200">
+        {isCompleted && (
+          <span className="flex items-center justify-between gap-3 py-2.5">
+            <span className="inline-flex min-w-0 items-center gap-2">
+              <IconCheck className="h-4 w-4 shrink-0 text-secondary dark:text-emerald-300" />
+              <span className="truncate">Completed by</span>
+            </span>
+            <strong className="min-w-0 truncate text-right">
+              {job.completedByName || '—'}
+            </strong>
+          </span>
+        )}
+        {isCompleted && collaboration && (
+          <span className="flex items-center justify-between gap-3 py-2.5">
+            <span className="inline-flex min-w-0 items-center gap-2">
+              <IconUserPlus className="h-4 w-4 shrink-0 text-slate-400" />
+              <span className="truncate">Collaborators</span>
+            </span>
+            <strong className="min-w-0 truncate text-right">
+              {collaboration}${mine ? ' (you)' : ''}
+            </strong>
+          </span>
+        )}
+        {isCompleted && (
+          <span className="flex items-center justify-between gap-3 py-2.5">
+            <span className="inline-flex min-w-0 items-center gap-2">
+              <IconCalendar className="h-4 w-4 shrink-0 text-secondary dark:text-emerald-300" />
+              <span className="truncate">Completed on</span>
+            </span>
+            <strong className="shrink-0 text-secondary dark:text-emerald-300">
+              {formatDate(job.completedAt)}
+            </strong>
+          </span>
+        )}
         <span className="flex items-center justify-between gap-3 py-2.5">
           <span className="inline-flex min-w-0 items-center gap-2">
             <IconBox className="h-4 w-4 shrink-0 text-slate-400" />
@@ -103,21 +137,17 @@ export function JobCard({
           </span>
           <strong className="shrink-0">{formatDate(job.dueDate)}</strong>
         </span>
-        <span className="flex items-center justify-between gap-3 py-2.5">
-          <span className="inline-flex min-w-0 items-center gap-2">
-            <IconUser className="h-4 w-4 shrink-0 text-slate-400" />
-            <span className="truncate">
-              {job.status === 'completed' && job.completedByName ? 'Completed by' : 'Collaborators'}
+        {!isCompleted && (
+          <span className="flex items-center justify-between gap-3 py-2.5">
+            <span className="inline-flex min-w-0 items-center gap-2">
+              <IconUser className="h-4 w-4 shrink-0 text-slate-400" />
+              <span className="truncate">Collaborators</span>
             </span>
+            <strong className="min-w-0 truncate text-right">
+              {collaboration ? `${collaboration}${mine ? ' (you)' : ''}` : 'Unassigned'}
+            </strong>
           </span>
-          <strong className="min-w-0 truncate text-right">
-            {job.status === 'completed' && job.completedByName
-              ? job.completedByName
-              : collaboration
-                ? `${collaboration}${mine ? ' (you)' : ''}`
-                : 'Unassigned'}
-          </strong>
-        </span>
+        )}
       </div>
 
       <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
