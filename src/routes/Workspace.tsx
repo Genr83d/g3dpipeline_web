@@ -9,6 +9,7 @@ import { BrandMark } from '../components/BrandMark';
 const tabs = [
   { to: '/', label: 'Jobs', end: true },
   { to: '/inventory', label: 'Inventory', end: false },
+  { to: '/maintenance', label: 'Maintenance', end: false },
   { to: '/summary', label: 'Summary', end: false },
   { to: '/archive', label: 'Archive', end: false },
 ];
@@ -22,7 +23,7 @@ export function Workspace() {
   return (
     <div className="min-h-dvh">
       <header className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/80 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 py-3 sm:gap-4 sm:px-4">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-3 py-3 sm:flex-nowrap sm:gap-4 sm:px-4">
           <Link
             to="/"
             aria-label="GENR8 Pipeline home"
@@ -31,9 +32,9 @@ export function Workspace() {
             <BrandMark className="h-9 w-9" alt="" />
             <span className="hidden font-display text-lg font-bold tracking-tight sm:block">GENR8 Pipeline</span>
           </Link>
-          <nav className="flex items-center gap-1 rounded-full bg-slate-100 p-1 dark:bg-slate-800" aria-label="Workspace tabs">
+          <nav className="order-last flex w-full items-center gap-1 overflow-x-auto rounded-full bg-slate-100 p-1 dark:bg-slate-800 sm:order-none sm:w-auto" aria-label="Workspace tabs">
             {tabs.map((tab) => (
-              <NavLink key={tab.to} to={tab.to} end={tab.end} className="relative rounded-full px-2.5 py-1.5 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none sm:px-4">
+              <NavLink key={tab.to} to={tab.to} end={tab.end} className="relative shrink-0 rounded-full px-2.5 py-1.5 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none sm:px-4">
                 {({ isActive: active }) => (
                   <>
                     {active && (

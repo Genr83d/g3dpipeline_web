@@ -4,6 +4,12 @@ export type JobStatus = 'pending' | 'started' | 'completed';
 export type UserRole = 'staff' | 'manager' | 'admin';
 export type UserStatus = 'pending' | 'active' | 'disabled' | 'removed';
 
+export interface JobCollaborator {
+  uid: string;
+  name: string;
+  role: UserRole;
+}
+
 export interface Job {
   id: string;
   name: string;
@@ -20,6 +26,8 @@ export interface Job {
   assignedByUid: string;
   assignedByName: string;
   assignedAt: Date | null;
+  collaborators: JobCollaborator[];
+  collaboratorUids: string[];
   createdAt: Date | null;
   updatedAt: Date | null;
   startedAt: Date | null;
@@ -36,6 +44,33 @@ export interface Material {
   unit: string;
   quantity: number;
   totalQuantity: number;
+  createdAt: Date | null;
+  createdByUid: string;
+  createdByName: string;
+  updatedAt: Date | null;
+  updatedByUid: string;
+  updatedByName: string;
+}
+
+export interface MaintenanceProcedure {
+  id: string;
+  title: string;
+  isDone: boolean;
+}
+
+export interface MaintenanceHistoryRecord {
+  completedAt: Date | null;
+  procedureTitles: string[];
+  completedByName: string;
+}
+
+export interface Machine {
+  id: string;
+  name: string;
+  location: string;
+  notes: string;
+  procedures: MaintenanceProcedure[];
+  maintenanceHistory: MaintenanceHistoryRecord[];
   createdAt: Date | null;
   createdByUid: string;
   createdByName: string;

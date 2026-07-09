@@ -61,24 +61,30 @@ export interface MaterialInput {
   totalQuantity: number;
 }
 
+function materialActorName(actor: Actor): string {
+  return actor.displayName?.trim() || actor.firstName || actor.email || 'User';
+}
+
 export async function addMaterial(actor: Actor, input: MaterialInput): Promise<void> {
+  const byName = materialActorName(actor);
   await addDoc(inventoryCol, {
     ...input,
     createdAt: serverTimestamp(),
     createdByUid: actor.uid,
-    createdByName: actor.firstName,
+    createdByName: byName,
     updatedAt: serverTimestamp(),
     updatedByUid: actor.uid,
-    updatedByName: actor.firstName,
+    updatedByName: byName,
   });
 }
 
 export async function editMaterial(actor: Actor, id: string, input: MaterialInput): Promise<void> {
+  const byName = materialActorName(actor);
   await updateDoc(doc(db, 'inventory', id), {
     ...input,
     updatedAt: serverTimestamp(),
     updatedByUid: actor.uid,
-    updatedByName: actor.firstName,
+    updatedByName: byName,
   });
 }
 

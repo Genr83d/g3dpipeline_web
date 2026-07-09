@@ -11,6 +11,7 @@ import SignUp from './pages/SignUp';
 import ForgotPassword from './pages/ForgotPassword';
 import Jobs from './pages/Jobs';
 import Inventory from './pages/Inventory';
+import Maintenance from './pages/Maintenance';
 import Summary from './pages/Summary';
 import Archive from './pages/Archive';
 
@@ -56,6 +57,7 @@ export default function App() {
                 <Route element={<Workspace />}>
                   <Route index element={<Jobs />} />
                   <Route path="inventory" element={<Inventory />} />
+                  <Route path="maintenance" element={<Maintenance />} />
                   <Route path="summary" element={<Summary />} />
                   <Route path="archive" element={<Archive />} />
                   <Route

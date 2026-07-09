@@ -11,7 +11,8 @@ import { EmptyState } from '../components/EmptyState';
 import { CenteredSpinner } from '../components/Spinner';
 import { IconBox, IconPlus } from '../components/icons';
 import { errorMessage } from '../lib/format';
-import type { AppUser, Job } from '../types';
+import type { Job } from '../types';
+import type { AssignTarget } from '../services/jobService';
 import * as jobService from '../services/jobService';
 
 type SortKey = 'due-asc' | 'due-desc' | 'qty-asc' | 'qty-desc';
@@ -67,40 +68,18 @@ export default function Jobs() {
     setEditing(null);
   }
 
-  /** Assignment writes get the handoff-specified permission-denied message. */
-  async function runAssign(action: () => Promise<void>, success: string) {
-    try {
-      await action();
-      toast(success, 'success');
-    } catch (err) {
-      const code = (err as { code?: string }).code ?? '';
-      toast(
-        code === 'permission-denied'
-          ? 'You no longer have permission to assign this job.'
-          : errorMessage(err),
-        'error',
-      );
-    }
+  async function handleSaveCollaborators(job: Job, collaborators: AssignTarget[]) {
+    await jobService.assignJob(actor!, job.id, collaborators);
+    const [primary] = collaborators;
+    const suffix = collaborators.length > 1 ? ` + ${collaborators.length - 1}` : '';
+    toast(`“${job.name}” collaborators updated: ${primary.name}${suffix}.`, 'success');
     setAssigning(null);
   }
 
-  function handleAssign(job: Job, target: AppUser) {
-    void runAssign(
-      () =>
-        jobService.assignJob(actor!, assigner!, job.id, {
-          uid: target.uid,
-          name: target.name,
-          role: target.role,
-        }),
-      `“${job.name}” assigned to ${target.name || target.email}.`,
-    );
-  }
-
-  function handleUnassign(job: Job) {
-    void runAssign(
-      () => jobService.unassignJob(actor!, job.id),
-      `“${job.name}” is unassigned.`,
-    );
+  async function handleClearCollaborators(job: Job) {
+    await jobService.unassignJob(actor!, job.id);
+    toast(`“${job.name}” is unassigned.`, 'success');
+    setAssigning(null);
   }
 
   return (
@@ -149,7 +128,7 @@ export default function Jobs() {
                 key={job.id}
                 job={job}
                 onStart={(j) => void run(() => jobService.startJob(actor!, assigner!, j.id), `You started “${j.name}”.`)}
-                onComplete={(j) => void run(() => jobService.completeJob(actor!, j.id), `“${j.name}” completed. Nice.`)}
+                onComplete={(j) => void run(() => jobService.completeJob(actor!, assigner!, j.id), `“${j.name}” completed. Nice.`)}
                 onEdit={setEditing}
                 onDelete={isAdmin ? setDeleting : undefined}
                 onAssign={isManagerOrAdmin ? setAssigning : undefined}
@@ -161,8 +140,8 @@ export default function Jobs() {
 
       <AssignJobModal
         job={assigning}
-        onAssign={handleAssign}
-        onUnassign={handleUnassign}
+        onSave={handleSaveCollaborators}
+        onClear={handleClearCollaborators}
         onClose={() => setAssigning(null)}
       />
 

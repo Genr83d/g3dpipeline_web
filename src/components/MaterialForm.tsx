@@ -17,6 +17,18 @@ export function MaterialForm({
   const [totalQuantity, setTotalQuantity] = useState(initial ? String(initial.totalQuantity) : '');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const parsedQuantity = Number(quantity);
+  const parsedTotal = Number(totalQuantity);
+  const canSubmit =
+    name.trim().length > 0 &&
+    unit.trim().length > 0 &&
+    quantity.trim().length > 0 &&
+    totalQuantity.trim().length > 0 &&
+    Number.isFinite(parsedQuantity) &&
+    Number.isFinite(parsedTotal) &&
+    parsedQuantity >= 0 &&
+    parsedTotal > 0 &&
+    parsedQuantity <= parsedTotal;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -112,7 +124,7 @@ export function MaterialForm({
         <button type="button" className="btn-ghost" onClick={onCancel}>
           Cancel
         </button>
-        <button type="submit" className="btn-primary" disabled={busy}>
+        <button type="submit" className="btn-primary" disabled={busy || !canSubmit}>
           {busy && (
             <span
               aria-hidden
