@@ -39,16 +39,21 @@ export function JobProgressGauge({
   ];
 
   return (
-    <div className="flex w-full flex-col items-center gap-5 sm:flex-row sm:gap-8">
-      <div className="shrink-0 text-center sm:text-left">
-        <p className="font-display text-4xl font-bold">{completionPercentage}%</p>
-        <p className="text-sm text-slate-500 dark:text-slate-400">Complete</p>
+    <div className="flex w-full flex-col gap-5 sm:flex-row sm:items-center sm:gap-8">
+      <div className="shrink-0">
+        <p className="technical-label">Pipeline completion</p>
+        <p className="font-display text-5xl font-bold tabular-nums text-ink dark:text-slate-50">
+          {completionPercentage}%
+        </p>
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          {total} total job{total === 1 ? '' : 's'}
+        </p>
       </div>
       <div className="w-full min-w-0 flex-1 space-y-3">
         <div
           role="img"
           aria-label={`${completionPercentage}% of jobs complete: ${completed} completed, ${started} in progress, ${pending} pending`}
-          className="flex h-3 w-full gap-0.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"
+          className="flex h-4 w-full gap-0.5 overflow-hidden rounded-md border border-slate-200/70 bg-slate-200/80 p-0.5 dark:border-slate-800 dark:bg-slate-950/60"
         >
           {total > 0 &&
             segments.map(
@@ -64,12 +69,17 @@ export function JobProgressGauge({
                 ),
             )}
         </div>
-        <ul className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 sm:justify-start">
+        <ul className="grid gap-2 sm:grid-cols-3">
           {segments.map((s) => (
-            <li key={s.key} className="flex items-center gap-2 text-sm">
+            <li
+              key={s.key}
+              className="flex items-center justify-between gap-3 rounded-md border border-slate-200/60 bg-white/45 px-3 py-2 text-sm dark:border-slate-800/80 dark:bg-slate-950/25"
+            >
+              <span className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
               <span aria-hidden className={`h-2.5 w-2.5 rounded-full ${s.cls}`} />
-              <span className="text-slate-600 dark:text-slate-300">{s.label}</span>
-              <span className="font-semibold">{s.count}</span>
+                {s.label}
+              </span>
+              <span className="font-semibold tabular-nums">{s.count}</span>
             </li>
           ))}
         </ul>

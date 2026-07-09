@@ -18,9 +18,9 @@ export default function Profile() {
 
   return (
     <SettingsShell title="Profile" subtitle="How you appear across the pipeline">
-      <div className="surface divide-y divide-slate-100 dark:divide-slate-800">
+      <div className="surface divide-y divide-slate-200/70 overflow-hidden dark:divide-slate-800/80">
         <div className="flex items-center gap-4 p-5">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-white">
+          <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-primary text-xl font-bold text-white shadow-[0_10px_24px_rgba(36,84,216,0.22)]">
             {firstName.charAt(0)}
           </div>
           <div>

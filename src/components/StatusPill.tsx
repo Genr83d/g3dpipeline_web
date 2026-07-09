@@ -20,7 +20,7 @@ const styles: Record<JobStatus, { label: string; cls: string }> = {
 export function StatusPill({ status, overdue = false }: { status: JobStatus; overdue?: boolean }) {
   if (overdue) {
     return (
-      <span className="inline-flex items-center rounded-full border border-danger/40 bg-danger-soft px-2.5 py-0.5 text-xs font-bold tracking-wide text-danger hc:border-current dark:border-red-400/40 dark:bg-red-950 dark:text-red-300">
+      <span className="inline-flex items-center rounded-md border border-danger/40 bg-danger-soft px-2.5 py-1 text-xs font-bold text-danger hc:border-current dark:border-red-400/40 dark:bg-red-950/80 dark:text-red-300">
         OVERDUE
       </span>
     );
@@ -28,7 +28,7 @@ export function StatusPill({ status, overdue = false }: { status: JobStatus; ove
   const s = styles[status];
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-bold tracking-wide hc:border-current ${s.cls}`}
+      className={`inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-bold hc:border-current ${s.cls}`}
     >
       {s.label}
     </span>

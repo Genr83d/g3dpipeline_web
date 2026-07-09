@@ -4,25 +4,39 @@
 @custom-variant hc (&:where(.hc, .hc *));
 
 @theme {
-  --color-primary: #1428af;
-  --color-primary-soft: #e3e8fb;
-  --color-secondary: #0e8f7d;
-  --color-secondary-soft: #dcf3ef;
-  --color-appbg: #f4f6fb;
-  --color-ink: #111827;
-  --color-danger: #c62828;
-  --color-danger-soft: #fbe4e4;
+  --color-primary: #2454d8;
+  --color-primary-soft: #dfe8ff;
+  --color-secondary: #087f74;
+  --color-secondary-soft: #d7f2ed;
+  --color-appbg: #eef3f7;
+  --color-ink: #0d1726;
+  --color-danger: #b42318;
+  --color-danger-soft: #fde2df;
   --font-sans: 'Inter', 'InterVariable', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'G3DSans', 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --radius-card: 14px;
+  --radius-card: 8px;
 }
 
 :root {
   font-family: var(--font-sans);
   color-scheme: light;
+  --grid-line: rgba(13, 23, 38, 0.055);
+  --surface-bg: rgba(255, 255, 255, 0.72);
+  --surface-bg-strong: rgba(255, 255, 255, 0.88);
+  --surface-border: rgba(100, 116, 139, 0.28);
+  --surface-shadow: 0 18px 42px rgba(13, 23, 38, 0.09);
+  --field-bg: rgba(255, 255, 255, 0.78);
+  --focus-ring: rgba(36, 84, 216, 0.22);
 }
 :root.dark {
   color-scheme: dark;
+  --grid-line: rgba(226, 232, 240, 0.045);
+  --surface-bg: rgba(15, 23, 42, 0.68);
+  --surface-bg-strong: rgba(15, 23, 42, 0.86);
+  --surface-border: rgba(226, 232, 240, 0.12);
+  --surface-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+  --field-bg: rgba(15, 23, 42, 0.72);
+  --focus-ring: rgba(129, 140, 248, 0.24);
 }
 
 :root[data-text-size='small'] { font-size: 14px; }
@@ -30,20 +44,28 @@
 :root[data-text-size='large'] { font-size: 18px; }
 
 body {
-  @apply bg-appbg text-ink antialiased dark:bg-slate-950 dark:text-slate-100;
+  @apply min-h-dvh bg-appbg text-ink antialiased dark:bg-slate-950 dark:text-slate-100;
+  background-image:
+    linear-gradient(180deg, rgba(36, 84, 216, 0.11), rgba(238, 243, 247, 0) 430px),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-position: top center, top center, top center;
+  background-size: auto, 42px 42px, 42px 42px;
 }
 
 .auth-backdrop {
   background-image:
-    linear-gradient(rgba(20, 40, 175, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(20, 40, 175, 0.025) 1px, transparent 1px);
-  background-size: 32px 32px;
+    linear-gradient(145deg, rgba(36, 84, 216, 0.12), rgba(8, 127, 116, 0.07) 44%, transparent 68%),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: auto, 36px 36px, 36px 36px;
 }
 
 .dark .auth-backdrop {
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    linear-gradient(145deg, rgba(36, 84, 216, 0.18), rgba(8, 127, 116, 0.12) 44%, transparent 70%),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
 }
 
 .hc body {
@@ -52,40 +74,97 @@ body {
 
 /* Shared surfaces */
 @utility surface {
-  @apply rounded-(--radius-card) border border-slate-200/80 bg-white shadow-sm
-    dark:border-slate-800 dark:bg-slate-900
-    hc:border-2 hc:border-black hc:shadow-none dark:hc:border-white;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--surface-border);
+  background: var(--surface-bg);
+  box-shadow: var(--surface-shadow);
+  backdrop-filter: blur(22px) saturate(150%);
+  @apply transition-[background-color,border-color,box-shadow,transform] duration-200
+    hc:border-2 hc:border-black hc:bg-white hc:shadow-none dark:hc:border-white dark:hc:bg-black;
+}
+
+@utility surface-strong {
+  border-radius: var(--radius-card);
+  border: 1px solid var(--surface-border);
+  background: var(--surface-bg-strong);
+  box-shadow: var(--surface-shadow);
+  backdrop-filter: blur(24px) saturate(160%);
+  @apply hc:border-2 hc:border-black hc:bg-white hc:shadow-none dark:hc:border-white dark:hc:bg-black;
+}
+
+@utility surface-hover {
+  @apply hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-[0_22px_52px_rgba(13,23,38,0.12)]
+    dark:hover:border-indigo-300/20 dark:hover:shadow-[0_22px_58px_rgba(0,0,0,0.38)];
+}
+
+@utility technical-label {
+  @apply text-xs font-semibold uppercase text-slate-500 dark:text-slate-400;
 }
 
 @utility field {
-  @apply w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm
-    placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/25
-    focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100
+  background: var(--field-bg);
+  @apply w-full rounded-lg border border-slate-300/80 px-3.5 py-2.5 text-sm
+    text-ink shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] placeholder:text-slate-400
+    transition-[border-color,box-shadow,background-color] duration-150
+    focus:border-primary focus:ring-4 focus:ring-primary/15 focus:outline-none
+    disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700/80 dark:text-slate-100
+    dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]
     hc:border-2 hc:border-black dark:hc:border-white;
 }
 
 @utility btn {
-  @apply inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl px-4 py-2.5
-    text-sm font-semibold transition-[transform,background-color,box-shadow] duration-150
+  @apply inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-transparent px-4 py-2.5
+    text-sm font-semibold transition-[transform,background-color,border-color,color,box-shadow] duration-150
     focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
     focus-visible:outline-none active:scale-[0.98] disabled:cursor-not-allowed
     disabled:opacity-50 dark:focus-visible:ring-offset-slate-950;
 }
 @utility btn-primary {
-  @apply btn bg-primary text-white shadow-sm hover:bg-[#1c33cf] hc:border-2 hc:border-black;
+  @apply btn border-primary/80 bg-primary text-white shadow-[0_10px_24px_rgba(36,84,216,0.22)]
+    hover:bg-[#1d47ba] hover:shadow-[0_13px_30px_rgba(36,84,216,0.28)] hc:border-2 hc:border-black;
 }
 @utility btn-secondary {
-  @apply btn bg-secondary-soft text-secondary hover:bg-[#c8ece5]
+  @apply btn border-secondary/15 bg-secondary-soft text-secondary hover:border-secondary/25 hover:bg-[#c8ece5]
     dark:bg-secondary/15 dark:text-emerald-300 dark:hover:bg-secondary/25
     hc:border-2 hc:border-black dark:hc:border-white;
 }
 @utility btn-ghost {
-  @apply btn text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800;
+  @apply btn border-slate-200/70 bg-white/35 text-slate-600 hover:border-slate-300/80 hover:bg-white/75
+    dark:border-slate-700/60 dark:bg-slate-950/20 dark:text-slate-300 dark:hover:bg-slate-800/80;
 }
 @utility btn-danger {
-  @apply btn bg-danger-soft text-danger hover:bg-[#f6cfcf]
+  @apply btn border-danger/15 bg-danger-soft text-danger hover:border-danger/25 hover:bg-[#f8cac5]
     dark:bg-danger/15 dark:text-red-300 dark:hover:bg-danger/25
     hc:border-2 hc:border-black dark:hc:border-white;
+}
+
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.18), rgba(148, 163, 184, 0.28), rgba(148, 163, 184, 0.18));
+}
+
+.dark .skeleton-shimmer {
+  background: linear-gradient(90deg, rgba(51, 65, 85, 0.5), rgba(71, 85, 105, 0.58), rgba(51, 65, 85, 0.5));
+}
+
+.skeleton-shimmer::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.38), transparent);
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+}
+
+.dark .skeleton-shimmer::after {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

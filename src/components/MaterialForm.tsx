@@ -53,9 +53,9 @@ export function MaterialForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <label htmlFor="material-name" className="mb-1 block text-sm font-medium">
+        <label htmlFor="material-name" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
           Material Name
         </label>
         <input
@@ -68,7 +68,7 @@ export function MaterialForm({
         />
       </div>
       <div>
-        <label htmlFor="material-unit" className="mb-1 block text-sm font-medium">
+        <label htmlFor="material-unit" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
           Unit
         </label>
         <input
@@ -83,9 +83,9 @@ export function MaterialForm({
           Examples: kg, sheets, litres, rolls
         </p>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label htmlFor="material-qty" className="mb-1 block text-sm font-medium">
+          <label htmlFor="material-qty" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
             Current Stock
           </label>
           <input
@@ -100,7 +100,7 @@ export function MaterialForm({
           />
         </div>
         <div>
-          <label htmlFor="material-total" className="mb-1 block text-sm font-medium">
+          <label htmlFor="material-total" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
             Full Stock Quantity
           </label>
           <input
@@ -119,7 +119,11 @@ export function MaterialForm({
           </p>
         </div>
       </div>
-      {error && <p className="text-sm font-medium text-danger" role="alert">{error}</p>}
+      {error && (
+        <p className="rounded-md border border-danger/20 bg-danger-soft/70 px-3 py-2 text-sm font-medium text-danger dark:bg-red-950/40 dark:text-red-300" role="alert">
+          {error}
+        </p>
+      )}
       <div className="flex justify-end gap-2 pt-1">
         <button type="button" className="btn-ghost" onClick={onCancel}>
           Cancel

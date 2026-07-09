@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Modal } from './Modal';
 import { useAuth } from '../context/AuthProvider';
 import { watchAssignableUsers } from '../services/userService';
+import { Skeleton } from './Skeleton';
 import { IconClose, IconPlus } from './icons';
 import type { AssignTarget } from '../services/jobService';
 import type { AppUser, Job, UserRole } from '../types';
@@ -150,13 +151,13 @@ export function AssignJobModal({
     >
       {job && (
         <div className="space-y-4">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="rounded-md border border-slate-200/70 bg-white/45 px-3 py-2 text-sm text-slate-600 dark:border-slate-800/80 dark:bg-slate-950/25 dark:text-slate-300">
             <strong className="text-slate-700 dark:text-slate-200">{job.name}</strong> for{' '}
             {job.customer}
           </p>
 
           <div>
-            <label htmlFor="assign-role" className="mb-1 block text-sm font-medium">
+            <label htmlFor="assign-role" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
               Role
             </label>
             <select
@@ -175,15 +176,18 @@ export function AssignJobModal({
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="assign-user" className="block text-sm font-medium">
+            <label htmlFor="assign-user" className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
               Active Users
             </label>
             {loadError ? (
-              <p className="text-sm font-medium text-danger" role="alert">
+              <p className="rounded-md border border-danger/20 bg-danger-soft/70 px-3 py-2 text-sm font-medium text-danger dark:bg-red-950/40 dark:text-red-300" role="alert">
                 {loadError}
               </p>
             ) : loading ? (
-              <p className="text-sm text-slate-500 dark:text-slate-400">Loading users...</p>
+              <div className="flex gap-2" aria-label="Loading assignable users">
+                <Skeleton className="h-10 flex-1" />
+                <Skeleton className="h-10 w-20" />
+              </div>
             ) : users.length === 0 ? (
               <p className="text-sm text-slate-500 dark:text-slate-400">
                 No active {roleLabels[role].toLowerCase()} users to assign.
@@ -219,7 +223,7 @@ export function AssignJobModal({
           </div>
 
           <div className="space-y-2">
-            <p className="text-sm font-medium">Selected Collaborators</p>
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Selected Collaborators</p>
             {selected.length === 0 ? (
               <p className="text-sm text-slate-500 dark:text-slate-400">No collaborators selected.</p>
             ) : (
@@ -227,7 +231,7 @@ export function AssignJobModal({
                 {selected.map((collaborator) => (
                   <span
                     key={collaborator.uid}
-                    className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-3 py-1 text-sm font-semibold text-primary dark:border-indigo-300/20 dark:bg-indigo-950 dark:text-indigo-200"
+                    className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-primary/20 bg-primary-soft/80 px-3 py-1.5 text-sm font-semibold text-primary dark:border-indigo-300/20 dark:bg-indigo-950/80 dark:text-indigo-200"
                   >
                     <span className="truncate">
                       {collaboratorName(collaborator)} ({roleLabels[collaborator.role]})
@@ -251,7 +255,7 @@ export function AssignJobModal({
           </div>
 
           {saveError && (
-            <p className="text-sm font-medium text-danger" role="alert">
+            <p className="rounded-md border border-danger/20 bg-danger-soft/70 px-3 py-2 text-sm font-medium text-danger dark:bg-red-950/40 dark:text-red-300" role="alert">
               {saveError}
             </p>
           )}

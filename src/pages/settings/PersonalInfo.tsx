@@ -47,7 +47,7 @@ export default function PersonalInfo() {
         <div className="grid gap-4 sm:grid-cols-2">
           {fields.map((f) => (
             <div key={f.key} className={f.key === 'fullName' ? 'sm:col-span-2' : ''}>
-              <label htmlFor={f.key} className="mb-1 block text-sm font-medium">{f.label}</label>
+              <label htmlFor={f.key} className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">{f.label}</label>
               <input
                 id={f.key}
                 className="field"

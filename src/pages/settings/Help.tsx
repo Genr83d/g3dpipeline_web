@@ -28,8 +28,8 @@ export default function Help() {
     <SettingsShell title="Help" subtitle="Quick answers about the pipeline">
       <div className="space-y-3">
         {faqs.map((f) => (
-          <details key={f.q} className="surface group p-4">
-            <summary className="cursor-pointer font-semibold select-none">{f.q}</summary>
+          <details key={f.q} className="surface surface-hover group p-4">
+            <summary className="cursor-pointer font-semibold select-none marker:text-primary">{f.q}</summary>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{f.a}</p>
           </details>
         ))}

@@ -8,7 +8,7 @@ export default function About() {
         <div className="flex items-center gap-3">
           <BrandMark className="h-14 w-14" alt="" />
           <div>
-            <p className="font-display text-lg font-bold tracking-tight">GENR8 Pipeline</p>
+            <p className="font-display text-lg font-bold">GENR8 Pipeline</p>
             <p className="text-sm text-slate-500 dark:text-slate-400">Web client · v0.1.0</p>
           </div>
         </div>

@@ -46,18 +46,18 @@ export default function Security() {
       <form onSubmit={handleChange} className="surface space-y-4 p-5">
         <h2 className="font-display font-bold">Change password</h2>
         <div>
-          <label htmlFor="current" className="mb-1 block text-sm font-medium">Current password</label>
+          <label htmlFor="current" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Current password</label>
           <input id="current" type="password" className="field" autoComplete="current-password"
             value={current} onChange={(e) => setCurrent(e.target.value)} required />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="next" className="mb-1 block text-sm font-medium">New password</label>
+            <label htmlFor="next" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">New password</label>
             <input id="next" type="password" className="field" autoComplete="new-password"
               minLength={6} value={next} onChange={(e) => setNext(e.target.value)} required />
           </div>
           <div>
-            <label htmlFor="confirm" className="mb-1 block text-sm font-medium">Confirm new password</label>
+            <label htmlFor="confirm" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Confirm new password</label>
             <input id="confirm" type="password" className="field" autoComplete="new-password"
               minLength={6} value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
           </div>

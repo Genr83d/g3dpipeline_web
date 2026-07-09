@@ -5,7 +5,8 @@ import { useAuth } from '../context/AuthProvider';
 import { useToast } from '../components/Toast';
 import { JobCard } from '../components/JobCard';
 import { EmptyState } from '../components/EmptyState';
-import { JobCardSkeleton } from '../components/Skeleton';
+import { JobCardSkeleton, Skeleton } from '../components/Skeleton';
+import { PageHeader } from '../components/PageHeader';
 import { IconCheck } from '../components/icons';
 import { errorMessage } from '../lib/format';
 import { restoreJob } from '../services/jobService';
@@ -33,18 +34,22 @@ export default function Archive() {
   }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold">Archive</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          {loading ? 'Connecting…' : `${archived.length} completed job${archived.length === 1 ? '' : 's'}, newest first`}
-        </p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Archive"
+        eyebrow="Completed output"
+        subtitle={loading ? 'Connecting to shipped jobs...' : `${archived.length} completed job${archived.length === 1 ? '' : 's'}, newest first`}
+      />
 
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <JobCardSkeleton /><JobCardSkeleton />
-        </div>
+        <>
+          <Skeleton className="h-20 max-w-sm" />
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <JobCardSkeleton />
+            <JobCardSkeleton />
+            <JobCardSkeleton />
+          </div>
+        </>
       ) : archived.length === 0 ? (
         <EmptyState
           icon={<IconCheck className="h-7 w-7" />}
@@ -52,7 +57,7 @@ export default function Archive() {
           subtitle="Completed jobs land here, newest first."
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <AnimatePresence mode="popLayout">
             {archived.map((job) => (
               <JobCard key={job.id} job={job} onRestore={(j) => void handleRestore(j.id, j.name)} />

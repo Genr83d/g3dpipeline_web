@@ -8,10 +8,11 @@ import { JobForm, type JobFormValues } from '../components/JobForm';
 import { Modal } from '../components/Modal';
 import { AssignJobModal } from '../components/AssignJobModal';
 import { EmptyState } from '../components/EmptyState';
-import { CenteredSpinner } from '../components/Spinner';
+import { PageHeader } from '../components/PageHeader';
+import { JobCardSkeleton, Skeleton } from '../components/Skeleton';
 import { IconBox, IconPlus } from '../components/icons';
 import { errorMessage } from '../lib/format';
-import type { Job } from '../types';
+import { isOverdue, type Job } from '../types';
 import type { AssignTarget } from '../services/jobService';
 import * as jobService from '../services/jobService';
 
@@ -45,6 +46,15 @@ export default function Jobs() {
     }
     return sorted;
   }, [jobs, sort]);
+  const overview = useMemo(
+    () => ({
+      pending: pipeline.filter((job) => job.status === 'pending').length,
+      started: pipeline.filter((job) => job.status === 'started').length,
+      overdue: pipeline.filter((job) => isOverdue(job)).length,
+      units: pipeline.reduce((total, job) => total + job.quantity, 0),
+    }),
+    [pipeline],
+  );
 
   async function run(action: () => Promise<void>, success: string) {
     try {
@@ -83,17 +93,15 @@ export default function Jobs() {
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-bold">Jobs</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            {loading ? 'Connecting…' : `${pipeline.length} active job${pipeline.length === 1 ? '' : 's'} in the pipeline`}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+    <div className="space-y-6">
+      <PageHeader
+        title="Jobs"
+        eyebrow="Live pipeline"
+        subtitle={loading ? 'Connecting to the production stream...' : `${pipeline.length} active job${pipeline.length === 1 ? '' : 's'} in the pipeline`}
+        actions={
+          <>
           <label htmlFor="sort" className="sr-only">Sort jobs</label>
-          <select id="sort" className="field w-auto py-2" value={sort}
+          <select id="sort" className="field w-full py-2 sm:w-auto" value={sort}
             onChange={(e) => setSort(e.target.value as SortKey)}>
             {sortOptions.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -102,13 +110,30 @@ export default function Jobs() {
           <button className="btn-primary" onClick={() => setAdding(true)}>
             <IconPlus className="h-4 w-4" /> Add job
           </button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
-      {error && <p className="text-sm font-medium text-danger" role="alert">{error}</p>}
+      {error && (
+        <p className="rounded-md border border-danger/20 bg-danger-soft/70 px-3 py-2 text-sm font-medium text-danger dark:bg-red-950/40 dark:text-red-300" role="alert">
+          {error}
+        </p>
+      )}
 
       {loading ? (
-        <CenteredSpinner />
+        <>
+          <div className="grid gap-3 sm:grid-cols-4">
+            <Skeleton className="h-20" />
+            <Skeleton className="h-20" />
+            <Skeleton className="h-20" />
+            <Skeleton className="h-20" />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <JobCardSkeleton />
+            <JobCardSkeleton />
+            <JobCardSkeleton />
+          </div>
+        </>
       ) : pipeline.length === 0 ? (
         <EmptyState
           icon={<IconBox className="h-7 w-7" />}
@@ -121,21 +146,41 @@ export default function Jobs() {
           }
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <AnimatePresence mode="popLayout">
-            {pipeline.map((job) => (
-              <JobCard
-                key={job.id}
-                job={job}
-                onStart={(j) => void run(() => jobService.startJob(actor!, assigner!, j.id), `You started “${j.name}”.`)}
-                onComplete={(j) => void run(() => jobService.completeJob(actor!, assigner!, j.id), `“${j.name}” completed. Nice.`)}
-                onEdit={setEditing}
-                onDelete={isAdmin ? setDeleting : undefined}
-                onAssign={isManagerOrAdmin ? setAssigning : undefined}
-              />
+        <>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ['Pending', overview.pending],
+              ['In progress', overview.started],
+              ['Overdue', overview.overdue],
+              ['Units queued', overview.units],
+            ].map(([label, value]) => (
+              <div key={label} className="surface px-4 py-3">
+                <p className="technical-label">{label}</p>
+                <p className={`font-display text-2xl font-bold tabular-nums ${
+                  label === 'Overdue' && Number(value) > 0 ? 'text-danger dark:text-red-300' : ''
+                }`}>
+                  {value}
+                </p>
+              </div>
             ))}
-          </AnimatePresence>
-        </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <AnimatePresence mode="popLayout">
+              {pipeline.map((job) => (
+                <JobCard
+                  key={job.id}
+                  job={job}
+                  onStart={(j) => void run(() => jobService.startJob(actor!, assigner!, j.id), `You started “${j.name}”.`)}
+                  onComplete={(j) => void run(() => jobService.completeJob(actor!, assigner!, j.id), `“${j.name}” completed. Nice.`)}
+                  onEdit={setEditing}
+                  onDelete={isAdmin ? setDeleting : undefined}
+                  onAssign={isManagerOrAdmin ? setAssigning : undefined}
+                />
+              ))}
+            </AnimatePresence>
+          </div>
+        </>
       )}
 
       <AssignJobModal

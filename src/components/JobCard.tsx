@@ -43,6 +43,14 @@ export function JobCard({
   // so they get no Start shortcut until a job is assigned to them.
   const canStart = hasCollaborators ? mine : !isManager;
   const canComplete = mine || isManagerOrAdmin;
+  const accent =
+    overdue
+      ? 'before:bg-danger'
+      : job.status === 'started'
+        ? 'before:bg-amber-500'
+        : job.status === 'completed'
+          ? 'before:bg-secondary'
+          : 'before:bg-primary';
 
   return (
     <motion.article
@@ -51,7 +59,7 @@ export function JobCard({
       animate={{ opacity: 1, y: 0 }}
       exit={motionReduced ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
       transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-      className={`surface flex flex-col gap-3 p-4 ${
+      className={`surface surface-hover relative flex min-h-64 flex-col gap-4 overflow-hidden p-4 before:absolute before:inset-y-0 before:left-0 before:w-1 ${accent} ${
         overdue
           ? 'border-danger/40'
           : job.status === 'started'
@@ -62,29 +70,53 @@ export function JobCard({
       }`}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="truncate font-display text-base font-bold">{job.name}</h3>
-          <p className="truncate text-sm text-slate-500 dark:text-slate-400">for {job.customer}</p>
+        <div className="min-w-0 space-y-1 pl-2">
+          <p className="technical-label">Job order</p>
+          <h3 className="line-clamp-2 font-display text-lg font-bold leading-6 text-ink dark:text-slate-50">
+            {job.name}
+          </h3>
+          <p className="truncate text-sm font-medium text-slate-600 dark:text-slate-300">
+            {job.customer}
+          </p>
         </div>
         <StatusPill status={job.status} overdue={overdue} />
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 dark:text-slate-300">
-        <span className="inline-flex items-center gap-1.5">
-          <IconBox className="h-4 w-4 text-slate-400" />
-          {job.quantity} unit{job.quantity === 1 ? '' : 's'}
+      <div className="divide-y divide-slate-200/70 border-y border-slate-200/70 text-sm text-slate-700 dark:divide-slate-800/80 dark:border-slate-800/80 dark:text-slate-200">
+        <span className="flex items-center justify-between gap-3 py-2.5">
+          <span className="inline-flex min-w-0 items-center gap-2">
+            <IconBox className="h-4 w-4 shrink-0 text-slate-400" />
+            <span className="truncate">Quantity</span>
+          </span>
+          <strong className="shrink-0 tabular-nums">
+            {job.quantity} unit{job.quantity === 1 ? '' : 's'}
+          </strong>
         </span>
-        <span className={`inline-flex items-center gap-1.5 ${overdue ? 'font-semibold text-danger dark:text-red-300' : ''}`}>
-          <IconCalendar className="h-4 w-4 text-slate-400" />
-          Due {formatDate(job.dueDate)}
+        <span className={`flex items-center justify-between gap-3 py-2.5 ${
+          overdue
+            ? 'font-semibold text-danger dark:text-red-300'
+            : ''
+        }`}>
+          <span className="inline-flex min-w-0 items-center gap-2">
+            <IconCalendar className="h-4 w-4 shrink-0 text-slate-400" />
+            <span className="truncate">Due date</span>
+          </span>
+          <strong className="shrink-0">{formatDate(job.dueDate)}</strong>
         </span>
-        <span className="inline-flex items-center gap-1.5">
-          <IconUser className="h-4 w-4 text-slate-400" />
-          {job.status === 'completed' && job.completedByName
-            ? `Done by ${job.completedByName}`
-            : collaboration
-              ? `Collaborators ${collaboration}${mine ? ' (you)' : ''}`
-              : 'Unassigned'}
+        <span className="flex items-center justify-between gap-3 py-2.5">
+          <span className="inline-flex min-w-0 items-center gap-2">
+            <IconUser className="h-4 w-4 shrink-0 text-slate-400" />
+            <span className="truncate">
+              {job.status === 'completed' && job.completedByName ? 'Completed by' : 'Collaborators'}
+            </span>
+          </span>
+          <strong className="min-w-0 truncate text-right">
+            {job.status === 'completed' && job.completedByName
+              ? job.completedByName
+              : collaboration
+                ? `${collaboration}${mine ? ' (you)' : ''}`
+                : 'Unassigned'}
+          </strong>
         </span>
       </div>
 

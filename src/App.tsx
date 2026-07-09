@@ -5,7 +5,7 @@ import { AppearanceProvider } from './context/AppearanceProvider';
 import { ToastProvider } from './components/Toast';
 import { AuthGate } from './routes/AuthGate';
 import { Workspace } from './routes/Workspace';
-import { Skeleton } from './components/Skeleton';
+import { PageHeaderSkeleton, Skeleton } from './components/Skeleton';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import ForgotPassword from './pages/ForgotPassword';
@@ -31,8 +31,12 @@ function AdminOnly({ children }: { children: ReactNode }) {
 function SettingsFallback() {
   return (
     <div className="mx-auto max-w-xl space-y-4">
-      <Skeleton className="h-8 w-48" />
-      <Skeleton className="h-64" />
+      <PageHeaderSkeleton />
+      <div className="surface space-y-4 p-5">
+        <Skeleton className="h-12" />
+        <Skeleton className="h-12" />
+        <Skeleton className="h-12" />
+      </div>
     </div>
   );
 }
