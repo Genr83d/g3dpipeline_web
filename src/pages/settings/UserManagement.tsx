@@ -2,16 +2,16 @@ import { useAuth } from '../../context/AuthProvider';
 import { useUsers } from '../../hooks/useUsers';
 import { setUserStatus } from '../../services/userService';
 import { useToast } from '../../components/Toast';
-import { Skeleton } from '../../components/Skeleton';
+import { TableRowSkeleton } from '../../components/Skeleton';
 import { errorMessage } from '../../lib/format';
 import { SettingsShell } from './SettingsShell';
 import type { AppUser, UserStatus } from '../../types';
 
 const statusStyles: Record<UserStatus, string> = {
-  pending: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
-  active: 'bg-secondary-soft text-secondary dark:bg-emerald-950 dark:text-emerald-300',
-  disabled: 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
-  removed: 'bg-danger-soft text-danger dark:bg-red-950 dark:text-red-300',
+  pending: 'border-amber-400/35 bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300',
+  active: 'border-secondary/35 bg-secondary-soft text-secondary dark:bg-emerald-950/80 dark:text-emerald-300',
+  disabled: 'border-slate-300 bg-slate-200 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300',
+  removed: 'border-danger/30 bg-danger-soft text-danger dark:bg-red-950/80 dark:text-red-300',
 };
 
 export default function UserManagement() {
@@ -59,15 +59,21 @@ export default function UserManagement() {
 
   return (
     <SettingsShell title="User management" subtitle="Approve and manage staff accounts" wide>
-      {error && <p className="text-sm font-medium text-danger" role="alert">{error}</p>}
+      {error && (
+        <p className="rounded-md border border-danger/20 bg-danger-soft/70 px-3 py-2 text-sm font-medium text-danger dark:bg-red-950/40 dark:text-red-300" role="alert">
+          {error}
+        </p>
+      )}
       {loading ? (
         <div className="space-y-3">
-          <Skeleton className="h-16" /><Skeleton className="h-16" /><Skeleton className="h-16" />
+          <TableRowSkeleton />
+          <TableRowSkeleton />
+          <TableRowSkeleton />
         </div>
       ) : (
         <ul className="space-y-3">
           {users.map((user) => (
-            <li key={user.uid} className="surface flex flex-wrap items-center justify-between gap-3 p-4">
+            <li key={user.uid} className="surface surface-hover flex flex-wrap items-center justify-between gap-3 p-4">
               <div className="min-w-0">
                 <p className="truncate font-semibold">
                   {user.name || user.email}
@@ -78,7 +84,7 @@ export default function UserManagement() {
                 <p className="truncate text-sm text-slate-500 dark:text-slate-400">{user.email}</p>
                 <div className="mt-1 flex items-center gap-2">
                   <span className="text-xs font-medium text-primary capitalize dark:text-indigo-300">{user.role}</span>
-                  <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold capitalize ${statusStyles[user.status]}`}>
+                  <span className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-semibold capitalize ${statusStyles[user.status]}`}>
                     {user.status}
                   </span>
                 </div>

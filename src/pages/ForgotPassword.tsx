@@ -37,11 +37,11 @@ export default function ForgotPassword() {
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium">Email</label>
+            <label htmlFor="email" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Email</label>
             <input id="email" type="email" className="field" autoComplete="email" value={email}
               onChange={(e) => setEmail(e.target.value)} required />
           </div>
-          {error && <p className="text-sm font-medium text-danger" role="alert">{error}</p>}
+          {error && <p className="rounded-md border border-danger/20 bg-danger-soft/70 px-3 py-2 text-sm font-medium text-danger dark:bg-red-950/40 dark:text-red-300" role="alert">{error}</p>}
           <button type="submit" className="btn-primary w-full" disabled={busy}>
             {busy ? 'Sending…' : 'Send reset link'}
           </button>

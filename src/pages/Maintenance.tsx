@@ -3,9 +3,10 @@ import { useAuth } from '../context/AuthProvider';
 import { useMachines } from '../hooks/useMachines';
 import { MachineForm } from '../components/MachineForm';
 import { EmptyState } from '../components/EmptyState';
-import { CenteredSpinner } from '../components/Spinner';
 import { Modal } from '../components/Modal';
 import { useToast } from '../components/Toast';
+import { PageHeader } from '../components/PageHeader';
+import { MachineCardSkeleton, Skeleton } from '../components/Skeleton';
 import {
   IconCheck,
   IconClock,
@@ -71,10 +72,10 @@ function IconButton({
       aria-label={label}
       title={title}
       disabled={disabled}
-      className={`rounded-lg p-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${
+      className={`rounded-md border p-2 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${
         danger
-          ? 'text-danger hover:bg-danger-soft dark:text-red-300 dark:hover:bg-danger/15'
-          : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
+          ? 'border-danger/15 bg-danger-soft/45 text-danger hover:bg-danger-soft dark:border-red-400/15 dark:bg-danger/10 dark:text-red-300 dark:hover:bg-danger/20'
+          : 'border-slate-200/70 bg-white/45 text-slate-500 hover:bg-white/80 hover:text-slate-800 dark:border-slate-800/80 dark:bg-slate-950/20 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100'
       }`}
       onClick={onClick}
     >
@@ -119,15 +120,16 @@ function MachineCard({
   }
 
   return (
-    <article className="surface flex flex-col gap-4 p-4">
+    <article className="surface surface-hover flex flex-col gap-4 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
-          <h2 className="line-clamp-2 font-display text-lg font-bold">{machine.name}</h2>
-          <p className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+          <p className="technical-label">Machine</p>
+          <h2 className="line-clamp-2 font-display text-xl font-bold text-ink dark:text-slate-50">{machine.name}</h2>
+          <p className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300">
             <IconMapPin className="h-4 w-4" />
             <span className="truncate">{machine.location}</span>
           </p>
-          <p className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+          <p className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300">
             <IconClock className="h-4 w-4" />
             Last maintained: {formatDate(maintainedAt)}
           </p>
@@ -150,21 +152,21 @@ function MachineCard({
       </div>
 
       {machine.notes && (
-        <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600 dark:bg-slate-800/70 dark:text-slate-300">
+        <p className="rounded-md border border-slate-200/70 bg-white/45 px-3 py-2 text-sm text-slate-600 dark:border-slate-800/80 dark:bg-slate-950/25 dark:text-slate-300">
           {machine.notes}
         </p>
       )}
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h3 className="text-sm font-semibold uppercase text-slate-500 dark:text-slate-400">
+          <h3 className="technical-label">
             Procedures
           </h3>
           <span
-            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+            className={`rounded-md border px-2.5 py-1 text-xs font-semibold ${
               checked.length > 0
-                ? 'bg-secondary-soft text-secondary dark:bg-secondary/15 dark:text-emerald-300'
-                : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                ? 'border-secondary/20 bg-secondary-soft text-secondary dark:border-emerald-400/20 dark:bg-secondary/15 dark:text-emerald-300'
+                : 'border-slate-200/70 bg-white/45 text-slate-500 dark:border-slate-800/80 dark:bg-slate-950/25 dark:text-slate-400'
             }`}
           >
             {checked.length} ready
@@ -181,7 +183,7 @@ function MachineCard({
               return (
                 <div
                   key={procedure.id}
-                  className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-800"
+                  className="flex items-center gap-2 rounded-md border border-slate-200/70 bg-white/35 px-3 py-2 dark:border-slate-800/80 dark:bg-slate-950/20"
                 >
                   <input
                     id={`${machine.id}-${procedure.id}`}
@@ -206,7 +208,7 @@ function MachineCard({
                     aria-label={`Remove ${procedure.title}`}
                     title="Remove procedure"
                     disabled={toggleBusy || removeBusy}
-                    className="rounded-lg p-1.5 text-slate-400 hover:bg-danger-soft hover:text-danger focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-danger/15 dark:hover:text-red-300"
+                    className="rounded-md p-1.5 text-slate-400 hover:bg-danger-soft hover:text-danger focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-danger/15 dark:hover:text-red-300"
                     onClick={() => onRemoveProcedure(machine, procedure)}
                   >
                     {removeBusy ? <InlineSpinner /> : <IconTrash className="h-4 w-4" />}
@@ -249,8 +251,8 @@ function MachineCard({
         </button>
       </section>
 
-      <section className="border-t border-slate-200 pt-4 dark:border-slate-800">
-        <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase text-slate-500 dark:text-slate-400">
+      <section className="border-t border-slate-200/70 pt-4 dark:border-slate-800/80">
+        <div className="technical-label mb-3 flex items-center gap-2">
           <IconHistory className="h-4 w-4" />
           Maintenance History
         </div>
@@ -259,7 +261,7 @@ function MachineCard({
         ) : (
           <ol className="space-y-3">
             {machine.maintenanceHistory.map((record, index) => (
-              <li key={`${record.completedAt?.toISOString() ?? 'unknown'}-${index}`} className="border-l-2 border-primary/30 pl-3">
+              <li key={`${record.completedAt?.toISOString() ?? 'unknown'}-${index}`} className="border-l-2 border-primary/35 pl-3">
                 <p className="text-sm font-semibold">{formatDate(record.completedAt)}</p>
                 {record.completedByName && (
                   <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -383,21 +385,31 @@ export default function Maintenance() {
   );
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-bold">Maintenance</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            {loading
-              ? 'Connecting...'
-              : `${machines.length} machine${machines.length === 1 ? '' : 's'} tracked`}
-          </p>
-        </div>
-        {addButton}
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Maintenance"
+        eyebrow="Machine readiness"
+        subtitle={
+          loading
+            ? 'Connecting to maintenance records...'
+            : `${machines.length} machine${machines.length === 1 ? '' : 's'} tracked`
+        }
+        actions={addButton}
+      />
 
       {loading ? (
-        <CenteredSpinner />
+        <>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
+          </div>
+          <Skeleton className="h-11" />
+          <div className="grid gap-4 xl:grid-cols-2">
+            <MachineCardSkeleton />
+            <MachineCardSkeleton />
+          </div>
+        </>
       ) : error ? (
         <EmptyState
           icon={<IconCloudOff className="h-7 w-7" />}
@@ -412,29 +424,29 @@ export default function Maintenance() {
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="surface p-4">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Machines</p>
+            <div className="surface px-4 py-3">
+              <p className="technical-label">Machines</p>
               <p className="font-display text-2xl font-bold">{machines.length}</p>
             </div>
-            <div className="surface p-4">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Procedures</p>
+            <div className="surface px-4 py-3">
+              <p className="technical-label">Procedures</p>
               <p className="font-display text-2xl font-bold">{totalProcedures}</p>
             </div>
-            <div className="surface p-4">
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Ready to Log</p>
-              <p className="font-display text-2xl font-bold">{readyProcedures}</p>
+            <div className="surface px-4 py-3">
+              <p className="technical-label">Ready to log</p>
+              <p className="font-display text-2xl font-bold text-secondary tabular-nums dark:text-emerald-300">{readyProcedures}</p>
             </div>
           </div>
 
-          <div className="relative">
-            <IconSearch className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <div className="surface relative p-2">
+            <IconSearch className="pointer-events-none absolute top-1/2 left-5 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <label htmlFor="machine-search" className="sr-only">
               Search machines
             </label>
             <input
               id="machine-search"
               type="search"
-              className="field py-2.5 pr-10 pl-9"
+              className="field border-transparent py-2.5 pr-10 pl-9"
               placeholder="Search machines, locations, or procedures"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -444,7 +456,7 @@ export default function Maintenance() {
                 type="button"
                 aria-label="Clear search"
                 title="Clear search"
-                className="absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1.5 text-slate-400 hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none dark:hover:text-slate-200"
+                className="absolute top-1/2 right-4 -translate-y-1/2 rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none dark:hover:bg-slate-800 dark:hover:text-slate-200"
                 onClick={() => setSearch('')}
               >
                 <IconClose className="h-4 w-4" />
@@ -471,7 +483,7 @@ export default function Maintenance() {
               }
             />
           ) : (
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid gap-4 xl:grid-cols-2">
               {visible.map((machine) => (
                 <MachineCard
                   key={machine.id}
@@ -541,7 +553,7 @@ export default function Maintenance() {
             <p className="text-sm">
               Log the checked maintenance for <strong>{confirming.name}</strong>?
             </p>
-            <div className="rounded-xl bg-slate-50 px-3 py-2 text-sm dark:bg-slate-800/70">
+            <div className="rounded-md border border-slate-200/70 bg-white/45 px-3 py-2 text-sm dark:border-slate-800/80 dark:bg-slate-950/25">
               {checkedProcedures(confirming).map((procedure) => procedure.title).join(', ')}
             </div>
             <div className="flex justify-end gap-2">

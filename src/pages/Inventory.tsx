@@ -10,10 +10,11 @@ import {
   type MaterialInput,
 } from '../services/inventoryService';
 import { EmptyState } from '../components/EmptyState';
-import { CenteredSpinner } from '../components/Spinner';
 import { Modal } from '../components/Modal';
 import { MaterialForm } from '../components/MaterialForm';
 import { useToast } from '../components/Toast';
+import { PageHeader } from '../components/PageHeader';
+import { MaterialCardSkeleton, Skeleton } from '../components/Skeleton';
 import {
   IconAlert,
   IconClose,
@@ -38,14 +39,15 @@ function MaterialCard({ material, onEdit }: { material: Material; onEdit: (m: Ma
   const colors = stockColors(ratio);
   return (
     <div
-      className={`surface space-y-3 p-4 ${
+      className={`surface surface-hover space-y-4 p-4 ${
         low ? 'border-2 border-danger/50 dark:border-red-400/40' : ''
       }`}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="line-clamp-2 font-semibold">{material.name}</p>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+        <div className="min-w-0 space-y-1">
+          <p className="technical-label">Material</p>
+          <p className="line-clamp-2 font-display text-lg font-bold text-ink dark:text-slate-50">{material.name}</p>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
             {formatQuantity(material.quantity)} of {formatQuantity(material.totalQuantity)}{' '}
             {material.unit}
           </p>
@@ -54,7 +56,7 @@ function MaterialCard({ material, onEdit }: { material: Material; onEdit: (m: Ma
           type="button"
           aria-label="Edit material"
           title="Edit material"
-          className="shrink-0 rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          className="shrink-0 rounded-md border border-slate-200/70 bg-white/45 p-2 text-slate-500 transition-colors hover:bg-white/80 hover:text-slate-800 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none dark:border-slate-800/80 dark:bg-slate-950/20 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
           onClick={() => onEdit(material)}
         >
           <IconEdit className="h-4 w-4" />
@@ -67,7 +69,7 @@ function MaterialCard({ material, onEdit }: { material: Material; onEdit: (m: Ma
           aria-valuenow={Math.round(ratio * 100)}
           aria-valuemin={0}
           aria-valuemax={100}
-          className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"
+          className="h-2.5 flex-1 overflow-hidden rounded-full border border-slate-200/70 bg-slate-200/80 dark:border-slate-800 dark:bg-slate-950/60"
         >
           <div className={`h-full rounded-full ${colors.bar}`} style={{ width: `${ratio * 100}%` }} />
         </div>
@@ -76,7 +78,7 @@ function MaterialCard({ material, onEdit }: { material: Material; onEdit: (m: Ma
         </span>
       </div>
       {low && (
-        <p className={`flex items-center gap-1.5 text-sm font-medium ${colors.text}`}>
+        <p className={`flex items-center gap-1.5 rounded-md border border-danger/20 bg-danger-soft/60 px-3 py-2 text-sm font-semibold dark:bg-red-950/30 ${colors.text}`}>
           <IconAlert className="h-4 w-4" /> Low stock - below 30%
         </p>
       )}
@@ -115,19 +117,27 @@ export default function Inventory() {
   );
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-bold">Inventory</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            {loading ? 'Connecting…' : 'Live company stock, shared with the mobile app'}
-          </p>
-        </div>
-        {addButton}
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Inventory"
+        eyebrow="Materials control"
+        subtitle={loading ? 'Connecting to stock records...' : 'Live company stock, shared with the mobile app'}
+        actions={addButton}
+      />
 
       {loading ? (
-        <CenteredSpinner />
+        <>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
+          </div>
+          <Skeleton className="h-11" />
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <MaterialCardSkeleton />
+            <MaterialCardSkeleton />
+            <MaterialCardSkeleton />
+          </div>
+        </>
       ) : error ? (
         <EmptyState
           icon={<IconCloudOff className="h-7 w-7" />}
@@ -141,33 +151,42 @@ export default function Inventory() {
         />
       ) : (
         <>
-          <div className="surface space-y-1 p-4">
-            <p className="font-display text-lg font-bold">
-              {materials.length} {materials.length === 1 ? 'Material' : 'Materials'}
-            </p>
-            <p
-              className={`flex items-center gap-1.5 text-sm font-medium ${
-                lowCount > 0
-                  ? 'text-danger dark:text-red-400'
-                  : 'text-secondary dark:text-emerald-300'
-              }`}
-            >
-              {lowCount > 0 && <IconAlert className="h-4 w-4" />}
-              {lowCount > 0
-                ? `${lowCount} below the 30% stock level`
-                : 'All materials are sufficiently stocked'}
-            </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="surface px-4 py-3">
+              <p className="technical-label">Materials tracked</p>
+              <p className="font-display text-2xl font-bold tabular-nums">
+                {materials.length}
+              </p>
+            </div>
+            <div className="surface px-4 py-3">
+              <p className="technical-label">Stock alerts</p>
+              <p
+                className={`flex items-center gap-2 font-display text-2xl font-bold tabular-nums ${
+                  lowCount > 0
+                    ? 'text-danger dark:text-red-400'
+                    : 'text-secondary dark:text-emerald-300'
+                }`}
+              >
+                {lowCount > 0 && <IconAlert className="h-5 w-5" />}
+                {lowCount}
+              </p>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                {lowCount > 0
+                  ? 'Below the 30% stock level'
+                  : 'All materials are sufficiently stocked'}
+              </p>
+            </div>
           </div>
 
-          <div className="relative">
-            <IconSearch className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <div className="surface relative p-2">
+            <IconSearch className="pointer-events-none absolute top-1/2 left-5 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <label htmlFor="material-search" className="sr-only">
               Search materials
             </label>
             <input
               id="material-search"
               type="search"
-              className="field py-2.5 pr-10 pl-9"
+              className="field border-transparent py-2.5 pr-10 pl-9"
               placeholder="Search materials"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -177,7 +196,7 @@ export default function Inventory() {
                 type="button"
                 aria-label="Clear search"
                 title="Clear search"
-                className="absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1.5 text-slate-400 hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none dark:hover:text-slate-200"
+                className="absolute top-1/2 right-4 -translate-y-1/2 rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none dark:hover:bg-slate-800 dark:hover:text-slate-200"
                 onClick={() => setSearch('')}
               >
                 <IconClose className="h-4 w-4" />
@@ -204,7 +223,7 @@ export default function Inventory() {
               }
             />
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {visible.map((m) => (
                 <MaterialCard key={m.id} material={m} onEdit={setEditing} />
               ))}
@@ -213,14 +232,14 @@ export default function Inventory() {
         </>
       )}
 
-      <Modal open={adding} title="ADD MATERIAL" onClose={() => setAdding(false)}>
+      <Modal open={adding} title="Add material" onClose={() => setAdding(false)}>
         <MaterialForm
           onSubmit={(values) => save((v) => addMaterial(actor!, v), values)}
           onCancel={() => setAdding(false)}
         />
       </Modal>
 
-      <Modal open={editing !== null} title="EDIT MATERIAL" onClose={() => setEditing(null)}>
+      <Modal open={editing !== null} title="Edit material" onClose={() => setEditing(null)}>
         {editing && (
           <MaterialForm
             initial={editing}

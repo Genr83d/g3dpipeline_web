@@ -11,8 +11,8 @@ function Segmented<T extends string>({
 }) {
   return (
     <fieldset>
-      <legend className="mb-2 text-sm font-medium">{legend}</legend>
-      <div className="flex gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800" role="radiogroup">
+      <legend className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-200">{legend}</legend>
+      <div className="flex gap-1 rounded-lg border border-slate-200/70 bg-white/45 p-1 dark:border-slate-800/80 dark:bg-slate-950/25" role="radiogroup">
         {options.map((o) => (
           <button
             key={o.value}
@@ -20,9 +20,9 @@ function Segmented<T extends string>({
             role="radio"
             aria-checked={value === o.value}
             onClick={() => onChange(o.value)}
-            className={`flex-1 cursor-pointer rounded-lg px-3 py-2 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
+            className={`flex-1 cursor-pointer rounded-md px-3 py-2 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
               value === o.value
-                ? 'bg-white text-primary shadow-sm dark:bg-slate-700 dark:text-indigo-300'
+                ? 'bg-white text-primary shadow-sm dark:bg-slate-800 dark:text-indigo-300'
                 : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
             }`}
           >
@@ -52,7 +52,7 @@ function Toggle({ label, description, checked, onChange }: {
         aria-checked={checked}
         aria-label={label}
         onClick={() => onChange(!checked)}
-        className={`relative h-7 w-12 shrink-0 cursor-pointer rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none dark:focus-visible:ring-offset-slate-950 ${
+        className={`relative h-7 w-12 shrink-0 cursor-pointer rounded-full border transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none dark:focus-visible:ring-offset-slate-950 ${
           checked ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-700'
         }`}
       >

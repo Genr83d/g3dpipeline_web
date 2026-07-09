@@ -36,9 +36,9 @@ export function MachineForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <label htmlFor="machine-name" className="mb-1 block text-sm font-medium">
+        <label htmlFor="machine-name" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
           Machine Name
         </label>
         <input
@@ -51,7 +51,7 @@ export function MachineForm({
         />
       </div>
       <div>
-        <label htmlFor="machine-location" className="mb-1 block text-sm font-medium">
+        <label htmlFor="machine-location" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
           Location
         </label>
         <input
@@ -63,7 +63,7 @@ export function MachineForm({
         />
       </div>
       <div>
-        <label htmlFor="machine-notes" className="mb-1 block text-sm font-medium">
+        <label htmlFor="machine-notes" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
           Notes
         </label>
         <textarea
@@ -75,7 +75,7 @@ export function MachineForm({
         />
       </div>
       {error && (
-        <p className="text-sm font-medium text-danger" role="alert">
+        <p className="rounded-md border border-danger/20 bg-danger-soft/70 px-3 py-2 text-sm font-medium text-danger dark:bg-red-950/40 dark:text-red-300" role="alert">
           {error}
         </p>
       )}

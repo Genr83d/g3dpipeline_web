@@ -5,16 +5,16 @@ import { AppearanceProvider } from './context/AppearanceProvider';
 import { ToastProvider } from './components/Toast';
 import { AuthGate } from './routes/AuthGate';
 import { Workspace } from './routes/Workspace';
-import { Skeleton } from './components/Skeleton';
-import SignIn from './pages/SignIn';
-import SignUp from './pages/SignUp';
-import ForgotPassword from './pages/ForgotPassword';
-import Jobs from './pages/Jobs';
-import Inventory from './pages/Inventory';
-import Maintenance from './pages/Maintenance';
-import Summary from './pages/Summary';
-import Archive from './pages/Archive';
+import { PageHeaderSkeleton, Skeleton } from './components/Skeleton';
 
+const SignIn = lazy(() => import('./pages/SignIn'));
+const SignUp = lazy(() => import('./pages/SignUp'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const Jobs = lazy(() => import('./pages/Jobs'));
+const Inventory = lazy(() => import('./pages/Inventory'));
+const Maintenance = lazy(() => import('./pages/Maintenance'));
+const Summary = lazy(() => import('./pages/Summary'));
+const Archive = lazy(() => import('./pages/Archive'));
 const Profile = lazy(() => import('./pages/settings/Profile'));
 const PersonalInfo = lazy(() => import('./pages/settings/PersonalInfo'));
 const Security = lazy(() => import('./pages/settings/Security'));
@@ -31,10 +31,52 @@ function AdminOnly({ children }: { children: ReactNode }) {
 function SettingsFallback() {
   return (
     <div className="mx-auto max-w-xl space-y-4">
-      <Skeleton className="h-8 w-48" />
-      <Skeleton className="h-64" />
+      <PageHeaderSkeleton />
+      <div className="surface space-y-4 p-5">
+        <Skeleton className="h-12" />
+        <Skeleton className="h-12" />
+        <Skeleton className="h-12" />
+      </div>
     </div>
   );
+}
+
+function WorkspaceRouteFallback() {
+  return (
+    <div className="space-y-6">
+      <PageHeaderSkeleton actions />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <Skeleton className="h-48" />
+        <Skeleton className="h-48" />
+        <Skeleton className="h-48" />
+      </div>
+    </div>
+  );
+}
+
+function AuthRouteFallback() {
+  return (
+    <div className="auth-backdrop flex min-h-dvh items-center justify-center p-4">
+      <div className="surface-strong w-full max-w-sm space-y-5 p-6 sm:p-8">
+        <Skeleton className="mx-auto h-16 w-16" />
+        <div className="space-y-2">
+          <Skeleton className="mx-auto h-5 w-36" />
+          <Skeleton className="mx-auto h-4 w-48" />
+        </div>
+        <Skeleton className="h-11" />
+        <Skeleton className="h-11" />
+        <Skeleton className="h-11" />
+      </div>
+    </div>
+  );
+}
+
+function RouteSuspense({ children }: { children: ReactNode }) {
+  return <Suspense fallback={<WorkspaceRouteFallback />}>{children}</Suspense>;
+}
+
+function AuthSuspense({ children }: { children: ReactNode }) {
+  return <Suspense fallback={<AuthRouteFallback />}>{children}</Suspense>;
 }
 
 export default function App() {
@@ -46,20 +88,20 @@ export default function App() {
             <AuthGate
               signedOut={
                 <Routes>
-                  <Route path="/sign-in" element={<SignIn />} />
-                  <Route path="/sign-up" element={<SignUp />} />
-                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/sign-in" element={<AuthSuspense><SignIn /></AuthSuspense>} />
+                  <Route path="/sign-up" element={<AuthSuspense><SignUp /></AuthSuspense>} />
+                  <Route path="/forgot-password" element={<AuthSuspense><ForgotPassword /></AuthSuspense>} />
                   <Route path="*" element={<Navigate to="/sign-in" replace />} />
                 </Routes>
               }
             >
               <Routes>
                 <Route element={<Workspace />}>
-                  <Route index element={<Jobs />} />
-                  <Route path="inventory" element={<Inventory />} />
-                  <Route path="maintenance" element={<Maintenance />} />
-                  <Route path="summary" element={<Summary />} />
-                  <Route path="archive" element={<Archive />} />
+                  <Route index element={<RouteSuspense><Jobs /></RouteSuspense>} />
+                  <Route path="inventory" element={<RouteSuspense><Inventory /></RouteSuspense>} />
+                  <Route path="maintenance" element={<RouteSuspense><Maintenance /></RouteSuspense>} />
+                  <Route path="summary" element={<RouteSuspense><Summary /></RouteSuspense>} />
+                  <Route path="archive" element={<RouteSuspense><Archive /></RouteSuspense>} />
                   <Route
                     path="settings/*"
                     element={
