@@ -254,11 +254,20 @@ describe('AWF job form', () => {
 });
 
 describe('AWF job card permissions', () => {
-  it.each(JOB_CATEGORY_OPTIONS)(
-    'shows the $label category badge on every job card',
-    ({ value, label }) => {
+  it.each([
+    { value: 'manufacturing', label: 'Manufacturing', symbol: 'gear', color: 'text-primary' },
+    { value: 'repair', label: 'Repair', symbol: 'wrench', color: 'text-amber-800' },
+    { value: 'design', label: 'Design', symbol: 'palette', color: 'text-violet-700' },
+    { value: 'softwareDevelopment', label: 'Software development', symbol: 'code', color: 'text-cyan-700' },
+    { value: 'miscellaneous', label: 'Miscellaneous', symbol: 'tag', color: 'text-slate-600' },
+  ] as const)(
+    'shows the color-coded $label badge with its $symbol symbol',
+    ({ value, label, symbol, color }) => {
       render(<JobCard job={job({ category: value })} />);
-      expect(screen.getByText(label)).toBeInTheDocument();
+      const badge = screen.getByLabelText(`Job type: ${label}`);
+      expect(badge).toHaveAttribute('data-job-category', value);
+      expect(badge).toHaveClass(color);
+      expect(badge.querySelector(`[data-category-symbol="${symbol}"]`)).toBeInTheDocument();
     },
   );
 
