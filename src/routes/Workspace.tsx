@@ -1,6 +1,9 @@
-import { Link, NavLink, Outlet, useOutletContext } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, NavLink, Outlet, useNavigate, useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useJobs, type JobsState } from '../hooks/useJobs';
+import { useInventory, type InventoryState } from '../hooks/useInventory';
+import { useMachines, type MachinesState } from '../hooks/useMachines';
 import { useAuth } from '../context/AuthProvider';
 import { useAppearance } from '../context/AppearanceProvider';
 import { AccountMenu } from '../components/AccountMenu';
@@ -14,11 +17,41 @@ const tabs = [
   { to: '/archive', label: 'Archive', end: false },
 ];
 
-/** Signed-in shell: app bar, tab nav, and the shared live jobs stream. */
+const awfTabs = tabs.filter(
+  (tab) => tab.to === '/' || tab.to === '/summary' || tab.to === '/archive',
+);
+
+export interface WorkspaceOutletState {
+  jobs: JobsState;
+  inventory: InventoryState;
+  machines: MachinesState;
+}
+
+/** Signed-in shell and the single owner of all role-dependent data streams. */
 export function Workspace() {
-  const { isActive } = useAuth();
+  const { isActive, profile } = useAuth();
   const { motionReduced } = useAppearance();
-  const jobsState = useJobs(isActive);
+  const navigate = useNavigate();
+  const role = profile?.role ?? 'staff';
+  const roleKey = profile ? `${profile.uid}:${profile.role}` : 'inactive';
+  const isAwf = role === 'awf';
+  const nonAwfEnabled = isActive && !isAwf;
+  const jobsState = useJobs(isActive, role, roleKey);
+  const inventoryState = useInventory(nonAwfEnabled, roleKey);
+  const machinesState = useMachines(nonAwfEnabled, roleKey);
+  const visibleTabs = isAwf ? awfTabs : tabs;
+
+  // A keyed Workspace remounts for every live role change. On an AWF mount,
+  // select Jobs once; subsequent AWF navigation to Summary/Archive is allowed.
+  useEffect(() => {
+    if (isActive && isAwf) navigate('/', { replace: true });
+  }, [isActive, isAwf, navigate, roleKey]);
+
+  const outletState: WorkspaceOutletState = {
+    jobs: jobsState,
+    inventory: inventoryState,
+    machines: machinesState,
+  };
 
   return (
     <div className="relative min-h-dvh">
@@ -41,7 +74,7 @@ export function Workspace() {
             className="order-last flex w-full items-center gap-1 overflow-x-auto rounded-lg border border-slate-200/70 bg-white/45 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-900/55 sm:order-none sm:w-auto"
             aria-label="Workspace tabs"
           >
-            {tabs.map((tab) => (
+            {visibleTabs.map((tab) => (
               <NavLink
                 key={tab.to}
                 to={tab.to}
@@ -69,12 +102,20 @@ export function Workspace() {
         </div>
       </header>
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <Outlet context={jobsState} />
+        <Outlet context={outletState} />
       </main>
     </div>
   );
 }
 
 export function useJobsOutlet(): JobsState {
-  return useOutletContext<JobsState>();
+  return useOutletContext<WorkspaceOutletState>().jobs;
+}
+
+export function useInventoryOutlet(): InventoryState {
+  return useOutletContext<WorkspaceOutletState>().inventory;
+}
+
+export function useMachinesOutlet(): MachinesState {
+  return useOutletContext<WorkspaceOutletState>().machines;
 }

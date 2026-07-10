@@ -10,7 +10,8 @@ import { AssignJobModal } from '../components/AssignJobModal';
 import { EmptyState } from '../components/EmptyState';
 import { PageHeader } from '../components/PageHeader';
 import { JobCardSkeleton, Skeleton } from '../components/Skeleton';
-import { IconBox, IconPlus } from '../components/icons';
+import { Spinner } from '../components/Spinner';
+import { IconBox, IconCloudOff, IconPlus } from '../components/icons';
 import { errorMessage } from '../lib/format';
 import { isOverdue, type Job } from '../types';
 import type { AssignTarget } from '../services/jobService';
@@ -19,14 +20,14 @@ import * as jobService from '../services/jobService';
 type SortKey = 'due-asc' | 'due-desc' | 'qty-asc' | 'qty-desc';
 
 const sortOptions: { value: SortKey; label: string }[] = [
-  { value: 'due-asc', label: 'Closest due date' },
-  { value: 'due-desc', label: 'Furthest due date' },
+  { value: 'due-asc', label: 'Closest deadline' },
+  { value: 'due-desc', label: 'Furthest deadline' },
   { value: 'qty-asc', label: 'Smallest quantity' },
   { value: 'qty-desc', label: 'Largest quantity' },
 ];
 
 export default function Jobs() {
-  const { jobs, loading, error } = useJobsOutlet();
+  const { jobs, loading, error, retry } = useJobsOutlet();
   const { actor, assigner, isAdmin, isManagerOrAdmin } = useAuth();
   const { toast } = useToast();
   const [sort, setSort] = useState<SortKey>('due-asc');
@@ -56,30 +57,38 @@ export default function Jobs() {
     [pipeline],
   );
 
-  async function run(action: () => Promise<void>, success: string) {
+  async function run(action: () => Promise<void>, success: string): Promise<boolean> {
     try {
       await action();
       toast(success, 'success');
+      return true;
     } catch (err) {
       toast(errorMessage(err), 'error');
+      return false;
     }
   }
 
   if (!actor || !assigner) return null;
 
   async function handleAdd(values: JobFormValues) {
-    await run(() => jobService.addJob(actor!, values), 'Job added to the pipeline.');
-    setAdding(false);
+    const saved = await run(
+      () => jobService.addJob(actor!, assigner!, values),
+      'Job added to the pipeline.',
+    );
+    if (saved) setAdding(false);
   }
 
   async function handleEdit(values: JobFormValues) {
     if (!editing) return;
-    await run(() => jobService.editJob(actor!, editing.id, values), 'Job updated.');
-    setEditing(null);
+    const saved = await run(
+      () => jobService.editJob(actor!, assigner!, editing.id, values),
+      'Job updated.',
+    );
+    if (saved) setEditing(null);
   }
 
   async function handleSaveCollaborators(job: Job, collaborators: AssignTarget[]) {
-    await jobService.assignJob(actor!, job.id, collaborators);
+    await jobService.assignJob(actor!, assigner!, job.id, collaborators);
     const [primary] = collaborators;
     const suffix = collaborators.length > 1 ? ` + ${collaborators.length - 1}` : '';
     toast(`“${job.name}” collaborators updated: ${primary.name}${suffix}.`, 'success');
@@ -97,7 +106,7 @@ export default function Jobs() {
       <PageHeader
         title="Jobs"
         eyebrow="Live pipeline"
-        subtitle={loading ? 'Connecting to the production stream...' : `${pipeline.length} active job${pipeline.length === 1 ? '' : 's'} in the pipeline`}
+        subtitle={loading ? 'Loading shared jobs...' : `${pipeline.length} active job${pipeline.length === 1 ? '' : 's'} in the pipeline`}
         actions={
           <>
           <label htmlFor="sort" className="sr-only">Sort jobs</label>
@@ -114,14 +123,14 @@ export default function Jobs() {
         }
       />
 
-      {error && (
-        <p className="rounded-md border border-danger/20 bg-danger-soft/70 px-3 py-2 text-sm font-medium text-danger dark:bg-red-950/40 dark:text-red-300" role="alert">
-          {error}
-        </p>
-      )}
-
       {loading ? (
         <>
+          <div className="surface flex items-center justify-center gap-3 px-4 py-5" role="status">
+            <Spinner className="h-6 w-6" />
+            <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+              Loading shared jobs...
+            </p>
+          </div>
           <div className="grid gap-3 sm:grid-cols-4">
             <Skeleton className="h-20" />
             <Skeleton className="h-20" />
@@ -134,11 +143,23 @@ export default function Jobs() {
             <JobCardSkeleton />
           </div>
         </>
+      ) : error ? (
+        <EmptyState
+          tone="danger"
+          icon={<IconCloudOff className="h-7 w-7" />}
+          title="Unable to Load Jobs"
+          subtitle={error}
+          action={
+            <button className="btn-secondary" onClick={retry}>
+              Retry
+            </button>
+          }
+        />
       ) : pipeline.length === 0 ? (
         <EmptyState
           icon={<IconBox className="h-7 w-7" />}
-          title="The pipeline is clear"
-          subtitle="No active jobs right now. Add one and it appears on everyone's board instantly."
+          title="No Jobs In The Pipeline"
+          subtitle="Create a new job to begin tracking production."
           action={
             <button className="btn-primary" onClick={() => setAdding(true)}>
               <IconPlus className="h-4 w-4" /> Add the first job

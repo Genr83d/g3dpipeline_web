@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { useAuth } from '../context/AuthProvider';
-import { useMachines } from '../hooks/useMachines';
+import { useMachinesOutlet } from '../routes/Workspace';
 import { MachineForm } from '../components/MachineForm';
 import { EmptyState } from '../components/EmptyState';
 import { Modal } from '../components/Modal';
@@ -281,8 +281,8 @@ function MachineCard({
 }
 
 export default function Maintenance() {
-  const { actor, isActive, isAdmin } = useAuth();
-  const { machines, loading, error, retry } = useMachines(isActive);
+  const { actor, isAdmin } = useAuth();
+  const { machines, loading, error, retry } = useMachinesOutlet();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [adding, setAdding] = useState(false);

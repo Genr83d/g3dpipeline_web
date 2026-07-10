@@ -1,12 +1,15 @@
 import { useState, type FormEvent } from 'react';
 import { toDateInputValue, fromDateInputValue } from '../lib/format';
+import { isManagerOrAdminRole } from '../lib/roles';
 import type { Job } from '../types';
+import { useAuth } from '../context/AuthProvider';
 
 export interface JobFormValues {
   name: string;
   customer: string;
   quantity: number;
   dueDate: Date;
+  isAwf: boolean;
 }
 
 export function JobForm({
@@ -20,12 +23,16 @@ export function JobForm({
   onSubmit: (values: JobFormValues) => Promise<void>;
   onCancel: () => void;
 }) {
+  const { profile } = useAuth();
+  const canChooseAwf = profile ? isManagerOrAdminRole(profile.role) : false;
   const [name, setName] = useState(initial?.name ?? '');
   const [customer, setCustomer] = useState(initial?.customer ?? '');
   const [quantity, setQuantity] = useState(initial ? String(initial.quantity) : '');
   const [dueDate, setDueDate] = useState(initial ? toDateInputValue(initial.dueDate) : '');
+  const [isAwf, setIsAwf] = useState(initial?.isAwf ?? profile?.role === 'awf');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const today = toDateInputValue(new Date());
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -33,7 +40,13 @@ export function JobForm({
     if (!name.trim()) return setError('Job name is required.');
     if (!customer.trim()) return setError('Receiver is required.');
     if (!Number.isInteger(qty) || qty <= 0) return setError('Quantity must be a whole number above 0.');
-    if (!dueDate) return setError('A due date is required.');
+    if (!dueDate) return setError('Deadline is required.');
+    const parsedDueDate = fromDateInputValue(dueDate);
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    if (parsedDueDate.getTime() < startOfToday.getTime()) {
+      return setError('Deadline cannot be in the past.');
+    }
     setError('');
     setBusy(true);
     try {
@@ -41,7 +54,8 @@ export function JobForm({
         name: name.trim(),
         customer: customer.trim(),
         quantity: qty,
-        dueDate: fromDateInputValue(dueDate),
+        dueDate: parsedDueDate,
+        isAwf: profile?.role === 'awf' ? true : isAwf,
       });
     } finally {
       setBusy(false);
@@ -49,10 +63,10 @@ export function JobForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-5" noValidate>
       <div>
         <label htmlFor="job-name" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
-          Job name
+          Job Name
         </label>
         <input
           id="job-name"
@@ -65,7 +79,7 @@ export function JobForm({
       </div>
       <div>
         <label htmlFor="job-customer" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
-          Receiver
+          Name of Receiver
         </label>
         <input
           id="job-customer"
@@ -78,7 +92,7 @@ export function JobForm({
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label htmlFor="job-qty" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
-            Quantity
+            Order Quantity
           </label>
           <input
             id="job-qty"
@@ -93,17 +107,40 @@ export function JobForm({
         </div>
         <div>
           <label htmlFor="job-due" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
-            Due date
+            Deadline
           </label>
           <input
             id="job-due"
             className="field"
             type="date"
+            min={today}
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
           />
         </div>
       </div>
+      {canChooseAwf && (
+        <label
+          htmlFor="job-awf"
+          className="flex cursor-pointer items-start gap-3 rounded-md border border-slate-200/70 bg-white/45 px-3 py-3 dark:border-slate-800/80 dark:bg-slate-950/25"
+        >
+          <input
+            id="job-awf"
+            type="checkbox"
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-secondary focus:ring-secondary dark:border-slate-700"
+            checked={isAwf}
+            onChange={(e) => setIsAwf(e.target.checked)}
+          />
+          <span>
+            <span className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+              AWF job
+            </span>
+            <span className="mt-0.5 block text-xs leading-5 text-slate-500 dark:text-slate-400">
+              Include this job in the AWF Staff pipeline.
+            </span>
+          </span>
+        </label>
+      )}
       {error && (
         <p className="rounded-md border border-danger/20 bg-danger-soft/70 px-3 py-2 text-sm font-medium text-danger dark:bg-red-950/40 dark:text-red-300" role="alert">
           {error}

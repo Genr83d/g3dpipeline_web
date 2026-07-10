@@ -19,6 +19,7 @@ export function formatQuantity(n: number): string {
 export function errorMessage(err: unknown): string {
   if (err instanceof Error) {
     const code = (err as { code?: string }).code ?? '';
+    const normalizedCode = code.replace(/^firestore\//, '');
     const map: Record<string, string> = {
       'auth/invalid-credential': 'Incorrect email or password.',
       'auth/user-not-found': 'No account exists with that email.',
@@ -28,9 +29,24 @@ export function errorMessage(err: unknown): string {
       'auth/invalid-email': 'That email address is not valid.',
       'auth/too-many-requests': 'Too many attempts. Try again in a few minutes.',
       'permission-denied': "You don't have permission to do that.",
+      'failed-precondition': 'This action is temporarily unavailable. Please try again shortly.',
+      unavailable: 'Unable to connect. Check your internet connection and try again.',
+      'deadline-exceeded': 'The request took too long. Please try again.',
     };
     if (map[code]) return map[code];
-    return err.message.replace(/^Firebase:\s*/, '').replace(/\s*\(auth\/.*\)\.?$/, '.');
+    if (map[normalizedCode]) return map[normalizedCode];
+    if (code.startsWith('auth/')) return 'Unable to complete authentication. Please try again.';
+
+    const message = err.message
+      .replace(/^Firebase:\s*/, '')
+      .replace(/\s*\(auth\/.*\)\.?$/, '.');
+    if (
+      /https?:\/\//i.test(message) ||
+      /firebase|firestore|create.*index|exception|stack trace/i.test(message)
+    ) {
+      return 'Unable to complete that action right now. Please try again.';
+    }
+    return message || 'Something went wrong.';
   }
   return 'Something went wrong.';
 }

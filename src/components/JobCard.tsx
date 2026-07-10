@@ -1,15 +1,35 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { isOverdue, type Job } from '../types';
 import { formatDate } from '../lib/format';
+import {
+  canCompleteJob,
+  canDeleteJob,
+  canEditJob,
+  canManageCollaborators,
+  canRestoreJob,
+  canStartJob,
+} from '../lib/jobPermissions';
+import { isManagerOrAdminRole, roleLabel } from '../lib/roles';
 import { StatusPill } from './StatusPill';
-import { IconBox, IconCalendar, IconCheck, IconEdit, IconPlay, IconRestore, IconTrash, IconUser, IconUserPlus } from './icons';
+import { IconBox, IconCalendar, IconCheck, IconChevron, IconEdit, IconPlay, IconRestore, IconTrash, IconUser, IconUserPlus } from './icons';
 import { useAuth } from '../context/AuthProvider';
 import { useAppearance } from '../context/AppearanceProvider';
 
-function collaboratorSummary(job: Job): string {
+function collaboratorSummary(job: Job, currentUid?: string): string {
   if (job.collaborators.length === 0) return '';
-  const firstName = job.collaborators[0].name || 'User';
-  return job.collaborators.length === 1 ? firstName : `${firstName} + ${job.collaborators.length - 1}`;
+  const me = currentUid && job.collaborators.some((collaborator) => collaborator.uid === currentUid);
+  if (me) {
+    return job.collaborators.length === 1 ? 'Me' : `Me + ${job.collaborators.length - 1}`;
+  }
+  const first = job.collaborators[0];
+  const firstName = first.name.trim();
+  if (job.collaborators.length === 1) {
+    return firstName ? `${firstName} · ${roleLabel(first.role)}` : roleLabel(first.role);
+  }
+  return firstName
+    ? `${firstName} + ${job.collaborators.length - 1}`
+    : `${job.collaborators.length} people`;
 }
 
 export function JobCard({
@@ -29,22 +49,21 @@ export function JobCard({
   onRestore?: (job: Job) => void;
   onAssign?: (job: Job) => void;
 }) {
-  const { authUser, isAdmin, isManagerOrAdmin } = useAuth();
+  const { profile } = useAuth();
   const { motionReduced } = useAppearance();
+  const [expanded, setExpanded] = useState(true);
   const overdue = isOverdue(job);
-  const mine =
-    authUser !== null &&
-    authUser !== undefined &&
-    (job.collaboratorUids.includes(authUser.uid) || job.assignedToUid === authUser.uid);
-  const hasCollaborators = job.collaboratorUids.length > 0;
-  const collaboration = collaboratorSummary(job);
+  const hasCollaborators = job.collaboratorUids.length > 0 || job.assignedToUid.length > 0;
+  const collaboration = collaboratorSummary(job, profile?.uid);
   const isCompleted = job.status === 'completed';
-  const collaborationLabel = collaboration ? `${collaboration}${mine ? ' (you)' : ''}` : '';
-  const isManager = isManagerOrAdmin && !isAdmin;
-  // Starting an unassigned job self-assigns it — Managers may only assign Staff,
-  // so they get no Start shortcut until a job is assigned to them.
-  const canStart = hasCollaborators ? mine : !isManager;
-  const canComplete = mine || isManagerOrAdmin;
+  const viewer = profile ? { uid: profile.uid, role: profile.role } : null;
+  const canStart = viewer ? canStartJob(job, viewer) : false;
+  const canComplete = viewer ? canCompleteJob(job, viewer) : false;
+  const canEdit = profile ? canEditJob(job.status, profile.role) : false;
+  const canManageTeam = profile ? canManageCollaborators(job.status, profile.role) : false;
+  const canRestore = profile ? canRestoreJob(profile.role) : false;
+  const canDelete = profile ? canDeleteJob(profile.role) : false;
+  const isManagerOrAdmin = profile ? isManagerOrAdminRole(profile.role) : false;
   const accent =
     overdue
       ? 'before:bg-danger'
@@ -81,10 +100,17 @@ export function JobCard({
             {job.customer}
           </p>
         </div>
-        <StatusPill status={job.status} overdue={overdue} />
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          <StatusPill status={job.status} overdue={overdue} />
+          {isManagerOrAdmin && job.isAwf && (
+            <span className="inline-flex rounded-md border border-secondary/35 bg-secondary-soft px-2 py-0.5 text-[0.68rem] font-bold tracking-wide text-secondary dark:border-emerald-400/30 dark:bg-emerald-950/70 dark:text-emerald-300">
+              AWF
+            </span>
+          )}
+        </div>
       </div>
 
-      <div className="divide-y divide-slate-200/70 border-y border-slate-200/70 text-sm text-slate-700 dark:divide-slate-800/80 dark:border-slate-800/80 dark:text-slate-200">
+      {expanded && <div className="divide-y divide-slate-200/70 border-y border-slate-200/70 text-sm text-slate-700 dark:divide-slate-800/80 dark:border-slate-800/80 dark:text-slate-200">
         {isCompleted && (
           <span className="flex items-center justify-between gap-3 py-2.5">
             <span className="inline-flex min-w-0 items-center gap-2">
@@ -103,7 +129,7 @@ export function JobCard({
               <span className="truncate">Collaborators</span>
             </span>
             <strong className="min-w-0 truncate text-right">
-              {collaborationLabel}
+              {collaboration}
             </strong>
           </span>
         )}
@@ -145,39 +171,49 @@ export function JobCard({
               <span className="truncate">Collaborators</span>
             </span>
             <strong className="min-w-0 truncate text-right">
-              {collaborationLabel || 'Unassigned'}
+              {collaboration || 'Unassigned'}
             </strong>
           </span>
         )}
-      </div>
+      </div>}
 
       <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
+        <button
+          type="button"
+          className="btn-ghost px-2.5"
+          aria-expanded={expanded}
+          aria-label={`${expanded ? 'Collapse' : 'Expand'} ${job.name}`}
+          onClick={() => setExpanded((value) => !value)}
+        >
+          <IconChevron className={`h-4 w-4 transition-transform ${expanded ? '-rotate-90' : 'rotate-90'}`} />
+          {expanded ? 'Hide details' : 'Show details'}
+        </button>
         {job.status === 'pending' && onStart && canStart && (
           <button className="btn-primary flex-1" onClick={() => onStart(job)}>
-            <IconPlay className="h-4 w-4" /> Start
+            <IconPlay className="h-4 w-4" /> Start Job
           </button>
         )}
         {job.status === 'started' && canComplete && onComplete && (
           <button className="btn-secondary flex-1" onClick={() => onComplete(job)}>
-            <IconCheck className="h-4 w-4" /> Complete
+            <IconCheck className="h-4 w-4" /> Complete Job
           </button>
         )}
-        {job.status === 'completed' && isManagerOrAdmin && onRestore && (
+        {job.status === 'completed' && canRestore && onRestore && (
           <button className="btn-secondary flex-1" onClick={() => onRestore(job)}>
             <IconRestore className="h-4 w-4" /> Restore
           </button>
         )}
-        {job.status !== 'completed' && isManagerOrAdmin && onAssign && (
+        {canManageTeam && onAssign && (
           <button className="btn-secondary" onClick={() => onAssign(job)} aria-label={`Edit collaborators for ${job.name}`}>
-            <IconUserPlus className="h-4 w-4" /> {hasCollaborators ? 'Edit' : 'Assign'}
+            <IconUserPlus className="h-4 w-4" /> {hasCollaborators ? 'Edit Team' : 'Add Team'}
           </button>
         )}
-        {isManagerOrAdmin && onEdit && (
+        {canEdit && onEdit && (
           <button className="btn-ghost" onClick={() => onEdit(job)} aria-label={`Edit ${job.name}`}>
             <IconEdit className="h-4 w-4" /> Edit
           </button>
         )}
-        {isAdmin && onDelete && (
+        {canDelete && onDelete && (
           <button className="btn-danger" onClick={() => onDelete(job)} aria-label={`Delete ${job.name}`}>
             <IconTrash className="h-4 w-4" />
           </button>

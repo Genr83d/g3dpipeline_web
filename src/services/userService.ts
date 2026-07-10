@@ -10,16 +10,23 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { toDate, type AppUser, type ProfileFields, type UserRole, type UserStatus } from '../types';
+import {
+  parseUserRole,
+  toDate,
+  type AppUser,
+  type ProfileFields,
+  type UserRole,
+  type UserStatus,
+} from '../types';
 
-function parseUser(uid: string, data: Record<string, unknown>): AppUser {
-  const role = data.role as string;
+export function parseUser(uid: string, data: Record<string, unknown>): AppUser {
+  const role = data.role;
   const status = data.status as string;
   return {
     uid,
     name: (data.name as string) ?? '',
     email: (data.email as string) ?? '',
-    role: (role === 'manager' || role === 'admin' ? role : 'staff') as UserRole,
+    role: parseUserRole(role),
     status: (status === 'active' || status === 'disabled' || status === 'removed'
       ? status
       : 'pending') as UserStatus,
@@ -61,9 +68,9 @@ export function watchAllUsers(
   );
 }
 
-/** Assignment picker: active users of one role. Rules require exactly this
- *  constrained query for Managers (status == active, role == staff); Admins
- *  may pick any role. Sorted by display name in the client — no index needed. */
+/** Assignment picker: active users of one role. Rules require this constrained
+ *  query; caller permissions decide which role values may be selected. Sorted
+ *  by display name in the client — no ordering index needed. */
 export function watchAssignableUsers(
   role: UserRole,
   onUsers: (users: AppUser[]) => void,

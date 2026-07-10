@@ -28,6 +28,18 @@ function AdminOnly({ children }: { children: ReactNode }) {
   return isAdmin ? <>{children}</> : <Navigate to="/" replace />;
 }
 
+function NonAwfOnly({ children }: { children: ReactNode }) {
+  const { profile } = useAuth();
+  return profile?.role === 'awf' ? <Navigate to="/" replace /> : <>{children}</>;
+}
+
+/** A live role change remounts the complete listener/UI subtree. */
+function RoleScopedWorkspace() {
+  const { profile } = useAuth();
+  if (!profile) return null;
+  return <Workspace key={`${profile.uid}:${profile.role}`} />;
+}
+
 function SettingsFallback() {
   return (
     <div className="mx-auto max-w-xl space-y-4">
@@ -96,10 +108,24 @@ export default function App() {
               }
             >
               <Routes>
-                <Route element={<Workspace />}>
+                <Route element={<RoleScopedWorkspace />}>
                   <Route index element={<RouteSuspense><Jobs /></RouteSuspense>} />
-                  <Route path="inventory" element={<RouteSuspense><Inventory /></RouteSuspense>} />
-                  <Route path="maintenance" element={<RouteSuspense><Maintenance /></RouteSuspense>} />
+                  <Route
+                    path="inventory"
+                    element={
+                      <NonAwfOnly>
+                        <RouteSuspense><Inventory /></RouteSuspense>
+                      </NonAwfOnly>
+                    }
+                  />
+                  <Route
+                    path="maintenance"
+                    element={
+                      <NonAwfOnly>
+                        <RouteSuspense><Maintenance /></RouteSuspense>
+                      </NonAwfOnly>
+                    }
+                  />
                   <Route path="summary" element={<RouteSuspense><Summary /></RouteSuspense>} />
                   <Route path="archive" element={<RouteSuspense><Archive /></RouteSuspense>} />
                   <Route

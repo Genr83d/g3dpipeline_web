@@ -4,16 +4,10 @@ import { useAuth } from '../context/AuthProvider';
 import { watchAssignableUsers } from '../services/userService';
 import { Skeleton } from './Skeleton';
 import { IconClose, IconPlus } from './icons';
+import { canClearCollaborators } from '../lib/jobPermissions';
+import { assignableRolesFor, isManagerOrAdminRole, roleLabel } from '../lib/roles';
 import type { AssignTarget } from '../services/jobService';
 import type { AppUser, Job, UserRole } from '../types';
-
-const roleLabels: Record<UserRole, string> = {
-  staff: 'Staff',
-  manager: 'Manager',
-  admin: 'Admin',
-};
-
-const adminRoles: UserRole[] = ['staff', 'manager', 'admin'];
 
 interface SelectedCollaborator extends AssignTarget {
   email?: string;
@@ -26,7 +20,7 @@ function collaboratorName(collaborator: { name?: string; email?: string }): stri
 function saveErrorMessage(err: unknown): string {
   if (err instanceof Error) {
     const code = (err as { code?: string }).code ?? '';
-    if (code === 'permission-denied') return 'Your role cannot change this assignment.';
+    if (code.endsWith('permission-denied')) return 'Your role cannot change this assignment.';
     if (err.message === 'Add at least one collaborator.') return err.message;
   }
   return 'Unable to update this assignment. It may have changed.';
@@ -43,7 +37,7 @@ export function AssignJobModal({
   onClear: (job: Job) => Promise<void>;
   onClose: () => void;
 }) {
-  const { isAdmin } = useAuth();
+  const { profile } = useAuth();
   const [role, setRole] = useState<UserRole>('staff');
   const [users, setUsers] = useState<AppUser[]>([]);
   const [selectedUid, setSelectedUid] = useState('');
@@ -54,9 +48,17 @@ export function AssignJobModal({
   const [saving, setSaving] = useState(false);
   const [clearing, setClearing] = useState(false);
 
-  const allowedRoles = useMemo(() => (isAdmin ? adminRoles : (['staff'] as UserRole[])), [isAdmin]);
-  const canClear =
+  const allowedRoles = useMemo(
+    () => (profile ? assignableRolesFor(profile.role) : []),
+    [profile],
+  );
+  const canManage = profile ? isManagerOrAdminRole(profile.role) : false;
+  const hasExistingCollaborators =
     job !== null && (job.collaborators.length > 0 || job.assignedToUid.trim().length > 0);
+  const canClear =
+    job && profile
+      ? canClearCollaborators(job.status, profile.role, hasExistingCollaborators)
+      : false;
 
   useEffect(() => {
     if (!job) return;
@@ -70,23 +72,38 @@ export function AssignJobModal({
   }, [job]);
 
   useEffect(() => {
-    if (!job) return;
+    if (job && !canManage) onClose();
+  }, [canManage, job, onClose]);
+
+  useEffect(() => {
+    if (!allowedRoles.includes(role) && allowedRoles[0]) setRole(allowedRoles[0]);
+  }, [allowedRoles, role]);
+
+  useEffect(() => {
+    if (!job || !canManage || !allowedRoles.includes(role)) return;
+    let active = true;
     setUsers([]);
     setSelectedUid('');
     setLoading(true);
     setLoadError(null);
-    return watchAssignableUsers(
+    const unsubscribe = watchAssignableUsers(
       role,
       (u) => {
+        if (!active) return;
         setUsers(u);
         setLoading(false);
       },
       () => {
+        if (!active) return;
         setLoadError('Unable to load eligible users. Check your permissions and try again.');
         setLoading(false);
       },
     );
-  }, [job, role]);
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [allowedRoles, canManage, job, role]);
 
   const availableUsers = users.filter((user) => !selected.some((c) => c.uid === user.uid));
 
@@ -146,7 +163,7 @@ export function AssignJobModal({
   return (
     <Modal
       open={job !== null}
-      title={job?.collaborators.length ? 'Edit Collaborators' : 'Add Collaborators'}
+      title={hasExistingCollaborators ? 'EDIT COLLABORATORS' : 'ADD COLLABORATORS'}
       onClose={onClose}
     >
       {job && (
@@ -164,12 +181,12 @@ export function AssignJobModal({
               id="assign-role"
               className="field"
               value={role}
-              disabled={!isAdmin || saving || clearing}
+              disabled={allowedRoles.length <= 1 || saving || clearing}
               onChange={(e) => setRole(e.target.value as UserRole)}
             >
               {allowedRoles.map((r) => (
                 <option key={r} value={r}>
-                  {roleLabels[r]}
+                  {roleLabel(r)}
                 </option>
               ))}
             </select>
@@ -177,7 +194,7 @@ export function AssignJobModal({
 
           <div className="space-y-2">
             <label htmlFor="assign-user" className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Active Users
+              Active User
             </label>
             {loadError ? (
               <p className="rounded-md border border-danger/20 bg-danger-soft/70 px-3 py-2 text-sm font-medium text-danger dark:bg-red-950/40 dark:text-red-300" role="alert">
@@ -190,7 +207,7 @@ export function AssignJobModal({
               </div>
             ) : users.length === 0 ? (
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                No active {roleLabels[role].toLowerCase()} users to assign.
+                No active {roleLabel(role).toLowerCase()} users to assign.
               </p>
             ) : (
               <div className="flex gap-2">
@@ -216,7 +233,7 @@ export function AssignJobModal({
                   disabled={!selectedUid || saving || clearing}
                   onClick={addSelected}
                 >
-                  <IconPlus className="h-4 w-4" /> Add
+                  <IconPlus className="h-4 w-4" /> Add Collaborator
                 </button>
               </div>
             )}
@@ -234,7 +251,7 @@ export function AssignJobModal({
                     className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-primary/20 bg-primary-soft/80 px-3 py-1.5 text-sm font-semibold text-primary dark:border-indigo-300/20 dark:bg-indigo-950/80 dark:text-indigo-200"
                   >
                     <span className="truncate">
-                      {collaboratorName(collaborator)} ({roleLabels[collaborator.role]})
+                      {collaboratorName(collaborator)} ({roleLabel(collaborator.role)})
                     </span>
                     <button
                       type="button"
