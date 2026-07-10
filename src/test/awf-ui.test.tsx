@@ -307,8 +307,9 @@ describe('AWF account menu', () => {
 });
 
 describe('AWF workspace navigation', () => {
-  it('contains only Jobs, Summary, and Archive', () => {
+  it('contains and navigates between only Jobs, Summary, and Archive', async () => {
     setRole('awf');
+    const user = userEvent.setup();
     render(
       <MemoryRouter initialEntries={['/']}>
         <Routes>
@@ -329,6 +330,12 @@ describe('AWF workspace navigation', () => {
     ]);
     expect(within(navigation).queryByText('Inventory')).not.toBeInTheDocument();
     expect(within(navigation).queryByText('Maintenance')).not.toBeInTheDocument();
+
+    await user.click(within(navigation).getByRole('link', { name: 'Summary' }));
+    expect(await screen.findByText('Summary page')).toBeInTheDocument();
+
+    await user.click(within(navigation).getByRole('link', { name: 'Archive' }));
+    expect(await screen.findByText('Archive page')).toBeInTheDocument();
   });
 });
 

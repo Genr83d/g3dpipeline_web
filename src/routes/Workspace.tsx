@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link, NavLink, Outlet, useNavigate, useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useJobs, type JobsState } from '../hooks/useJobs';
@@ -40,11 +40,15 @@ export function Workspace() {
   const inventoryState = useInventory(nonAwfEnabled, roleKey);
   const machinesState = useMachines(nonAwfEnabled, roleKey);
   const visibleTabs = isAwf ? awfTabs : tabs;
+  const redirectedAwfEntry = useRef(false);
 
   // A keyed Workspace remounts for every live role change. On an AWF mount,
   // select Jobs once; subsequent AWF navigation to Summary/Archive is allowed.
   useEffect(() => {
-    if (isActive && isAwf) navigate('/', { replace: true });
+    if (!redirectedAwfEntry.current && isActive && isAwf) {
+      redirectedAwfEntry.current = true;
+      navigate('/', { replace: true });
+    }
   }, [isActive, isAwf, navigate, roleKey]);
 
   const outletState: WorkspaceOutletState = {
