@@ -11,8 +11,9 @@ import {
   canStartJob,
 } from '../lib/jobPermissions';
 import { isManagerOrAdminRole, roleLabel } from '../lib/roles';
+import { jobCategoryLabel } from '../lib/jobCategories';
 import { StatusPill } from './StatusPill';
-import { IconBox, IconCalendar, IconCheck, IconChevron, IconEdit, IconPlay, IconRestore, IconTrash, IconUser, IconUserPlus } from './icons';
+import { IconBox, IconCalendar, IconCheck, IconChevron, IconEdit, IconPlay, IconRestore, IconTag, IconTrash, IconUser, IconUserPlus } from './icons';
 import { useAuth } from '../context/AuthProvider';
 import { useAppearance } from '../context/AppearanceProvider';
 
@@ -102,6 +103,10 @@ export function JobCard({
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1.5">
           <StatusPill status={job.status} overdue={overdue} />
+          <span className="inline-flex items-center gap-1 rounded-md border border-slate-300/70 bg-white/60 px-2 py-0.5 text-[0.68rem] font-bold text-slate-600 dark:border-slate-700/80 dark:bg-slate-900/70 dark:text-slate-300">
+            <IconTag className="h-3 w-3" />
+            {jobCategoryLabel(job.category)}
+          </span>
           {isManagerOrAdmin && job.isAwf && (
             <span className="inline-flex rounded-md border border-secondary/35 bg-secondary-soft px-2 py-0.5 text-[0.68rem] font-bold tracking-wide text-secondary dark:border-emerald-400/30 dark:bg-emerald-950/70 dark:text-emerald-300">
               AWF

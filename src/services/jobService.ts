@@ -25,6 +25,7 @@ import {
   collaboratorsRequireAwf,
   resolveNewJobIsAwf,
 } from '../lib/jobPermissions';
+import { parseJobCategory } from '../lib/jobCategories';
 import { inventoryCol } from './inventoryService';
 import {
   parseAssignedRole,
@@ -32,6 +33,7 @@ import {
   parseUserRole,
   toDate,
   type Job,
+  type JobCategory,
   type JobCollaborator,
   type UserRole,
 } from '../types';
@@ -129,6 +131,7 @@ export function parseJob(id: string, data: Record<string, unknown>): Job {
     quantity: typeof data.quantity === 'number' ? data.quantity : 0,
     dueDate: toDate(data.dueDate) ?? new Date(),
     status: parseJobStatus(data.status),
+    category: parseJobCategory(data.category),
     isAwf: data.isAwf === true,
     createdByUid: (data.createdByUid as string) ?? '',
     createdByName: (data.createdByName as string) ?? '',
@@ -175,6 +178,7 @@ export interface JobInput {
   customer: string;
   quantity: number;
   dueDate: Date;
+  category: JobCategory;
   isAwf?: boolean;
 }
 
@@ -192,6 +196,7 @@ export async function addJob(
     quantity: input.quantity,
     dueDate: Timestamp.fromDate(input.dueDate),
     status: 'pending',
+    category: input.category,
     isAwf: resolveNewJobIsAwf(self.role, input.isAwf),
     createdByUid: actor.uid,
     createdByName: byName,
@@ -446,6 +451,7 @@ export interface JobEdit {
   customer?: string;
   quantity?: number;
   dueDate?: Date;
+  category?: JobCategory;
   isAwf?: boolean;
 }
 
@@ -469,6 +475,7 @@ export async function editJob(
   if (edit.customer !== undefined) patch.customer = edit.customer;
   if (edit.quantity !== undefined) patch.quantity = edit.quantity;
   if (edit.dueDate !== undefined) patch.dueDate = Timestamp.fromDate(edit.dueDate);
+  if (edit.category !== undefined) patch.category = edit.category;
   if (edit.isAwf !== undefined) patch.isAwf = edit.isAwf;
   await updateDoc(doc(db, 'jobs', jobId), patch);
 }

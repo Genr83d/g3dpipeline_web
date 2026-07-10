@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { toDateInputValue, fromDateInputValue } from '../lib/format';
+import { DEFAULT_JOB_CATEGORY, JOB_CATEGORY_OPTIONS } from '../lib/jobCategories';
 import { isManagerOrAdminRole } from '../lib/roles';
-import type { Job } from '../types';
+import type { Job, JobCategory } from '../types';
 import { useAuth } from '../context/AuthProvider';
 
 export interface JobFormValues {
@@ -9,6 +10,7 @@ export interface JobFormValues {
   customer: string;
   quantity: number;
   dueDate: Date;
+  category: JobCategory;
   isAwf: boolean;
 }
 
@@ -29,6 +31,9 @@ export function JobForm({
   const [customer, setCustomer] = useState(initial?.customer ?? '');
   const [quantity, setQuantity] = useState(initial ? String(initial.quantity) : '');
   const [dueDate, setDueDate] = useState(initial ? toDateInputValue(initial.dueDate) : '');
+  const [category, setCategory] = useState<JobCategory>(
+    initial?.category ?? DEFAULT_JOB_CATEGORY,
+  );
   const [isAwf, setIsAwf] = useState(initial?.isAwf ?? profile?.role === 'awf');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -55,6 +60,7 @@ export function JobForm({
         customer: customer.trim(),
         quantity: qty,
         dueDate: parsedDueDate,
+        category,
         isAwf: profile?.role === 'awf' ? true : isAwf,
       });
     } finally {
@@ -88,6 +94,24 @@ export function JobForm({
           onChange={(e) => setCustomer(e.target.value)}
           placeholder="Who is this for?"
         />
+      </div>
+      <div>
+        <label htmlFor="job-category" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+          Job Type
+        </label>
+        <select
+          id="job-category"
+          className="field"
+          value={category}
+          required
+          onChange={(e) => setCategory(e.target.value as JobCategory)}
+        >
+          {JOB_CATEGORY_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>

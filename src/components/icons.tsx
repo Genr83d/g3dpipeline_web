@@ -30,6 +30,10 @@ export const IconRestore = (p: IconProps = {}) =>
   base(<path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5" />, p);
 export const IconBox = (p: IconProps = {}) =>
   base(<path d="M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8" />, p);
+export const IconTag = (p: IconProps = {}) =>
+  base(<path d="M20 13l-7 7-10-10V3h7l10 10zM7.5 7.5h.01" />, p);
+export const IconFilter = (p: IconProps = {}) =>
+  base(<path d="M4 5h16l-6 7v5l-4 2v-7z" />, p);
 export const IconCalendar = (p: IconProps = {}) =>
   base(<path d="M8 2v4M16 2v4M3 9h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />, p);
 export const IconUser = (p: IconProps = {}) =>
