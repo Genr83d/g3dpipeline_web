@@ -11,8 +11,14 @@ import { EmptyState } from '../components/EmptyState';
 import { PageHeader } from '../components/PageHeader';
 import { JobCardSkeleton, Skeleton } from '../components/Skeleton';
 import { Spinner } from '../components/Spinner';
-import { IconBox, IconCloudOff, IconPlus } from '../components/icons';
+import { IconBox, IconCloudOff, IconFilter, IconPlus } from '../components/icons';
 import { errorMessage } from '../lib/format';
+import {
+  filterJobsByCategory,
+  JOB_CATEGORY_OPTIONS,
+  jobCategoryLabel,
+  type JobCategoryFilter,
+} from '../lib/jobCategories';
 import { isOverdue, type Job } from '../types';
 import type { AssignTarget } from '../services/jobService';
 import * as jobService from '../services/jobService';
@@ -31,14 +37,18 @@ export default function Jobs() {
   const { actor, assigner, isAdmin, isManagerOrAdmin } = useAuth();
   const { toast } = useToast();
   const [sort, setSort] = useState<SortKey>('due-asc');
+  const [categoryFilter, setCategoryFilter] = useState<JobCategoryFilter>('all');
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<Job | null>(null);
   const [deleting, setDeleting] = useState<Job | null>(null);
   const [assigning, setAssigning] = useState<Job | null>(null);
 
+  const activeJobs = useMemo(
+    () => jobs.filter((job) => job.status !== 'completed'),
+    [jobs],
+  );
   const pipeline = useMemo(() => {
-    const active = jobs.filter((j) => j.status !== 'completed');
-    const sorted = [...active];
+    const sorted = filterJobsByCategory(activeJobs, categoryFilter);
     switch (sort) {
       case 'due-asc': sorted.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime()); break;
       case 'due-desc': sorted.sort((a, b) => b.dueDate.getTime() - a.dueDate.getTime()); break;
@@ -46,7 +56,7 @@ export default function Jobs() {
       case 'qty-desc': sorted.sort((a, b) => b.quantity - a.quantity); break;
     }
     return sorted;
-  }, [jobs, sort]);
+  }, [activeJobs, categoryFilter, sort]);
   const overview = useMemo(
     () => ({
       pending: pipeline.filter((job) => job.status === 'pending').length,
@@ -109,6 +119,32 @@ export default function Jobs() {
         subtitle={loading ? 'Loading shared jobs...' : `${pipeline.length} active job${pipeline.length === 1 ? '' : 's'} in the pipeline`}
         actions={
           <>
+          <div className="relative w-full sm:w-auto">
+            <IconFilter
+              className={`pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transition-colors ${
+                categoryFilter === 'all'
+                  ? 'text-slate-400'
+                  : 'text-primary dark:text-indigo-300'
+              }`}
+            />
+            <label htmlFor="job-category-filter" className="sr-only">Filter by job type</label>
+            <select
+              id="job-category-filter"
+              aria-label="Filter by job type"
+              className={`field w-full py-2 pl-9 sm:w-auto ${
+                categoryFilter === 'all'
+                  ? ''
+                  : 'border-primary/45 text-primary dark:border-indigo-400/45 dark:text-indigo-200'
+              }`}
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value as JobCategoryFilter)}
+            >
+              <option value="all">All Types</option>
+              {JOB_CATEGORY_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
           <label htmlFor="sort" className="sr-only">Sort jobs</label>
           <select id="sort" className="field w-full py-2 sm:w-auto" value={sort}
             onChange={(e) => setSort(e.target.value as SortKey)}>
@@ -155,7 +191,7 @@ export default function Jobs() {
             </button>
           }
         />
-      ) : pipeline.length === 0 ? (
+      ) : activeJobs.length === 0 ? (
         <EmptyState
           icon={<IconBox className="h-7 w-7" />}
           title="No Jobs In The Pipeline"
@@ -163,6 +199,17 @@ export default function Jobs() {
           action={
             <button className="btn-primary" onClick={() => setAdding(true)}>
               <IconPlus className="h-4 w-4" /> Add the first job
+            </button>
+          }
+        />
+      ) : pipeline.length === 0 && categoryFilter !== 'all' ? (
+        <EmptyState
+          icon={<IconFilter className="h-7 w-7" />}
+          title={`No ${jobCategoryLabel(categoryFilter)} Jobs`}
+          subtitle="Try another job type or show all job types."
+          action={
+            <button className="btn-secondary" onClick={() => setCategoryFilter('all')}>
+              Show All Types
             </button>
           }
         />

@@ -30,6 +30,16 @@ export const IconRestore = (p: IconProps = {}) =>
   base(<path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5" />, p);
 export const IconBox = (p: IconProps = {}) =>
   base(<path d="M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8" />, p);
+export const IconTag = (p: IconProps = {}) =>
+  base(<path d="M20 13l-7 7-10-10V3h7l10 10zM7.5 7.5h.01" />, p);
+export const IconGear = (p: IconProps = {}) =>
+  base(<><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-4v-.09A1.7 1.7 0 0 0 8.96 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3v-4h.09A1.7 1.7 0 0 0 4.6 8.96a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1.03-1.56V3h4v.09A1.7 1.7 0 0 0 15.04 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.26.62.87 1.03 1.56 1.03H21v4h-.09A1.7 1.7 0 0 0 19.4 15z" /></>, p);
+export const IconPalette = (p: IconProps = {}) =>
+  base(<><path d="M12 3a9 9 0 1 0 0 18h1.5a1.5 1.5 0 0 0 0-3H12a2 2 0 0 1 0-4h2a7 7 0 0 0-2-11z" /><path d="M7.5 10h.01M9.5 6.5h.01M14 6.5h.01M17 9.5h.01" /></>, p);
+export const IconCode = (p: IconProps = {}) =>
+  base(<path d="M8 9l-4 3 4 3M16 9l4 3-4 3M14 5l-4 14" />, p);
+export const IconFilter = (p: IconProps = {}) =>
+  base(<path d="M4 5h16l-6 7v5l-4 2v-7z" />, p);
 export const IconCalendar = (p: IconProps = {}) =>
   base(<path d="M8 2v4M16 2v4M3 9h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />, p);
 export const IconUser = (p: IconProps = {}) =>

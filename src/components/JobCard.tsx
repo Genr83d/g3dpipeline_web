@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { isOverdue, type Job } from '../types';
+import { isOverdue, type Job, type JobCategory } from '../types';
 import { formatDate } from '../lib/format';
 import {
   canCompleteJob,
@@ -11,8 +11,9 @@ import {
   canStartJob,
 } from '../lib/jobPermissions';
 import { isManagerOrAdminRole, roleLabel } from '../lib/roles';
+import { jobCategoryLabel } from '../lib/jobCategories';
 import { StatusPill } from './StatusPill';
-import { IconBox, IconCalendar, IconCheck, IconChevron, IconEdit, IconPlay, IconRestore, IconTrash, IconUser, IconUserPlus } from './icons';
+import { IconBox, IconCalendar, IconCheck, IconChevron, IconCode, IconEdit, IconGear, IconPalette, IconPlay, IconRestore, IconTag, IconTrash, IconUser, IconUserPlus, IconWrench } from './icons';
 import { useAuth } from '../context/AuthProvider';
 import { useAppearance } from '../context/AppearanceProvider';
 
@@ -30,6 +31,35 @@ function collaboratorSummary(job: Job, currentUid?: string): string {
   return firstName
     ? `${firstName} + ${job.collaborators.length - 1}`
     : `${job.collaborators.length} people`;
+}
+
+const categoryBadgeStyles: Readonly<Record<JobCategory, string>> = {
+  manufacturing:
+    'border-primary/35 bg-primary-soft text-primary dark:border-indigo-400/35 dark:bg-indigo-950/75 dark:text-indigo-300',
+  repair:
+    'border-amber-400/45 bg-amber-100 text-amber-800 dark:border-amber-400/40 dark:bg-amber-950/75 dark:text-amber-300',
+  design:
+    'border-violet-400/40 bg-violet-100 text-violet-700 dark:border-violet-400/40 dark:bg-violet-950/75 dark:text-violet-300',
+  softwareDevelopment:
+    'border-cyan-400/40 bg-cyan-100 text-cyan-700 dark:border-cyan-400/40 dark:bg-cyan-950/75 dark:text-cyan-300',
+  miscellaneous:
+    'border-slate-300/70 bg-slate-100 text-slate-600 dark:border-slate-700/80 dark:bg-slate-900/75 dark:text-slate-300',
+};
+
+function JobCategoryIcon({ category }: { category: JobCategory }) {
+  const className = 'h-3.5 w-3.5 shrink-0';
+  switch (category) {
+    case 'manufacturing':
+      return <span data-category-symbol="gear"><IconGear className={className} /></span>;
+    case 'repair':
+      return <span data-category-symbol="wrench"><IconWrench className={className} /></span>;
+    case 'design':
+      return <span data-category-symbol="palette"><IconPalette className={className} /></span>;
+    case 'softwareDevelopment':
+      return <span data-category-symbol="code"><IconCode className={className} /></span>;
+    case 'miscellaneous':
+      return <span data-category-symbol="tag"><IconTag className={className} /></span>;
+  }
 }
 
 export function JobCard({
@@ -102,6 +132,14 @@ export function JobCard({
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1.5">
           <StatusPill status={job.status} overdue={overdue} />
+          <span
+            aria-label={`Job type: ${jobCategoryLabel(job.category)}`}
+            data-job-category={job.category}
+            className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[0.68rem] font-bold ${categoryBadgeStyles[job.category]}`}
+          >
+            <JobCategoryIcon category={job.category} />
+            {jobCategoryLabel(job.category)}
+          </span>
           {isManagerOrAdmin && job.isAwf && (
             <span className="inline-flex rounded-md border border-secondary/35 bg-secondary-soft px-2 py-0.5 text-[0.68rem] font-bold tracking-wide text-secondary dark:border-emerald-400/30 dark:bg-emerald-950/70 dark:text-emerald-300">
               AWF

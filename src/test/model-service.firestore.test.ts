@@ -80,11 +80,14 @@ vi.mock('../services/inventoryService', () => ({
 import {
   addJob,
   assignJob,
+  completeJob,
   dedupeCollaborators,
   editJob,
   jobsQueryForRole,
   parseJob,
+  restoreJob,
   startJob,
+  unassignJob,
   type Actor,
   type Assigner,
   type AssignTarget,
@@ -104,6 +107,7 @@ const input: JobInput = {
   customer: 'Receiver',
   quantity: 12,
   dueDate: new Date('2030-01-02T23:59:59.000Z'),
+  category: 'manufacturing',
 };
 
 function self(role: UserRole): Assigner {
@@ -170,6 +174,10 @@ describe('user role queries and legacy defaults', () => {
 });
 
 describe('legacy job parsing and collaborator normalization', () => {
+  it('treats jobs without a category as Miscellaneous', () => {
+    expect(parseJob('legacy-job', {}).category).toBe('miscellaneous');
+  });
+
   it('falls back to the legacy primary AWF assignee when collaborators are absent', () => {
     const dueDate = new Date('2030-01-02T23:59:59.000Z');
     const job = parseJob('legacy-job', {
@@ -201,6 +209,68 @@ describe('legacy job parsing and collaborator normalization', () => {
       { uid: 'user-1', name: 'First Person', role: 'staff' },
       { uid: 'user-2', name: 'User', role: 'awf' },
     ]);
+  });
+});
+
+describe('job category persistence', () => {
+  it('stores the selected category when creating a job', async () => {
+    await addJob(actor, self('staff'), { ...input, category: 'softwareDevelopment' });
+    expect(lastWritePayload(firestore.addDoc)).toMatchObject({
+      category: 'softwareDevelopment',
+    });
+  });
+
+  it('stores a changed category with the rest of a job edit', async () => {
+    await editJob(actor, self('manager'), 'job-1', {
+      name: 'Updated job',
+      category: 'repair',
+    });
+    expect(lastWritePayload(firestore.updateDoc)).toMatchObject({
+      name: 'Updated job',
+      category: 'repair',
+    });
+  });
+
+  it('does not replace category during assignment or collaborator clearing', async () => {
+    await assignJob(actor, self('manager'), 'job-1', [
+      { uid: 'staff-1', name: 'Staff One', role: 'staff' },
+    ]);
+    expect(lastWritePayload(firestore.updateDoc)).not.toHaveProperty('category');
+
+    await unassignJob(actor, 'job-1');
+    expect(lastWritePayload(firestore.updateDoc)).not.toHaveProperty('category');
+  });
+
+  it('does not replace category while starting or completing a job', async () => {
+    firestore.transactionGet.mockResolvedValueOnce({
+      exists: () => true,
+      data: () => ({
+        status: 'pending',
+        category: 'design',
+        collaborators: [],
+        collaboratorUids: [],
+      }),
+    });
+    await startJob(actor, self('staff'), 'job-1');
+    expect(firestore.transactionUpdate.mock.calls.at(-1)?.[1]).not.toHaveProperty('category');
+
+    firestore.transactionGet.mockResolvedValueOnce({
+      exists: () => true,
+      data: () => ({
+        status: 'started',
+        name: 'Design review',
+        category: 'design',
+        collaborators: [{ uid: actor.uid, name: 'Avery Example', role: 'staff' }],
+        collaboratorUids: [actor.uid],
+      }),
+    });
+    await completeJob(actor, self('staff'), 'job-1');
+    expect(firestore.transactionUpdate.mock.calls.at(-1)?.[1]).not.toHaveProperty('category');
+  });
+
+  it('does not replace category while restoring a job', async () => {
+    await restoreJob(actor, 'job-1');
+    expect(lastWritePayload(firestore.updateDoc)).not.toHaveProperty('category');
   });
 });
 

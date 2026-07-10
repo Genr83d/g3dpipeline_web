@@ -1,6 +1,12 @@
 import type { Timestamp } from 'firebase/firestore';
 
 export type JobStatus = 'pending' | 'started' | 'completed';
+export type JobCategory =
+  | 'manufacturing'
+  | 'repair'
+  | 'design'
+  | 'softwareDevelopment'
+  | 'miscellaneous';
 export type UserRole = 'staff' | 'awf' | 'manager' | 'admin';
 export type UserStatus = 'pending' | 'active' | 'disabled' | 'removed';
 
@@ -17,6 +23,7 @@ export interface Job {
   quantity: number;
   dueDate: Date;
   status: JobStatus;
+  category: JobCategory;
   isAwf: boolean;
   createdByUid: string;
   createdByName: string;

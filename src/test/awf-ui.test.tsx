@@ -1,4 +1,4 @@
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { Link, MemoryRouter, Route, Routes } from 'react-router-dom';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -9,7 +9,10 @@ import { AccountMenu } from '../components/AccountMenu';
 import { AssignJobModal } from '../components/AssignJobModal';
 import { JobCard } from '../components/JobCard';
 import { JobForm } from '../components/JobForm';
+import { JOB_CATEGORY_OPTIONS } from '../lib/jobCategories';
+import Archive from '../pages/Archive';
 import Jobs from '../pages/Jobs';
+import Summary from '../pages/Summary';
 import { Workspace } from '../routes/Workspace';
 
 const testState = vi.hoisted(() => ({
@@ -39,7 +42,16 @@ vi.mock('../context/AppearanceProvider', () => ({
 
 vi.mock('../routes/Workspace', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../routes/Workspace')>();
-  return { ...actual, useJobsOutlet: () => testState.jobs };
+  return {
+    ...actual,
+    useJobsOutlet: () => testState.jobs,
+    useInventoryOutlet: () => ({
+      materials: [],
+      loading: false,
+      error: null,
+      retry: vi.fn(),
+    }),
+  };
 });
 
 vi.mock('../hooks/useJobs', () => ({
@@ -116,6 +128,7 @@ function job(overrides: Partial<Job> = {}): Job {
     quantity: 10,
     dueDate: new Date('2099-06-15T23:59:59'),
     status: 'pending',
+    category: 'manufacturing',
     isAwf: false,
     createdByUid: 'creator',
     createdByName: 'Creator',
@@ -203,9 +216,61 @@ describe('AWF job form', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Deadline cannot be in the past.');
     expect(onSubmit).not.toHaveBeenCalled();
   });
+
+  it('defaults new jobs to Manufacturing and submits that category', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    render(<JobForm submitLabel="Add job" onSubmit={onSubmit} onCancel={vi.fn()} />);
+
+    expect(screen.getByLabelText('Job Type')).toHaveValue('manufacturing');
+    await user.type(screen.getByLabelText('Job Name'), 'Production run');
+    await user.type(screen.getByLabelText('Name of Receiver'), 'Customer');
+    await user.type(screen.getByLabelText('Order Quantity'), '5');
+    fireEvent.change(screen.getByLabelText('Deadline'), { target: { value: '2099-01-01' } });
+    await user.click(screen.getByRole('button', { name: 'Add job' }));
+
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      category: 'manufacturing',
+    }));
+  });
+
+  it('loads and submits a changed category while editing', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    render(
+      <JobForm
+        initial={job({ category: 'design' })}
+        submitLabel="Save changes"
+        onSubmit={onSubmit}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText('Job Type')).toHaveValue('design');
+    await user.selectOptions(screen.getByLabelText('Job Type'), 'repair');
+    await user.click(screen.getByRole('button', { name: 'Save changes' }));
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ category: 'repair' }));
+  });
 });
 
 describe('AWF job card permissions', () => {
+  it.each([
+    { value: 'manufacturing', label: 'Manufacturing', symbol: 'gear', color: 'text-primary' },
+    { value: 'repair', label: 'Repair', symbol: 'wrench', color: 'text-amber-800' },
+    { value: 'design', label: 'Design', symbol: 'palette', color: 'text-violet-700' },
+    { value: 'softwareDevelopment', label: 'Software development', symbol: 'code', color: 'text-cyan-700' },
+    { value: 'miscellaneous', label: 'Miscellaneous', symbol: 'tag', color: 'text-slate-600' },
+  ] as const)(
+    'shows the color-coded $label badge with its $symbol symbol',
+    ({ value, label, symbol, color }) => {
+      render(<JobCard job={job({ category: value })} />);
+      const badge = screen.getByLabelText(`Job type: ${label}`);
+      expect(badge).toHaveAttribute('data-job-category', value);
+      expect(badge).toHaveClass(color);
+      expect(badge.querySelector(`[data-category-symbol="${symbol}"]`)).toBeInTheDocument();
+    },
+  );
+
   it('shows an AWF badge to managers but not AWF Staff', () => {
     setRole('manager');
     const awfJob = job({ isAwf: true });
@@ -364,6 +429,131 @@ describe('shared Jobs states', () => {
 
     expect(screen.getByText('No Jobs In The Pipeline')).toBeInTheDocument();
     expect(screen.getByText('Create a new job to begin tracking production.')).toBeInTheDocument();
+  });
+});
+
+describe('Jobs category filter', () => {
+  function categorizedJobs(): Job[] {
+    return JOB_CATEGORY_OPTIONS.map(({ value, label }, index) =>
+      job({
+        id: `job-${value}`,
+        name: `${label} job`,
+        category: value,
+        quantity: index + 1,
+      }),
+    );
+  }
+
+  it('shows every active job by default and excludes completed jobs', () => {
+    testState.jobs = jobsState({
+      jobs: [
+        ...categorizedJobs(),
+        job({ id: 'completed-job', name: 'Completed job', status: 'completed' }),
+      ],
+    });
+    render(<Jobs />);
+
+    expect(screen.getByLabelText('Filter by job type')).toHaveValue('all');
+    for (const { label } of JOB_CATEGORY_OPTIONS) {
+      expect(screen.getByRole('heading', { name: `${label} job` })).toBeInTheDocument();
+    }
+    expect(screen.queryByRole('heading', { name: 'Completed job' })).not.toBeInTheDocument();
+  });
+
+  it.each(JOB_CATEGORY_OPTIONS)(
+    'filters active jobs to $label',
+    async ({ value, label }) => {
+      const user = userEvent.setup();
+      testState.jobs = jobsState({ jobs: categorizedJobs() });
+      render(<Jobs />);
+
+      await user.selectOptions(screen.getByLabelText('Filter by job type'), value);
+      await waitFor(() => {
+        expect(screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent)).toEqual([
+          `${label} job`,
+        ]);
+      });
+    },
+  );
+
+  it('continues sorting within the filtered results', async () => {
+    const user = userEvent.setup();
+    testState.jobs = jobsState({
+      jobs: [
+        job({ id: 'repair-small', name: 'Small repair', category: 'repair', quantity: 2 }),
+        job({ id: 'design-large', name: 'Large design', category: 'design', quantity: 50 }),
+        job({ id: 'repair-large', name: 'Large repair', category: 'repair', quantity: 20 }),
+      ],
+    });
+    render(<Jobs />);
+
+    await user.selectOptions(screen.getByLabelText('Filter by job type'), 'repair');
+    await user.selectOptions(screen.getByLabelText('Sort jobs'), 'qty-desc');
+    await waitFor(() => {
+      expect(screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent)).toEqual([
+        'Large repair',
+        'Small repair',
+      ]);
+    });
+  });
+
+  it('shows the filtered empty state and clears it with Show All Types', async () => {
+    const user = userEvent.setup();
+    testState.jobs = jobsState({
+      jobs: [job({ id: 'manufacturing-job', name: 'Manufacturing job' })],
+    });
+    render(<Jobs />);
+
+    await user.selectOptions(screen.getByLabelText('Filter by job type'), 'repair');
+    expect(screen.getByText('No Repair Jobs')).toBeInTheDocument();
+    expect(screen.getByText('Try another job type or show all job types.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Show All Types' }));
+    expect(screen.getByLabelText('Filter by job type')).toHaveValue('all');
+    expect(screen.getByRole('heading', { name: 'Manufacturing job' })).toBeInTheDocument();
+  });
+
+  it('does not apply the Jobs category filter to Summary or Archive', async () => {
+    const user = userEvent.setup();
+    testState.jobs = jobsState({
+      jobs: [
+        job({ id: 'manufacturing', name: 'Manufacturing job', category: 'manufacturing' }),
+        job({ id: 'repair', name: 'Repair job', category: 'repair' }),
+        job({
+          id: 'archived-design',
+          name: 'Archived design',
+          category: 'design',
+          status: 'completed',
+          completedAt: new Date('2099-01-01'),
+        }),
+      ],
+    });
+
+    render(
+      <MemoryRouter>
+        <nav>
+          <Link to="/">Jobs</Link>
+          <Link to="/summary">Summary</Link>
+          <Link to="/archive">Archive</Link>
+        </nav>
+        <Routes>
+          <Route index element={<Jobs />} />
+          <Route path="summary" element={<Summary />} />
+          <Route path="archive" element={<Archive />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await user.selectOptions(screen.getByLabelText('Filter by job type'), 'repair');
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: 'Manufacturing job' })).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('link', { name: 'Summary' }));
+    expect(await screen.findByText('3 total jobs')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: 'Archive' }));
+    expect(await screen.findByRole('heading', { name: 'Archived design' })).toBeInTheDocument();
   });
 });
 
