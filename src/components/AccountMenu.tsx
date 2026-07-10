@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../context/AuthProvider';
 import { signOut } from '../services/authService';
 import { useAppearance } from '../context/AppearanceProvider';
+import { roleLabel } from '../lib/roles';
 import {
   IconUser, IconShield, IconMoon, IconUsers, IconHelp, IconInfo, IconLogout, IconMail,
 } from './icons';
@@ -13,6 +14,11 @@ export function AccountMenu() {
   const { motionReduced } = useAppearance();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const isAwf = profile?.role === 'awf';
+
+  useEffect(() => {
+    setOpen(false);
+  }, [profile?.role, profile?.uid]);
 
   useEffect(() => {
     if (!open) return;
@@ -47,9 +53,13 @@ export function AccountMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Account menu"
-        className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-primary/20 bg-primary text-sm font-bold text-white shadow-[0_10px_24px_rgba(36,84,216,0.22)] transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(36,84,216,0.28)] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95 dark:focus-visible:ring-offset-slate-950"
+        className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border text-sm font-bold text-white transition-[transform,box-shadow] hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95 dark:focus-visible:ring-offset-slate-950 ${
+          isAwf
+            ? 'border-secondary/25 bg-secondary shadow-[0_10px_24px_rgba(16,153,109,0.22)] hover:shadow-[0_14px_28px_rgba(16,153,109,0.28)] focus-visible:ring-secondary'
+            : 'border-primary/20 bg-primary shadow-[0_10px_24px_rgba(36,84,216,0.22)] hover:shadow-[0_14px_28px_rgba(36,84,216,0.28)] focus-visible:ring-primary'
+        }`}
       >
-        {firstName.charAt(0) || '?'}
+        {isAwf ? <IconUsers className="h-5 w-5" /> : firstName.charAt(0) || '?'}
       </button>
       <AnimatePresence>
         {open && (
@@ -64,9 +74,18 @@ export function AccountMenu() {
             <div className="border-b border-slate-200/70 px-3 py-3 dark:border-slate-800/80">
               <p className="truncate text-sm font-semibold">{profile?.name || firstName}</p>
               <p className="truncate text-xs text-slate-500 dark:text-slate-400">{profile?.email}</p>
-              <p className="mt-1 text-xs font-semibold text-primary capitalize dark:text-indigo-300">
-                {profile?.role}
-              </p>
+              {profile && (
+                <p
+                  className={`mt-1 flex items-center gap-1.5 text-xs font-semibold ${
+                    isAwf
+                      ? 'text-secondary dark:text-emerald-300'
+                      : 'text-primary dark:text-indigo-300'
+                  }`}
+                >
+                  {isAwf && <IconUsers className="h-3.5 w-3.5" />}
+                  {roleLabel(profile.role, true)}
+                </p>
+              )}
             </div>
             <nav className="py-1">
               {items.map((item) => (

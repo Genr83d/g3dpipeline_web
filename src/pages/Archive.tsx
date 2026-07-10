@@ -1,20 +1,23 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useJobsOutlet } from '../routes/Workspace';
 import { useAuth } from '../context/AuthProvider';
 import { useToast } from '../components/Toast';
 import { JobCard } from '../components/JobCard';
 import { EmptyState } from '../components/EmptyState';
+import { Modal } from '../components/Modal';
 import { JobCardSkeleton, Skeleton } from '../components/Skeleton';
 import { PageHeader } from '../components/PageHeader';
-import { IconCheck } from '../components/icons';
+import { IconCheck, IconCloudOff } from '../components/icons';
 import { errorMessage } from '../lib/format';
-import { restoreJob } from '../services/jobService';
+import { deleteJob, restoreJob } from '../services/jobService';
+import type { Job } from '../types';
 
 export default function Archive() {
-  const { jobs, loading } = useJobsOutlet();
-  const { actor } = useAuth();
+  const { jobs, loading, error, retry } = useJobsOutlet();
+  const { actor, isAdmin, isManagerOrAdmin } = useAuth();
   const { toast } = useToast();
+  const [deleting, setDeleting] = useState<Job | null>(null);
 
   const archived = useMemo(
     () =>
@@ -28,6 +31,16 @@ export default function Archive() {
     try {
       await restoreJob(actor!, jobId);
       toast(`“${name}” is back in the pipeline.`, 'success');
+    } catch (err) {
+      toast(errorMessage(err), 'error');
+    }
+  }
+
+  async function handleDelete(job: Job) {
+    try {
+      await deleteJob(job.id);
+      toast(`“${job.name}” deleted.`, 'success');
+      setDeleting(null);
     } catch (err) {
       toast(errorMessage(err), 'error');
     }
@@ -50,6 +63,14 @@ export default function Archive() {
             <JobCardSkeleton />
           </div>
         </>
+      ) : error ? (
+        <EmptyState
+          tone="danger"
+          icon={<IconCloudOff className="h-7 w-7" />}
+          title="Unable to Load Jobs"
+          subtitle={error}
+          action={<button className="btn-secondary" onClick={retry}>Retry</button>}
+        />
       ) : archived.length === 0 ? (
         <EmptyState
           icon={<IconCheck className="h-7 w-7" />}
@@ -60,11 +81,33 @@ export default function Archive() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <AnimatePresence mode="popLayout">
             {archived.map((job) => (
-              <JobCard key={job.id} job={job} onRestore={(j) => void handleRestore(j.id, j.name)} />
+              <JobCard
+                key={job.id}
+                job={job}
+                onRestore={isManagerOrAdmin ? (j) => void handleRestore(j.id, j.name) : undefined}
+                onDelete={isAdmin ? setDeleting : undefined}
+              />
             ))}
           </AnimatePresence>
         </div>
       )}
+
+      <Modal open={deleting !== null} title="Delete archived job?" onClose={() => setDeleting(null)}>
+        {deleting && (
+          <div className="space-y-4">
+            <p className="text-sm">
+              Permanently delete <strong>{deleting.name}</strong> for {deleting.customer}? This
+              can't be undone.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button className="btn-ghost" onClick={() => setDeleting(null)}>Cancel</button>
+              <button className="btn-danger" onClick={() => void handleDelete(deleting)}>
+                Delete
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

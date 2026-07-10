@@ -16,10 +16,20 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import {
+  canAssignRole,
+  canSelfStartUnassigned,
+  isManagerOrAdminRole,
+} from '../lib/roles';
+import {
+  collaboratorsRequireAwf,
+  resolveNewJobIsAwf,
+} from '../lib/jobPermissions';
 import { inventoryCol } from './inventoryService';
 import {
   parseAssignedRole,
   parseJobStatus,
+  parseUserRole,
   toDate,
   type Job,
   type JobCollaborator,
@@ -54,7 +64,7 @@ export interface AssignTarget {
 const jobsCol = collection(db, 'jobs');
 
 function parseCollaboratorRole(value: unknown): UserRole {
-  return value === 'manager' || value === 'admin' ? value : 'staff';
+  return parseUserRole(value);
 }
 
 function parseCollaborators(data: Record<string, unknown>): JobCollaborator[] {
@@ -94,7 +104,7 @@ function parseCollaboratorUids(
   return uids.length > 0 ? Array.from(new Set(uids)) : collaborators.map((c) => c.uid);
 }
 
-function dedupeCollaborators(collaborators: AssignTarget[]): JobCollaborator[] {
+export function dedupeCollaborators(collaborators: readonly AssignTarget[]): JobCollaborator[] {
   const seen = new Set<string>();
   const unique: JobCollaborator[] = [];
   for (const collaborator of collaborators) {
@@ -110,7 +120,7 @@ function dedupeCollaborators(collaborators: AssignTarget[]): JobCollaborator[] {
   return unique;
 }
 
-function parseJob(id: string, data: Record<string, unknown>): Job {
+export function parseJob(id: string, data: Record<string, unknown>): Job {
   const collaborators = parseCollaborators(data);
   return {
     id,
@@ -119,6 +129,7 @@ function parseJob(id: string, data: Record<string, unknown>): Job {
     quantity: typeof data.quantity === 'number' ? data.quantity : 0,
     dueDate: toDate(data.dueDate) ?? new Date(),
     status: parseJobStatus(data.status),
+    isAwf: data.isAwf === true,
     createdByUid: (data.createdByUid as string) ?? '',
     createdByName: (data.createdByName as string) ?? '',
     createdByEmail: (data.createdByEmail as string) ?? '',
@@ -141,21 +152,38 @@ function parseJob(id: string, data: Record<string, unknown>): Job {
   };
 }
 
+export function jobsQueryForRole(role: UserRole) {
+  return role === 'awf'
+    ? query(jobsCol, where('isAwf', '==', true), orderBy('dueDate', 'asc'))
+    : query(jobsCol, orderBy('dueDate', 'asc'));
+}
+
 export function watchJobs(
+  role: UserRole,
   onJobs: (jobs: Job[]) => void,
   onError: (err: Error) => void,
 ): Unsubscribe {
-  const q = query(jobsCol, orderBy('dueDate', 'asc'));
   return onSnapshot(
-    q,
+    jobsQueryForRole(role),
     (snap) => onJobs(snap.docs.map((d) => parseJob(d.id, d.data()))),
     onError,
   );
 }
 
+export interface JobInput {
+  name: string;
+  customer: string;
+  quantity: number;
+  dueDate: Date;
+  isAwf?: boolean;
+}
+
+/** All active roles may create jobs. AWF creators are always classified AWF;
+ *  only manager/admin requests may opt another new job into that pipeline. */
 export async function addJob(
   actor: Actor,
-  input: { name: string; customer: string; quantity: number; dueDate: Date },
+  self: Assigner,
+  input: JobInput,
 ): Promise<void> {
   const byName = actorDisplayName(actor);
   await addDoc(jobsCol, {
@@ -164,6 +192,7 @@ export async function addJob(
     quantity: input.quantity,
     dueDate: Timestamp.fromDate(input.dueDate),
     status: 'pending',
+    isAwf: resolveNewJobIsAwf(self.role, input.isAwf),
     createdByUid: actor.uid,
     createdByName: byName,
     createdByEmail: actor.email,
@@ -197,8 +226,8 @@ export async function startJob(actor: Actor, self: Assigner, jobId: string): Pro
     if (hasCollaborators && !collaboratorUids.includes(actor.uid)) {
       throw new Error('This job is assigned to someone else.');
     }
-    if (!hasCollaborators && self.role === 'manager') {
-      throw new Error('Managers must assign staff before starting this job.');
+    if (!hasCollaborators && !canSelfStartUnassigned(self.role)) {
+      throw new Error('Managers must assign Staff or AWF Staff before starting this job.');
     }
     const byName = actorDisplayName(actor);
     const patch: Record<string, unknown> = {
@@ -218,22 +247,31 @@ export async function startJob(actor: Actor, self: Assigner, jobId: string): Pro
       patch.assignedByUid = actor.uid;
       patch.assignedByName = byName;
       patch.assignedAt = serverTimestamp();
+      if (self.role === 'awf') patch.isAwf = true;
     }
     tx.update(ref, patch);
   });
 }
 
-/** Manager/admin: assign one or more collaborators to a pending/in-progress job. */
+/** Manager/admin: assign one or more collaborators to a pending/in-progress
+ *  job. Saving any AWF collaborator permanently promotes the job to AWF. */
 export async function assignJob(
   actor: Actor,
+  self: Assigner,
   jobId: string,
   targets: AssignTarget[],
 ): Promise<void> {
+  if (!isManagerOrAdminRole(self.role)) {
+    throw new Error('Only managers and admins can change collaborators.');
+  }
   const collaborators = dedupeCollaborators(targets);
   if (collaborators.length === 0) throw new Error('Add at least one collaborator.');
+  if (collaborators.some((collaborator) => !canAssignRole(self.role, collaborator.role))) {
+    throw new Error('Your role cannot assign one or more selected collaborators.');
+  }
   const [primary] = collaborators;
   const byName = actorDisplayName(actor);
-  await updateDoc(doc(db, 'jobs', jobId), {
+  const patch: Record<string, unknown> = {
     assignedToUid: primary.uid,
     assignedToName: primary.name,
     assignedToRole: primary.role,
@@ -245,7 +283,9 @@ export async function assignJob(
     updatedAt: serverTimestamp(),
     updatedByUid: actor.uid,
     updatedByName: byName,
-  });
+  };
+  if (collaboratorsRequireAwf(collaborators)) patch.isAwf = true;
+  await updateDoc(doc(db, 'jobs', jobId), patch);
 }
 
 /** Manager/admin: clear assignment/collaborators. Rules remain the source of truth. */
@@ -406,10 +446,20 @@ export interface JobEdit {
   customer?: string;
   quantity?: number;
   dueDate?: Date;
+  isAwf?: boolean;
 }
 
-/** Manager/admin: edit core fields. Never touches createdBy* / createdAt. */
-export async function editJob(actor: Actor, jobId: string, edit: JobEdit): Promise<void> {
+/** Manager/admin: edit core fields and, when supplied, the persistent AWF
+ *  classification. Never touches createdBy* / createdAt. */
+export async function editJob(
+  actor: Actor,
+  self: Assigner,
+  jobId: string,
+  edit: JobEdit,
+): Promise<void> {
+  if (!isManagerOrAdminRole(self.role)) {
+    throw new Error('Only managers and admins can edit jobs.');
+  }
   const patch: Record<string, unknown> = {
     updatedAt: serverTimestamp(),
     updatedByUid: actor.uid,
@@ -419,6 +469,7 @@ export async function editJob(actor: Actor, jobId: string, edit: JobEdit): Promi
   if (edit.customer !== undefined) patch.customer = edit.customer;
   if (edit.quantity !== undefined) patch.quantity = edit.quantity;
   if (edit.dueDate !== undefined) patch.dueDate = Timestamp.fromDate(edit.dueDate);
+  if (edit.isAwf !== undefined) patch.isAwf = edit.isAwf;
   await updateDoc(doc(db, 'jobs', jobId), patch);
 }
 

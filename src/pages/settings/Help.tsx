@@ -3,7 +3,7 @@ import { SettingsShell } from './SettingsShell';
 const faqs = [
   {
     q: 'How do jobs work?',
-    a: 'A job moves pending → in progress → completed. Anyone can add a job or start a pending one; only the person who started a job can complete it. Managers and admins can edit jobs and restore completed ones from the Archive.',
+    a: 'A job moves pending → in progress → completed. Anyone can add a job. A collaborator can start an assigned job, and collaborators, managers, or admins can complete work in progress. Managers and admins can edit jobs and restore completed ones from the Archive.',
   },
   {
     q: 'Why can two people not start the same job?',
@@ -19,7 +19,7 @@ const faqs = [
   },
   {
     q: 'How do I get a bigger role?',
-    a: 'Roles (staff, manager, admin) are assigned by an administrator directly in the Firebase Console — ask your admin.',
+    a: 'Roles (Staff, AWF Staff, Manager, and Admin) are assigned directly in the Firebase Console — ask your admin.',
   },
 ];
 

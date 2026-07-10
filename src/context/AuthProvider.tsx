@@ -42,12 +42,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(authUser === null ? null : undefined);
       return;
     }
+    let disposed = false;
     setProfile(undefined);
-    return watchUser(
+    const unsubscribe = watchUser(
       authUser.uid,
-      setProfile,
-      () => setProfile(null),
+      (user) => {
+        if (!disposed) setProfile(user);
+      },
+      () => {
+        if (!disposed) setProfile(null);
+      },
     );
+    return () => {
+      disposed = true;
+      unsubscribe();
+    };
   }, [authUser]);
 
   const value = useMemo<AuthState>(() => {

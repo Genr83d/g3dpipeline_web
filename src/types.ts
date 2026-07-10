@@ -1,7 +1,7 @@
 import type { Timestamp } from 'firebase/firestore';
 
 export type JobStatus = 'pending' | 'started' | 'completed';
-export type UserRole = 'staff' | 'manager' | 'admin';
+export type UserRole = 'staff' | 'awf' | 'manager' | 'admin';
 export type UserStatus = 'pending' | 'active' | 'disabled' | 'removed';
 
 export interface JobCollaborator {
@@ -17,6 +17,7 @@ export interface Job {
   quantity: number;
   dueDate: Date;
   status: JobStatus;
+  isAwf: boolean;
   createdByUid: string;
   createdByName: string;
   createdByEmail: string;
@@ -114,7 +115,12 @@ export function toDate(v: unknown): Date | null {
 }
 
 export function parseAssignedRole(v: unknown): UserRole | '' {
-  return v === 'staff' || v === 'manager' || v === 'admin' ? v : '';
+  return v === 'staff' || v === 'awf' || v === 'manager' || v === 'admin' ? v : '';
+}
+
+/** Unknown legacy roles intentionally fall back to ordinary Staff. */
+export function parseUserRole(v: unknown): UserRole {
+  return v === 'awf' || v === 'manager' || v === 'admin' ? v : 'staff';
 }
 
 export function parseJobStatus(v: unknown): JobStatus {

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthProvider';
-import { useInventory } from '../hooks/useInventory';
+import { useInventoryOutlet } from '../routes/Workspace';
 import {
   addMaterial,
   editMaterial,
@@ -87,8 +87,8 @@ function MaterialCard({ material, onEdit }: { material: Material; onEdit: (m: Ma
 }
 
 export default function Inventory() {
-  const { isActive, actor } = useAuth();
-  const { materials, loading, error, retry } = useInventory(isActive);
+  const { actor } = useAuth();
+  const { materials, loading, error, retry } = useInventoryOutlet();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [adding, setAdding] = useState(false);

@@ -5,6 +5,7 @@ import { useToast } from '../../components/Toast';
 import { TableRowSkeleton } from '../../components/Skeleton';
 import { errorMessage } from '../../lib/format';
 import { SettingsShell } from './SettingsShell';
+import { roleLabel, roleScopeKey } from '../../lib/roles';
 import type { AppUser, UserStatus } from '../../types';
 
 const statusStyles: Record<UserStatus, string> = {
@@ -15,8 +16,11 @@ const statusStyles: Record<UserStatus, string> = {
 };
 
 export default function UserManagement() {
-  const { authUser, isAdmin } = useAuth();
-  const { users, loading, error } = useUsers(isAdmin);
+  const { authUser, profile, isAdmin } = useAuth();
+  const { users, loading, error } = useUsers(
+    isAdmin,
+    profile ? roleScopeKey(profile.uid, profile.role) : '',
+  );
   const { toast } = useToast();
 
   async function change(user: AppUser, status: UserStatus, verb: string) {
@@ -58,10 +62,10 @@ export default function UserManagement() {
   }
 
   return (
-    <SettingsShell title="User management" subtitle="Approve and manage staff accounts" wide>
+    <SettingsShell title="User management" subtitle="Approve and manage user accounts" wide>
       {error && (
         <p className="rounded-md border border-danger/20 bg-danger-soft/70 px-3 py-2 text-sm font-medium text-danger dark:bg-red-950/40 dark:text-red-300" role="alert">
-          {error}
+          Unable to load user accounts. Check your connection and permissions, then try again.
         </p>
       )}
       {loading ? (
@@ -83,7 +87,7 @@ export default function UserManagement() {
                 </p>
                 <p className="truncate text-sm text-slate-500 dark:text-slate-400">{user.email}</p>
                 <div className="mt-1 flex items-center gap-2">
-                  <span className="text-xs font-medium text-primary capitalize dark:text-indigo-300">{user.role}</span>
+                  <span className="text-xs font-medium text-primary dark:text-indigo-300">{roleLabel(user.role)}</span>
                   <span className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-semibold capitalize ${statusStyles[user.status]}`}>
                     {user.status}
                   </span>

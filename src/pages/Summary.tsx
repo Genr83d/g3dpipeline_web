@@ -1,20 +1,21 @@
 import { useMemo } from 'react';
-import { useJobsOutlet } from '../routes/Workspace';
+import { useInventoryOutlet, useJobsOutlet } from '../routes/Workspace';
 import { useAuth } from '../context/AuthProvider';
-import { useInventory } from '../hooks/useInventory';
 import { isLowStock, stockRatio } from '../services/inventoryService';
 import { StatCard } from '../components/StatCard';
 import { JobProgressGauge } from '../components/JobProgressGauge';
+import { EmptyState } from '../components/EmptyState';
 import { PageHeader } from '../components/PageHeader';
 import { Skeleton, StatCardSkeleton } from '../components/Skeleton';
 import { formatQuantity } from '../lib/format';
 import { isOverdue } from '../types';
-import { IconAlert, IconBox, IconCheck, IconClock, IconPlay } from '../components/icons';
+import { IconAlert, IconBox, IconCheck, IconClock, IconCloudOff, IconPlay } from '../components/icons';
 
 export default function Summary() {
-  const { jobs, loading } = useJobsOutlet();
-  const { isActive } = useAuth();
-  const { materials, loading: inventoryLoading } = useInventory(isActive);
+  const { jobs, loading, error, retry } = useJobsOutlet();
+  const { materials, loading: inventoryLoading } = useInventoryOutlet();
+  const { profile } = useAuth();
+  const isAwf = profile?.role === 'awf';
 
   const stats = useMemo(() => {
     const pending = jobs.filter((j) => j.status === 'pending').length;
@@ -38,7 +39,7 @@ export default function Summary() {
       <PageHeader
         title="Summary"
         eyebrow="Operations overview"
-        subtitle="A live look at the whole shop."
+        subtitle={isAwf ? 'A live look at AWF production.' : 'A live look at the whole shop.'}
       />
 
       {loading ? (
@@ -68,6 +69,14 @@ export default function Summary() {
             <StatCardSkeleton />
           </div>
         </>
+      ) : error ? (
+        <EmptyState
+          tone="danger"
+          icon={<IconCloudOff className="h-7 w-7" />}
+          title="Unable to Load Jobs"
+          subtitle={error}
+          action={<button className="btn-secondary" onClick={retry}>Retry</button>}
+        />
       ) : (
         <>
           <div className="surface p-6">
@@ -91,7 +100,7 @@ export default function Summary() {
             />
           </div>
 
-          {inventoryLoading ? (
+          {!isAwf && (inventoryLoading ? (
             <section aria-label="Loading low stock materials" className="surface p-4">
               <Skeleton className="mb-4 h-5 w-44" />
               <div className="space-y-3">
@@ -123,7 +132,7 @@ export default function Summary() {
                 ))}
               </ul>
             </section>
-          )}
+          ))}
         </>
       )}
     </div>
