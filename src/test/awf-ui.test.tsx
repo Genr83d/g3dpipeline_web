@@ -292,15 +292,15 @@ describe('AWF job card permissions', () => {
     };
     setRole('manager');
     const { rerender } = render(<JobCard job={pending} {...callbacks} />);
-    expect(screen.queryByRole('button', { name: 'Start Job' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Start' })).not.toBeInTheDocument();
     expect(screen.getByText('Add Team')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Edit Event badges/ })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Delete Event badges/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Edit job' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Delete job' })).not.toBeInTheDocument();
 
     setRole('admin');
     rerender(<JobCard job={pending} {...callbacks} />);
-    expect(screen.getByRole('button', { name: 'Start Job' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Delete Event badges/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete job' })).toBeInTheDocument();
   });
 
   it('does not let AWF Staff start someone else’s assigned job', () => {
@@ -315,7 +315,7 @@ describe('AWF job card permissions', () => {
     });
     render(<JobCard job={assigned} onStart={vi.fn()} />);
 
-    expect(screen.queryByRole('button', { name: 'Start Job' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Start' })).not.toBeInTheDocument();
   });
 
   it('hides restore from AWF Staff and shows it to managers', () => {

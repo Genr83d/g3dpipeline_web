@@ -79,3 +79,5 @@ export const IconMapPin = (p: IconProps = {}) =>
   base(<path d="M12 22s7-4.9 7-12a7 7 0 1 0-14 0c0 7.1 7 12 7 12zM12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />, p);
 export const IconHistory = (p: IconProps = {}) =>
   base(<path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5M12 7v5l3 2" />, p);
+export const IconNote = (p: IconProps = {}) =>
+  base(<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M9 13h6M9 17h4" />, p);

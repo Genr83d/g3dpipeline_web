@@ -215,7 +215,7 @@ export function JobCard({
         )}
       </div>}
 
-      <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
+      <div className="mt-auto space-y-2 pt-1">
         <button
           type="button"
           className="btn-ghost px-2.5"
@@ -226,36 +226,51 @@ export function JobCard({
           <IconChevron className={`h-4 w-4 transition-transform ${expanded ? '-rotate-90' : 'rotate-90'}`} />
           {expanded ? 'Hide details' : 'Show details'}
         </button>
-        {job.status === 'pending' && onStart && canStart && (
-          <button className="btn-primary flex-1" onClick={() => onStart(job)}>
-            <IconPlay className="h-4 w-4" /> Start Job
-          </button>
-        )}
-        {job.status === 'started' && canComplete && onComplete && (
-          <button className="btn-secondary flex-1" onClick={() => onComplete(job)}>
-            <IconCheck className="h-4 w-4" /> Complete Job
-          </button>
-        )}
-        {job.status === 'completed' && canRestore && onRestore && (
-          <button className="btn-secondary flex-1" onClick={() => onRestore(job)}>
-            <IconRestore className="h-4 w-4" /> Restore
-          </button>
-        )}
-        {canManageTeam && onAssign && (
-          <button className="btn-secondary" onClick={() => onAssign(job)} aria-label={`Edit collaborators for ${job.name}`}>
-            <IconUserPlus className="h-4 w-4" /> {hasCollaborators ? 'Edit Team' : 'Add Team'}
-          </button>
-        )}
-        {canEdit && onEdit && (
-          <button className="btn-ghost" onClick={() => onEdit(job)} aria-label={`Edit ${job.name}`}>
-            <IconEdit className="h-4 w-4" /> Edit
-          </button>
-        )}
-        {canDelete && onDelete && (
-          <button className="btn-danger" onClick={() => onDelete(job)} aria-label={`Delete ${job.name}`}>
-            <IconTrash className="h-4 w-4" />
-          </button>
-        )}
+        <div
+          data-testid={`job-actions-${job.id}`}
+          className="flex flex-nowrap items-center justify-center gap-[12px]"
+        >
+          {canEdit && onEdit && (
+            <button
+              className="btn-ghost px-2.5"
+              onClick={() => onEdit(job)}
+              aria-label="Edit job"
+              title="Edit job"
+            >
+              <IconEdit className="h-4 w-4" />
+            </button>
+          )}
+          {canManageTeam && onAssign && (
+            <button className="btn-secondary" onClick={() => onAssign(job)}>
+              <IconUserPlus className="h-4 w-4" /> {hasCollaborators ? 'Team' : 'Add Team'}
+            </button>
+          )}
+          {job.status === 'pending' && onStart && canStart && (
+            <button className="btn-primary" onClick={() => onStart(job)}>
+              <IconPlay className="h-4 w-4" /> Start
+            </button>
+          )}
+          {job.status === 'started' && canComplete && onComplete && (
+            <button className="btn-secondary" onClick={() => onComplete(job)}>
+              <IconCheck className="h-4 w-4" /> Complete
+            </button>
+          )}
+          {job.status === 'completed' && canRestore && onRestore && (
+            <button className="btn-secondary" onClick={() => onRestore(job)}>
+              <IconRestore className="h-4 w-4" /> Restore
+            </button>
+          )}
+          {canDelete && onDelete && (
+            <button
+              className="btn-danger px-2.5"
+              onClick={() => onDelete(job)}
+              aria-label="Delete job"
+              title="Delete job"
+            >
+              <IconTrash className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
     </motion.article>
   );

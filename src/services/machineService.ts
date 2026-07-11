@@ -48,6 +48,7 @@ function parseHistoryRecord(value: unknown): MaintenanceHistoryRecord {
       ? data.procedureTitles.filter((title): title is string => typeof title === 'string')
       : [],
     completedByName: typeof data.completedByName === 'string' ? data.completedByName : '',
+    notes: typeof data.notes === 'string' ? data.notes : '',
   };
 }
 
@@ -192,9 +193,14 @@ export async function setProcedureDone(
   );
 }
 
-export async function logCheckedMaintenance(actor: Actor, machineId: string): Promise<string[]> {
+export async function logCheckedMaintenance(
+  actor: Actor,
+  machineId: string,
+  notes = '',
+): Promise<string[]> {
   const ref = doc(db, 'machines', machineId);
   const byName = actorDisplayName(actor);
+  const trimmedNotes = notes.trim();
   let completedTitles: string[] = [];
 
   await runTransaction(db, async (tx) => {
@@ -217,6 +223,7 @@ export async function logCheckedMaintenance(actor: Actor, machineId: string): Pr
       completedAt: record.completedAt,
       procedureTitles: record.procedureTitles,
       completedByName: record.completedByName,
+      notes: record.notes,
     }));
 
     tx.update(ref, {
@@ -226,6 +233,7 @@ export async function logCheckedMaintenance(actor: Actor, machineId: string): Pr
           completedAt: Timestamp.now(),
           procedureTitles: completedTitles,
           completedByName: byName,
+          notes: trimmedNotes,
         },
         ...previousHistory,
       ],

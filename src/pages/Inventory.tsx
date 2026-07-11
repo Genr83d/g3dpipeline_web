@@ -14,6 +14,7 @@ import { Modal } from '../components/Modal';
 import { MaterialForm } from '../components/MaterialForm';
 import { useToast } from '../components/Toast';
 import { PageHeader } from '../components/PageHeader';
+import { FloatingAddButton } from '../components/FloatingAddButton';
 import { MaterialCardSkeleton, Skeleton } from '../components/Skeleton';
 import {
   IconAlert,
@@ -231,6 +232,10 @@ export default function Inventory() {
           )}
         </>
       )}
+
+      <FloatingAddButton label="Add material" onClick={() => setAdding(true)}>
+        <IconLayers className="h-4 w-4" /> Add material
+      </FloatingAddButton>
 
       <Modal open={adding} title="Add material" onClose={() => setAdding(false)}>
         <MaterialForm
