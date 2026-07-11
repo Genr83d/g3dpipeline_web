@@ -6,6 +6,7 @@ import { EmptyState } from '../components/EmptyState';
 import { Modal } from '../components/Modal';
 import { useToast } from '../components/Toast';
 import { PageHeader } from '../components/PageHeader';
+import { FloatingAddButton } from '../components/FloatingAddButton';
 import { MachineCardSkeleton, Skeleton } from '../components/Skeleton';
 import {
   IconCheck,
@@ -15,6 +16,7 @@ import {
   IconEdit,
   IconHistory,
   IconMapPin,
+  IconNote,
   IconPlus,
   IconSearch,
   IconTrash,
@@ -271,6 +273,12 @@ function MachineCard({
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                   {record.procedureTitles.join(', ')}
                 </p>
+                {record.notes && (
+                  <p className="mt-1.5 flex items-start gap-1.5 rounded-md border border-slate-200/70 bg-white/45 px-2.5 py-1.5 text-sm text-slate-600 dark:border-slate-800/80 dark:bg-slate-950/25 dark:text-slate-300">
+                    <IconNote className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+                    <span className="min-w-0">{record.notes}</span>
+                  </p>
+                )}
               </li>
             ))}
           </ol>
@@ -289,6 +297,7 @@ export default function Maintenance() {
   const [editing, setEditing] = useState<Machine | null>(null);
   const [deleting, setDeleting] = useState<Machine | null>(null);
   const [confirming, setConfirming] = useState<Machine | null>(null);
+  const [maintenanceNotes, setMaintenanceNotes] = useState('');
   const [busyKey, setBusyKey] = useState<string | null>(null);
 
   const visible = useMemo(() => filterMachines(machines, search), [machines, search]);
@@ -368,14 +377,24 @@ export default function Maintenance() {
     );
   }
 
+  function openConfirmLog(machine: Machine) {
+    setMaintenanceNotes('');
+    setConfirming(machine);
+  }
+
+  function closeConfirmLog() {
+    setConfirming(null);
+    setMaintenanceNotes('');
+  }
+
   async function handleConfirmLog() {
     if (!confirming) return;
     const saved = await runAction(
       `maintenance-log:${confirming.id}`,
-      () => logCheckedMaintenance(actor!, confirming.id),
+      () => logCheckedMaintenance(actor!, confirming.id, maintenanceNotes.trim()),
       `Maintenance logged for ${confirming.name}.`,
     );
-    if (saved) setConfirming(null);
+    if (saved) closeConfirmLog();
   }
 
   const addButton = (
@@ -495,13 +514,17 @@ export default function Maintenance() {
                   onAddProcedure={handleAddProcedure}
                   onRemoveProcedure={handleRemoveProcedure}
                   onToggleProcedure={handleToggleProcedure}
-                  onLog={setConfirming}
+                  onLog={openConfirmLog}
                 />
               ))}
             </div>
           )}
         </>
       )}
+
+      <FloatingAddButton label="Add machine" onClick={() => setAdding(true)}>
+        <IconPlus className="h-4 w-4" /> Add machine
+      </FloatingAddButton>
 
       <Modal open={adding} title="Add machine" onClose={() => setAdding(false)}>
         <MachineForm onSubmit={handleAddMachine} onCancel={() => setAdding(false)} />
@@ -547,7 +570,7 @@ export default function Maintenance() {
         )}
       </Modal>
 
-      <Modal open={confirming !== null} title="Confirm Maintenance" onClose={() => setConfirming(null)}>
+      <Modal open={confirming !== null} title="Confirm Maintenance" onClose={closeConfirmLog}>
         {confirming && (
           <div className="space-y-4">
             <p className="text-sm">
@@ -556,8 +579,25 @@ export default function Maintenance() {
             <div className="rounded-md border border-slate-200/70 bg-white/45 px-3 py-2 text-sm dark:border-slate-800/80 dark:bg-slate-950/25">
               {checkedProcedures(confirming).map((procedure) => procedure.title).join(', ')}
             </div>
+            <div className="space-y-1.5">
+              <label
+                htmlFor={`maintenance-notes-${confirming.id}`}
+                className="text-sm font-semibold text-slate-700 dark:text-slate-200"
+              >
+                Maintenance notes
+              </label>
+              <textarea
+                id={`maintenance-notes-${confirming.id}`}
+                className="field min-h-20 resize-y"
+                rows={3}
+                autoCapitalize="sentences"
+                placeholder="Add notes about this maintenance"
+                value={maintenanceNotes}
+                onChange={(e) => setMaintenanceNotes(e.target.value)}
+              />
+            </div>
             <div className="flex justify-end gap-2">
-              <button className="btn-ghost" onClick={() => setConfirming(null)}>
+              <button className="btn-ghost" onClick={closeConfirmLog}>
                 Cancel
               </button>
               <button

@@ -70,6 +70,8 @@ export interface MaintenanceHistoryRecord {
   completedAt: Date | null;
   procedureTitles: string[];
   completedByName: string;
+  /** Optional maintenance-specific notes; legacy records without one read as ''. */
+  notes: string;
 }
 
 export interface Machine {
