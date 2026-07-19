@@ -209,7 +209,7 @@ describe('AWF job form', () => {
 
     await user.type(screen.getByLabelText('Job Name'), 'Badges');
     await user.type(screen.getByLabelText('Name of Receiver'), 'Conference team');
-    await user.type(screen.getByLabelText('Order Quantity'), '25');
+    await user.type(screen.getByLabelText('Quantity'), '25');
     fireEvent.change(screen.getByLabelText('Deadline'), { target: { value: '2000-01-01' } });
     await user.click(screen.getByRole('button', { name: 'Add job' }));
 
@@ -225,7 +225,7 @@ describe('AWF job form', () => {
     expect(screen.getByLabelText('Job Type')).toHaveValue('manufacturing');
     await user.type(screen.getByLabelText('Job Name'), 'Production run');
     await user.type(screen.getByLabelText('Name of Receiver'), 'Customer');
-    await user.type(screen.getByLabelText('Order Quantity'), '5');
+    await user.type(screen.getByLabelText('Quantity'), '5');
     fireEvent.change(screen.getByLabelText('Deadline'), { target: { value: '2099-01-01' } });
     await user.click(screen.getByRole('button', { name: 'Add job' }));
 

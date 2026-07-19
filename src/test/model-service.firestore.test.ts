@@ -221,11 +221,15 @@ describe('job category persistence', () => {
   });
 
   it('stores a changed category with the rest of a job edit', async () => {
+    firestore.transactionGet.mockResolvedValueOnce({
+      exists: () => true,
+      data: () => ({ status: 'pending', category: 'manufacturing', quantity: 5 }),
+    });
     await editJob(actor, self('manager'), 'job-1', {
       name: 'Updated job',
       category: 'repair',
     });
-    expect(lastWritePayload(firestore.updateDoc)).toMatchObject({
+    expect(firestore.transactionUpdate.mock.calls.at(-1)?.[1]).toMatchObject({
       name: 'Updated job',
       category: 'repair',
     });
@@ -269,8 +273,12 @@ describe('job category persistence', () => {
   });
 
   it('does not replace category while restoring a job', async () => {
+    firestore.transactionGet.mockResolvedValueOnce({
+      exists: () => true,
+      data: () => ({ status: 'completed' }),
+    });
     await restoreJob(actor, 'job-1');
-    expect(lastWritePayload(firestore.updateDoc)).not.toHaveProperty('category');
+    expect(firestore.transactionUpdate.mock.calls.at(-1)?.[1]).not.toHaveProperty('category');
   });
 });
 

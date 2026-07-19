@@ -20,6 +20,7 @@ function base(path: React.ReactNode, { className = 'h-5 w-5' }: IconProps) {
 }
 
 export const IconPlus = (p: IconProps = {}) => base(<path d="M12 5v14M5 12h14" />, p);
+export const IconMinus = (p: IconProps = {}) => base(<path d="M5 12h14" />, p);
 export const IconPlay = (p: IconProps = {}) => base(<path d="M7 4.5v15l12-7.5z" />, p);
 export const IconCheck = (p: IconProps = {}) => base(<path d="M4 12.5l5 5L20 6.5" />, p);
 export const IconTrash = (p: IconProps = {}) =>

@@ -1,9 +1,17 @@
 import { useState, type FormEvent } from 'react';
 import { toDateInputValue, fromDateInputValue } from '../lib/format';
-import { DEFAULT_JOB_CATEGORY, JOB_CATEGORY_OPTIONS } from '../lib/jobCategories';
+import {
+  clampJobQuantity,
+  DEFAULT_JOB_CATEGORY,
+  JOB_CATEGORY_OPTIONS,
+  jobQuantityConfig,
+  NORMALIZED_QUANTITY,
+  validateJobQuantity,
+} from '../lib/jobCategories';
 import { isManagerOrAdminRole } from '../lib/roles';
 import type { Job, JobCategory } from '../types';
 import { useAuth } from '../context/AuthProvider';
+import { IconMinus, IconPlus } from './icons';
 
 export interface JobFormValues {
   name: string;
@@ -39,12 +47,32 @@ export function JobForm({
   const [busy, setBusy] = useState(false);
   const today = toDateInputValue(new Date());
 
+  const quantityConfig = jobQuantityConfig(category);
+  const parsedQuantity = Number(quantity.trim());
+  const atMinimum =
+    Number.isFinite(parsedQuantity) && parsedQuantity <= quantityConfig.minimumQuantity;
+  const atMaximum =
+    Number.isFinite(parsedQuantity) && parsedQuantity >= quantityConfig.maximumQuantity;
+
+  function stepQuantity(delta: number) {
+    setQuantity((current) => {
+      const value = Number(current.trim());
+      const next = Number.isFinite(value) && current.trim().length > 0
+        ? value + delta
+        : quantityConfig.minimumQuantity;
+      return String(clampJobQuantity(category, next));
+    });
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    const qty = Number(quantity);
+    if (busy) return;
     if (!name.trim()) return setError('Job name is required.');
     if (!customer.trim()) return setError('Receiver is required.');
-    if (!Number.isInteger(qty) || qty <= 0) return setError('Quantity must be a whole number above 0.');
+    const quantityError = quantityConfig.usesQuantity
+      ? validateJobQuantity(category, quantity)
+      : null;
+    if (quantityError) return setError(quantityError);
     if (!dueDate) return setError('Deadline is required.');
     const parsedDueDate = fromDateInputValue(dueDate);
     const startOfToday = new Date();
@@ -58,7 +86,7 @@ export function JobForm({
       await onSubmit({
         name: name.trim(),
         customer: customer.trim(),
-        quantity: qty,
+        quantity: quantityConfig.usesQuantity ? Number(quantity.trim()) : NORMALIZED_QUANTITY,
         dueDate: parsedDueDate,
         category,
         isAwf: profile?.role === 'awf' ? true : isAwf,
@@ -114,21 +142,48 @@ export function JobForm({
         </select>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <label htmlFor="job-qty" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
-            Order Quantity
-          </label>
-          <input
-            id="job-qty"
-            className="field"
-            type="number"
-            min={1}
-            step={1}
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-            placeholder="1"
-          />
-        </div>
+        {quantityConfig.usesQuantity && (
+          <div>
+            <label htmlFor="job-qty" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+              {quantityConfig.quantityLabel}
+            </label>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="btn-ghost px-2.5"
+                aria-label={`Decrease ${quantityConfig.quantityLabel.toLowerCase()}`}
+                disabled={atMinimum}
+                onClick={() => stepQuantity(-1)}
+              >
+                <IconMinus className="h-4 w-4" />
+              </button>
+              <input
+                id="job-qty"
+                className="field text-center"
+                type="number"
+                inputMode="numeric"
+                min={quantityConfig.minimumQuantity}
+                max={quantityConfig.maximumQuantity}
+                step={1}
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                placeholder={String(quantityConfig.minimumQuantity)}
+              />
+              <button
+                type="button"
+                className="btn-ghost px-2.5"
+                aria-label={`Increase ${quantityConfig.quantityLabel.toLowerCase()}`}
+                disabled={atMaximum}
+                onClick={() => stepQuantity(1)}
+              >
+                <IconPlus className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Max {quantityConfig.maximumQuantity}
+            </p>
+          </div>
+        )}
         <div>
           <label htmlFor="job-due" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
             Deadline
