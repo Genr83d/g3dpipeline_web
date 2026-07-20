@@ -21,6 +21,7 @@ export interface Job {
   name: string;
   customer: string;
   quantity: number;
+  completedQuantity: number;
   dueDate: Date;
   status: JobStatus;
   category: JobCategory;

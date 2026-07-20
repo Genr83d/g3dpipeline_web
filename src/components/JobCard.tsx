@@ -7,11 +7,13 @@ import {
   canDeleteJob,
   canEditJob,
   canManageCollaborators,
+  canUpdateJobProgress,
   canRestoreJob,
   canStartJob,
 } from '../lib/jobPermissions';
 import { isManagerOrAdminRole, roleLabel } from '../lib/roles';
 import { jobCategoryLabel, jobQuantityConfig } from '../lib/jobCategories';
+import { jobCompletionRatio } from '../lib/jobProgress';
 import { StatusPill } from './StatusPill';
 import { IconBox, IconCalendar, IconCheck, IconChevron, IconCode, IconEdit, IconGear, IconHistory, IconPalette, IconPlay, IconRestore, IconTag, IconTrash, IconUser, IconUserPlus, IconUsers, IconWrench } from './icons';
 import { useAuth } from '../context/AuthProvider';
@@ -105,6 +107,7 @@ export function JobCard({
   onDelete,
   onRestore,
   onAssign,
+  onUpdateProgress,
 }: {
   job: Job;
   onStart?: (job: Job) => void;
@@ -113,6 +116,7 @@ export function JobCard({
   onDelete?: (job: Job) => void;
   onRestore?: (job: Job) => void;
   onAssign?: (job: Job) => void;
+  onUpdateProgress?: (job: Job) => void;
 }) {
   const { profile } = useAuth();
   const { motionReduced } = useAppearance();
@@ -128,6 +132,15 @@ export function JobCard({
   const canManageTeam = profile ? canManageCollaborators(job.status, profile.role) : false;
   const canRestore = profile ? canRestoreJob(profile.role) : false;
   const canDelete = profile ? canDeleteJob(profile.role) : false;
+  const canUpdateProgress = Boolean(
+    viewer &&
+    showsQuantity &&
+    job.quantity !== 1 &&
+    onUpdateProgress &&
+    canUpdateJobProgress(job, viewer),
+  );
+  const completionRatio = jobCompletionRatio(job.completedQuantity, job.quantity);
+  const completionPercentage = Math.round(completionRatio * 100);
   const isManagerOrAdmin = profile ? isManagerOrAdminRole(profile.role) : false;
   const accent =
     overdue
@@ -213,9 +226,22 @@ export function JobCard({
               <IconBox className="h-4 w-4 shrink-0 text-slate-400" />
               <span className="truncate">{jobQuantityConfig(job.category).quantityLabel}</span>
             </span>
-            <strong className="shrink-0 tabular-nums">
-              {job.quantity} unit{job.quantity === 1 ? '' : 's'}
-            </strong>
+            <span className="inline-flex shrink-0 items-center gap-1.5">
+              <strong className="tabular-nums">
+                {job.completedQuantity}/{job.quantity} units
+              </strong>
+              {canUpdateProgress && (
+                <button
+                  type="button"
+                  className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none dark:hover:bg-slate-800"
+                  aria-label="Update job progress"
+                  title="Update job progress"
+                  onClick={() => onUpdateProgress?.(job)}
+                >
+                  <IconEdit className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </span>
           </span>
         )}
         <span className={`flex items-center justify-between gap-3 py-2.5 ${
@@ -252,7 +278,34 @@ export function JobCard({
           ))}
       </div>}
 
-      <div className="mt-auto space-y-2 pt-1">
+      {!expanded && showsQuantity && (
+        <div className="mt-auto min-w-0 px-2" data-testid={`job-progress-${job.id}`}>
+          <div className="flex min-w-0 items-center justify-between gap-3 text-xs font-semibold tabular-nums text-slate-600 dark:text-slate-300">
+            <span className="truncate">{job.completedQuantity}/{job.quantity} units</span>
+            <span className="shrink-0">{completionPercentage}%</span>
+          </div>
+          <div
+            className={`mt-1.5 h-[5px] overflow-hidden rounded-full ${
+              overdue ? 'bg-danger/15' : job.status === 'started' ? 'bg-amber-500/15' : job.status === 'completed' ? 'bg-secondary/15' : 'bg-primary/15'
+            }`}
+            role="progressbar"
+            aria-label={`${job.name} completion`}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={completionPercentage}
+          >
+            <div
+              data-testid={`job-progress-fill-${job.id}`}
+              className={`h-full rounded-full ${
+                overdue ? 'bg-danger' : job.status === 'started' ? 'bg-amber-500' : job.status === 'completed' ? 'bg-secondary' : 'bg-primary'
+              }`}
+              style={{ width: `${completionRatio * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      <div className={`${expanded || !showsQuantity ? 'mt-auto' : ''} space-y-2 pt-1`}>
         <button
           type="button"
           className="btn-ghost px-2.5"

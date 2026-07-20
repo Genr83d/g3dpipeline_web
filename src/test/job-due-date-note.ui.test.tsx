@@ -31,6 +31,7 @@ function job(overrides: Partial<Job> = {}): Job {
     name: 'Event badges',
     customer: 'Receiver',
     quantity: 12,
+    completedQuantity: 0,
     dueDate: new Date('2099-06-15T23:59:59'),
     status: 'pending',
     category: 'manufacturing',

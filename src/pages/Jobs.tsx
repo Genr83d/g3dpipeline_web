@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthProvider';
 import { useToast } from '../components/Toast';
 import { JobCard } from '../components/JobCard';
 import { JobForm, type JobFormValues } from '../components/JobForm';
+import { JobProgressModal } from '../components/JobProgressModal';
 import { Modal } from '../components/Modal';
 import {
   JOB_DELETE_WARNING,
@@ -50,6 +51,7 @@ export default function Jobs() {
   const [assigning, setAssigning] = useState<Job | null>(null);
   const [starting, setStarting] = useState<Job | null>(null);
   const [completing, setCompleting] = useState<Job | null>(null);
+  const [updatingProgress, setUpdatingProgress] = useState<Job | null>(null);
 
   const activeJobs = useMemo(
     () => jobs.filter((job) => job.status !== 'completed'),
@@ -117,6 +119,17 @@ export default function Jobs() {
     await jobService.unassignJob(actor!, job.id);
     toast(`“${job.name}” is unassigned.`, 'success');
     setAssigning(null);
+  }
+
+  async function handleUpdateProgress(completedQuantity: number) {
+    if (!updatingProgress) return;
+    await jobService.updateJobProgress({
+      jobId: updatingProgress.id,
+      completedQuantity,
+      currentUser: { ...actor!, role: assigner!.role },
+    });
+    toast(`Progress updated to ${completedQuantity}/${updatingProgress.quantity} units.`, 'success');
+    setUpdatingProgress(null);
   }
 
   return (
@@ -252,6 +265,7 @@ export default function Jobs() {
                   onEdit={setEditing}
                   onDelete={isAdmin ? setDeleting : undefined}
                   onAssign={isManagerOrAdmin ? setAssigning : undefined}
+                  onUpdateProgress={setUpdatingProgress}
                 />
               ))}
             </AnimatePresence>
@@ -264,6 +278,12 @@ export default function Jobs() {
         onSave={handleSaveCollaborators}
         onClear={handleClearCollaborators}
         onClose={() => setAssigning(null)}
+      />
+
+      <JobProgressModal
+        job={updatingProgress}
+        onSave={handleUpdateProgress}
+        onClose={() => setUpdatingProgress(null)}
       />
 
       <Modal open={adding} title="Add job" onClose={() => setAdding(false)}>

@@ -77,6 +77,7 @@ import {
   type Actor,
   type Assigner,
   type JobInput,
+  updateJobProgress,
 } from '../services/jobService';
 
 const actor: Actor = {
@@ -140,7 +141,7 @@ describe('service-layer quantity enforcement', () => {
 
   it('accepts 100-unit physical batches and persists them unchanged', async () => {
     await addJob(actor, self(), input({ quantity: 100 }));
-    expect(lastAddPayload()).toMatchObject({ quantity: 100, category: 'manufacturing' });
+    expect(lastAddPayload()).toMatchObject({ quantity: 100, completedQuantity: 0, category: 'manufacturing' });
   });
 
   it('always persists quantity 1 for Software development jobs', async () => {
@@ -208,7 +209,7 @@ describe('service-layer status transition enforcement', () => {
   it('restores a completed job back to pending', async () => {
     jobDoc({ status: 'completed' });
     await restoreJob(actor, 'job-1');
-    expect(lastTransactionPatch()).toMatchObject({ status: 'pending' });
+    expect(lastTransactionPatch()).toMatchObject({ status: 'pending', completedQuantity: 0 });
   });
 
   it('legacy over-limit jobs can still be started (status-only update)', async () => {
@@ -222,5 +223,40 @@ describe('service-layer status transition enforcement', () => {
     const patch = lastTransactionPatch();
     expect(patch).toMatchObject({ status: 'started' });
     expect(patch).not.toHaveProperty('quantity');
+  });
+});
+
+describe('transactional progress updates', () => {
+  it('updates only progress and audit fields for an authorized collaborator', async () => {
+    jobDoc({ status: 'started', quantity: 15, collaboratorUids: [actor.uid] });
+    await updateJobProgress({ jobId: 'job-1', completedQuantity: 12, currentUser: { ...actor, role: 'staff' } });
+    expect(lastTransactionPatch()).toEqual({
+      completedQuantity: 12,
+      updatedAt: { kind: 'serverTimestamp' },
+      updatedByUid: actor.uid,
+      updatedByName: actor.displayName,
+    });
+  });
+
+  it('rejects unauthorized, completed, and out-of-range updates', async () => {
+    jobDoc({ status: 'started', quantity: 15, collaboratorUids: ['other'] });
+    await expect(updateJobProgress({ jobId: 'job-1', completedQuantity: 2, currentUser: { ...actor, role: 'staff' } })).rejects.toThrow('Only a collaborator');
+    jobDoc({ status: 'completed', quantity: 15, collaboratorUids: [actor.uid] });
+    await expect(updateJobProgress({ jobId: 'job-1', completedQuantity: 2, currentUser: { ...actor, role: 'staff' } })).rejects.toThrow('Completed jobs');
+    jobDoc({ status: 'pending', quantity: 15, collaboratorUids: [actor.uid] });
+    await expect(updateJobProgress({ jobId: 'job-1', completedQuantity: 16, currentUser: { ...actor, role: 'staff' } })).rejects.toThrow('Enter a whole number');
+  });
+
+  it('prevents lowering total quantity below completed progress', async () => {
+    jobDoc({ status: 'started', category: 'manufacturing', quantity: 15, completedQuantity: 12 });
+    await expect(editJob(actor, self(), 'job-1', { quantity: 11 })).rejects.toThrow(
+      'The total quantity cannot be less than the completed quantity.',
+    );
+  });
+
+  it('sets completion to the latest total quantity', async () => {
+    jobDoc({ status: 'started', name: 'Regular order', quantity: 15, collaboratorUids: [actor.uid] });
+    await completeJob(actor, self('staff'), 'job-1');
+    expect(lastTransactionPatch()).toMatchObject({ status: 'completed', completedQuantity: 15 });
   });
 });

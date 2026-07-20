@@ -178,6 +178,12 @@ describe('legacy job parsing and collaborator normalization', () => {
     expect(parseJob('legacy-job', {}).category).toBe('miscellaneous');
   });
 
+  it('defaults legacy progress to zero, or the full quantity when completed', () => {
+    expect(parseJob('pending', { status: 'pending', quantity: 15 }).completedQuantity).toBe(0);
+    expect(parseJob('completed', { status: 'completed', quantity: 15 }).completedQuantity).toBe(15);
+    expect(parseJob('malformed', { status: 'started', quantity: 15, completedQuantity: 99 }).completedQuantity).toBe(15);
+  });
+
   it('falls back to the legacy primary AWF assignee when collaborators are absent', () => {
     const dueDate = new Date('2030-01-02T23:59:59.000Z');
     const job = parseJob('legacy-job', {
@@ -195,6 +201,16 @@ describe('legacy job parsing and collaborator normalization', () => {
       { uid: 'legacy-awf', name: 'Legacy Person', role: 'awf' },
     ]);
     expect(job.collaboratorUids).toEqual(['legacy-awf']);
+  });
+
+  it('recognizes both legacy primary assignment and collaborator UID arrays', () => {
+    const job = parseJob('mixed-job', {
+      assignedToUid: 'legacy-primary',
+      assignedToName: 'Primary',
+      assignedToRole: 'staff',
+      collaboratorUids: ['current-collaborator'],
+    });
+    expect(job.collaboratorUids).toEqual(['current-collaborator', 'legacy-primary']);
   });
 
   it('deduplicates collaborators by trimmed UID and preserves the first as primary', () => {

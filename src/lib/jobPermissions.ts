@@ -31,6 +31,11 @@ export function canCompleteJob(job: JobPermissionTarget, user: JobPermissionUser
   return collaboratorUids(job).has(user.uid) || isManagerOrAdminRole(user.role);
 }
 
+export function canUpdateJobProgress(job: JobPermissionTarget, user: JobPermissionUser): boolean {
+  if (job.status !== 'pending' && job.status !== 'started') return false;
+  return collaboratorUids(job).has(user.uid) || isManagerOrAdminRole(user.role);
+}
+
 export function canEditJob(status: JobStatus, role: UserRole): boolean {
   return status !== 'completed' && isManagerOrAdminRole(role);
 }
