@@ -32,6 +32,7 @@ import {
 } from '../lib/jobCategories';
 import { inventoryCol } from './inventoryService';
 import { isSameCalendarDate } from '../lib/format';
+import { resolvedCompletedQuantity, validateCompletedQuantity } from '../lib/jobProgress';
 import {
   parseAssignedRole,
   parseJobStatus,
@@ -108,7 +109,12 @@ function parseCollaboratorUids(
   const uids = Array.isArray(data.collaboratorUids)
     ? data.collaboratorUids.filter((uid): uid is string => typeof uid === 'string' && uid.trim().length > 0)
     : [];
-  return uids.length > 0 ? Array.from(new Set(uids)) : collaborators.map((c) => c.uid);
+  const legacyUid = typeof data.assignedToUid === 'string' ? data.assignedToUid.trim() : '';
+  return Array.from(new Set([
+    ...uids,
+    ...collaborators.map((collaborator) => collaborator.uid),
+    ...(legacyUid ? [legacyUid] : []),
+  ]));
 }
 
 export function dedupeCollaborators(collaborators: readonly AssignTarget[]): JobCollaborator[] {
@@ -129,13 +135,16 @@ export function dedupeCollaborators(collaborators: readonly AssignTarget[]): Job
 
 export function parseJob(id: string, data: Record<string, unknown>): Job {
   const collaborators = parseCollaborators(data);
+  const status = parseJobStatus(data.status);
+  const quantity = typeof data.quantity === 'number' ? data.quantity : 0;
   return {
     id,
     name: typeof data.name === 'string' ? data.name : '',
     customer: typeof data.customer === 'string' ? data.customer : '',
-    quantity: typeof data.quantity === 'number' ? data.quantity : 0,
+    quantity,
+    completedQuantity: resolvedCompletedQuantity(data.completedQuantity, quantity, status),
     dueDate: toDate(data.dueDate) ?? new Date(),
-    status: parseJobStatus(data.status),
+    status,
     category: parseJobCategory(data.category),
     isAwf: data.isAwf === true,
     createdByUid: (data.createdByUid as string) ?? '',
@@ -213,6 +222,7 @@ export async function addJob(
     name: input.name,
     customer: input.customer,
     quantity: assertValidJobQuantity(input.category, input.quantity),
+    completedQuantity: 0,
     dueDate: Timestamp.fromDate(input.dueDate),
     status: 'pending',
     category: input.category,
@@ -358,15 +368,6 @@ function normalizedName(data: Record<string, unknown>): string {
 export async function completeJob(actor: Actor, self: Assigner, jobId: string): Promise<void> {
   const jobRef = doc(db, 'jobs', jobId);
   const byName = actorDisplayName(actor);
-  const completionPatch = {
-    status: 'completed',
-    completedAt: serverTimestamp(),
-    completedByUid: actor.uid,
-    completedByName: byName,
-    updatedAt: serverTimestamp(),
-    updatedByUid: actor.uid,
-    updatedByName: byName,
-  };
 
   const [completedSnap, inventorySnap] = await Promise.all([
     getDocs(query(jobsCol, where('status', '==', 'completed'))),
@@ -438,7 +439,16 @@ export async function completeJob(actor: Actor, self: Assigner, jobId: string): 
       }
     }
 
-    tx.update(jobRef, completionPatch);
+    tx.update(jobRef, {
+      status: 'completed',
+      completedQuantity: quantity,
+      completedAt: serverTimestamp(),
+      completedByUid: actor.uid,
+      completedByName: byName,
+      updatedAt: serverTimestamp(),
+      updatedByUid: actor.uid,
+      updatedByName: byName,
+    });
   });
 }
 
@@ -455,6 +465,7 @@ export async function restoreJob(actor: Actor, jobId: string): Promise<void> {
     }
     tx.update(ref, {
       status: 'pending',
+      completedQuantity: 0,
       assignedToUid: '',
       assignedToName: '',
       assignedToRole: '',
@@ -534,7 +545,16 @@ export async function editJob(
       const category = edit.category ?? parseJobCategory(data.category);
       const quantity =
         edit.quantity ?? (typeof data.quantity === 'number' ? data.quantity : 0);
-      patch.quantity = assertValidJobQuantity(category, quantity);
+      const nextQuantity = assertValidJobQuantity(category, quantity);
+      const storedCompleted = resolvedCompletedQuantity(
+        data.completedQuantity,
+        typeof data.quantity === 'number' ? data.quantity : 0,
+        parseJobStatus(data.status),
+      );
+      if (nextQuantity < storedCompleted) {
+        throw new Error('The total quantity cannot be less than the completed quantity.');
+      }
+      patch.quantity = nextQuantity;
     }
 
     // Compare against the freshly-read deadline by calendar day. dueDate (and
@@ -557,6 +577,45 @@ export async function editJob(
     }
 
     tx.update(ref, patch);
+  });
+}
+
+export interface UpdateJobProgressInput {
+  jobId: string;
+  completedQuantity: number;
+  currentUser: Actor & { role: UserRole };
+}
+
+/** Progress-only transaction. The server rules remain the final authority; these
+ * checks provide immediate feedback and protect against stale card data. */
+export async function updateJobProgress({
+  jobId,
+  completedQuantity,
+  currentUser,
+}: UpdateJobProgressInput): Promise<void> {
+  const ref = doc(db, 'jobs', jobId);
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error('This job no longer exists.');
+    const data = snap.data();
+    const status = parseJobStatus(data.status);
+    if (status !== 'pending' && status !== 'started') {
+      throw new Error('Completed jobs cannot have their progress updated.');
+    }
+    const collaborators = parseCollaborators(data);
+    const collaboratorUids = parseCollaboratorUids(data, collaborators);
+    if (!collaboratorUids.includes(currentUser.uid) && !isManagerOrAdminRole(currentUser.role)) {
+      throw new Error('Only a collaborator, manager, or admin can update progress.');
+    }
+    const quantity = typeof data.quantity === 'number' ? data.quantity : 0;
+    const validationError = validateCompletedQuantity(completedQuantity, quantity);
+    if (validationError) throw new Error(validationError);
+    tx.update(ref, {
+      completedQuantity,
+      updatedAt: serverTimestamp(),
+      updatedByUid: currentUser.uid,
+      updatedByName: actorDisplayName(currentUser),
+    });
   });
 }
 

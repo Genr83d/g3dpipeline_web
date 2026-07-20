@@ -81,6 +81,13 @@ export function JobForm({
       ? validateJobQuantity(category, quantity)
       : null;
     if (quantityError) return setError(quantityError);
+    if (
+      initial &&
+      (quantityConfig.usesQuantity ? Number(quantity.trim()) : NORMALIZED_QUANTITY) <
+        initial.completedQuantity
+    ) {
+      return setError('The total quantity cannot be less than the completed quantity.');
+    }
     if (!dueDate) return setError('Deadline is required.');
     const parsedDueDate = fromDateInputValue(dueDate);
     const startOfToday = new Date();
