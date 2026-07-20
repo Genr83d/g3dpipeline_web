@@ -11,26 +11,61 @@ import {
   canStartJob,
 } from '../lib/jobPermissions';
 import { isManagerOrAdminRole, roleLabel } from '../lib/roles';
-import { jobCategoryLabel } from '../lib/jobCategories';
+import { jobCategoryLabel, jobQuantityConfig } from '../lib/jobCategories';
 import { StatusPill } from './StatusPill';
-import { IconBox, IconCalendar, IconCheck, IconChevron, IconCode, IconEdit, IconGear, IconPalette, IconPlay, IconRestore, IconTag, IconTrash, IconUser, IconUserPlus, IconWrench } from './icons';
+import { IconBox, IconCalendar, IconCheck, IconChevron, IconCode, IconEdit, IconGear, IconPalette, IconPlay, IconRestore, IconTag, IconTrash, IconUser, IconUserPlus, IconUsers, IconWrench } from './icons';
 import { useAuth } from '../context/AuthProvider';
 import { useAppearance } from '../context/AppearanceProvider';
 
-function collaboratorSummary(job: Job, currentUid?: string): string {
-  if (job.collaborators.length === 0) return '';
-  const me = currentUid && job.collaborators.some((collaborator) => collaborator.uid === currentUid);
-  if (me) {
-    return job.collaborators.length === 1 ? 'Me' : `Me + ${job.collaborators.length - 1}`;
-  }
-  const first = job.collaborators[0];
-  const firstName = first.name.trim();
-  if (job.collaborators.length === 1) {
-    return firstName ? `${firstName} · ${roleLabel(first.role)}` : roleLabel(first.role);
-  }
-  return firstName
-    ? `${firstName} + ${job.collaborators.length - 1}`
-    : `${job.collaborators.length} people`;
+/** Compact dropdown of assigned collaborators. Collapsed it shows only the
+ *  count; expanded, a vertical list of avatar initial, name, and role. Never
+ *  renders email addresses or other private contact details. Legacy jobs with
+ *  only an assigned user surface that user via parseJob's collaborator fallback. */
+function CollaboratorList({ job }: { job: Job }) {
+  const [open, setOpen] = useState(false);
+  const count = job.collaborators.length;
+
+  return (
+    <div className="py-2.5">
+      <button
+        type="button"
+        className="flex w-full items-center justify-between gap-3 text-left"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+      >
+        <span className="inline-flex min-w-0 items-center gap-2">
+          <IconUsers className="h-4 w-4 shrink-0 text-slate-400" />
+          <span className="truncate">Collaborators ({count})</span>
+        </span>
+        <IconChevron className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${open ? '-rotate-90' : 'rotate-90'}`} />
+      </button>
+      {open && (
+        <ul className="mt-2 space-y-1.5" data-testid={`job-collaborators-${job.id}`}>
+          {job.collaborators.map((collaborator) => {
+            const name = collaborator.name.trim();
+            return (
+              <li key={collaborator.uid} className="flex min-w-0 items-center gap-2.5">
+                <span
+                  aria-hidden
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                >
+                  {name ? name.charAt(0).toUpperCase() : '?'}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-semibold">
+                    {name || 'Unknown collaborator'}
+                  </span>
+                  <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
+                    {roleLabel(collaborator.role)}
+                  </span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
 }
 
 const categoryBadgeStyles: Readonly<Record<JobCategory, string>> = {
@@ -84,8 +119,8 @@ export function JobCard({
   const [expanded, setExpanded] = useState(true);
   const overdue = isOverdue(job);
   const hasCollaborators = job.collaboratorUids.length > 0 || job.assignedToUid.length > 0;
-  const collaboration = collaboratorSummary(job, profile?.uid);
   const isCompleted = job.status === 'completed';
+  const showsQuantity = jobQuantityConfig(job.category).usesQuantity;
   const viewer = profile ? { uid: profile.uid, role: profile.role } : null;
   const canStart = viewer ? canStartJob(job, viewer) : false;
   const canComplete = viewer ? canCompleteJob(job, viewer) : false;
@@ -160,17 +195,7 @@ export function JobCard({
             </strong>
           </span>
         )}
-        {isCompleted && collaboration && (
-          <span className="flex items-center justify-between gap-3 py-2.5">
-            <span className="inline-flex min-w-0 items-center gap-2">
-              <IconUserPlus className="h-4 w-4 shrink-0 text-slate-400" />
-              <span className="truncate">Collaborators</span>
-            </span>
-            <strong className="min-w-0 truncate text-right">
-              {collaboration}
-            </strong>
-          </span>
-        )}
+        {isCompleted && job.collaborators.length > 0 && <CollaboratorList job={job} />}
         {isCompleted && (
           <span className="flex items-center justify-between gap-3 py-2.5">
             <span className="inline-flex min-w-0 items-center gap-2">
@@ -182,15 +207,17 @@ export function JobCard({
             </strong>
           </span>
         )}
-        <span className="flex items-center justify-between gap-3 py-2.5">
-          <span className="inline-flex min-w-0 items-center gap-2">
-            <IconBox className="h-4 w-4 shrink-0 text-slate-400" />
-            <span className="truncate">Quantity</span>
+        {showsQuantity && (
+          <span className="flex items-center justify-between gap-3 py-2.5">
+            <span className="inline-flex min-w-0 items-center gap-2">
+              <IconBox className="h-4 w-4 shrink-0 text-slate-400" />
+              <span className="truncate">{jobQuantityConfig(job.category).quantityLabel}</span>
+            </span>
+            <strong className="shrink-0 tabular-nums">
+              {job.quantity} unit{job.quantity === 1 ? '' : 's'}
+            </strong>
           </span>
-          <strong className="shrink-0 tabular-nums">
-            {job.quantity} unit{job.quantity === 1 ? '' : 's'}
-          </strong>
-        </span>
+        )}
         <span className={`flex items-center justify-between gap-3 py-2.5 ${
           overdue
             ? 'font-semibold text-danger dark:text-red-300'
@@ -202,17 +229,18 @@ export function JobCard({
           </span>
           <strong className="shrink-0">{formatDate(job.dueDate)}</strong>
         </span>
-        {!isCompleted && (
-          <span className="flex items-center justify-between gap-3 py-2.5">
-            <span className="inline-flex min-w-0 items-center gap-2">
-              <IconUser className="h-4 w-4 shrink-0 text-slate-400" />
-              <span className="truncate">Collaborators</span>
+        {!isCompleted &&
+          (job.collaborators.length > 0 ? (
+            <CollaboratorList job={job} />
+          ) : (
+            <span className="flex items-center justify-between gap-3 py-2.5">
+              <span className="inline-flex min-w-0 items-center gap-2">
+                <IconUser className="h-4 w-4 shrink-0 text-slate-400" />
+                <span className="truncate">Collaborators</span>
+              </span>
+              <strong className="min-w-0 truncate text-right">Unassigned</strong>
             </span>
-            <strong className="min-w-0 truncate text-right">
-              {collaboration || 'Unassigned'}
-            </strong>
-          </span>
-        )}
+          ))}
       </div>}
 
       <div className="mt-auto space-y-2 pt-1">

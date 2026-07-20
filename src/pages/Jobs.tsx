@@ -6,6 +6,12 @@ import { useToast } from '../components/Toast';
 import { JobCard } from '../components/JobCard';
 import { JobForm, type JobFormValues } from '../components/JobForm';
 import { Modal } from '../components/Modal';
+import {
+  JOB_DELETE_WARNING,
+  JOB_DOWNSTREAM_WARNING,
+  JobConfirmDialog,
+  JobConfirmSummary,
+} from '../components/JobConfirmDialog';
 import { AssignJobModal } from '../components/AssignJobModal';
 import { EmptyState } from '../components/EmptyState';
 import { PageHeader } from '../components/PageHeader';
@@ -42,6 +48,8 @@ export default function Jobs() {
   const [editing, setEditing] = useState<Job | null>(null);
   const [deleting, setDeleting] = useState<Job | null>(null);
   const [assigning, setAssigning] = useState<Job | null>(null);
+  const [starting, setStarting] = useState<Job | null>(null);
+  const [completing, setCompleting] = useState<Job | null>(null);
 
   const activeJobs = useMemo(
     () => jobs.filter((job) => job.status !== 'completed'),
@@ -239,8 +247,8 @@ export default function Jobs() {
                 <JobCard
                   key={job.id}
                   job={job}
-                  onStart={(j) => void run(() => jobService.startJob(actor!, assigner!, j.id), `You started “${j.name}”.`)}
-                  onComplete={(j) => void run(() => jobService.completeJob(actor!, assigner!, j.id), `“${j.name}” completed. Nice.`)}
+                  onStart={setStarting}
+                  onComplete={setCompleting}
                   onEdit={setEditing}
                   onDelete={isAdmin ? setDeleting : undefined}
                   onAssign={isManagerOrAdmin ? setAssigning : undefined}
@@ -268,28 +276,68 @@ export default function Jobs() {
         )}
       </Modal>
 
-      <Modal open={deleting !== null} title="Delete job?" onClose={() => setDeleting(null)}>
-        {deleting && (
-          <div className="space-y-4">
-            <p className="text-sm">
-              Permanently delete <strong>{deleting.name}</strong> for {deleting.customer}? This
-              can't be undone.
-            </p>
-            <div className="flex justify-end gap-2">
-              <button className="btn-ghost" onClick={() => setDeleting(null)}>Cancel</button>
-              <button
-                className="btn-danger"
-                onClick={() => {
-                  void run(() => jobService.deleteJob(deleting.id), 'Job deleted.');
-                  setDeleting(null);
-                }}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
+      <JobConfirmDialog
+        open={starting !== null}
+        title="Start Job?"
+        confirmLabel="Start Job"
+        busyLabel="Updating…"
+        warning={JOB_DOWNSTREAM_WARNING}
+        onCancel={() => setStarting(null)}
+        onConfirm={async () => {
+          await jobService.startJob(actor!, assigner!, starting!.id);
+          toast(`You started “${starting!.name}”.`, 'success');
+          setStarting(null);
+        }}
+      >
+        {starting && (
+          <JobConfirmSummary
+            jobName={starting.name}
+            currentStatus="Pending"
+            targetStatus="In Progress"
+          />
         )}
-      </Modal>
+      </JobConfirmDialog>
+
+      <JobConfirmDialog
+        open={completing !== null}
+        title="Complete Job?"
+        confirmLabel="Mark as Completed"
+        busyLabel="Updating…"
+        destructive
+        warning={JOB_DOWNSTREAM_WARNING}
+        onCancel={() => setCompleting(null)}
+        onConfirm={async () => {
+          await jobService.completeJob(actor!, assigner!, completing!.id);
+          toast(`“${completing!.name}” completed. Nice.`, 'success');
+          setCompleting(null);
+        }}
+      >
+        {completing && (
+          <JobConfirmSummary
+            jobName={completing.name}
+            jobRef={completing.id}
+            currentStatus="In Progress"
+            targetStatus="Completed"
+          />
+        )}
+      </JobConfirmDialog>
+
+      <JobConfirmDialog
+        open={deleting !== null}
+        title="Delete Job?"
+        confirmLabel="Delete Job"
+        busyLabel="Deleting…"
+        destructive
+        warning={JOB_DELETE_WARNING}
+        onCancel={() => setDeleting(null)}
+        onConfirm={async () => {
+          await jobService.deleteJob(deleting!.id);
+          toast(`“${deleting!.name}” deleted.`, 'success');
+          setDeleting(null);
+        }}
+      >
+        {deleting && <JobConfirmSummary jobName={deleting.name} jobRef={deleting.id} />}
+      </JobConfirmDialog>
     </div>
   );
 }

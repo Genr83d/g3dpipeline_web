@@ -5,7 +5,11 @@ import { useAuth } from '../context/AuthProvider';
 import { useToast } from '../components/Toast';
 import { JobCard } from '../components/JobCard';
 import { EmptyState } from '../components/EmptyState';
-import { Modal } from '../components/Modal';
+import {
+  JOB_DELETE_WARNING,
+  JobConfirmDialog,
+  JobConfirmSummary,
+} from '../components/JobConfirmDialog';
 import { JobCardSkeleton, Skeleton } from '../components/Skeleton';
 import { PageHeader } from '../components/PageHeader';
 import { IconCheck, IconCloudOff } from '../components/icons';
@@ -37,13 +41,9 @@ export default function Archive() {
   }
 
   async function handleDelete(job: Job) {
-    try {
-      await deleteJob(job.id);
-      toast(`“${job.name}” deleted.`, 'success');
-      setDeleting(null);
-    } catch (err) {
-      toast(errorMessage(err), 'error');
-    }
+    await deleteJob(job.id);
+    toast(`“${job.name}” deleted.`, 'success');
+    setDeleting(null);
   }
 
   return (
@@ -92,22 +92,18 @@ export default function Archive() {
         </div>
       )}
 
-      <Modal open={deleting !== null} title="Delete archived job?" onClose={() => setDeleting(null)}>
-        {deleting && (
-          <div className="space-y-4">
-            <p className="text-sm">
-              Permanently delete <strong>{deleting.name}</strong> for {deleting.customer}? This
-              can't be undone.
-            </p>
-            <div className="flex justify-end gap-2">
-              <button className="btn-ghost" onClick={() => setDeleting(null)}>Cancel</button>
-              <button className="btn-danger" onClick={() => void handleDelete(deleting)}>
-                Delete
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
+      <JobConfirmDialog
+        open={deleting !== null}
+        title="Delete Job?"
+        confirmLabel="Delete Job"
+        busyLabel="Deleting…"
+        destructive
+        warning={JOB_DELETE_WARNING}
+        onCancel={() => setDeleting(null)}
+        onConfirm={() => handleDelete(deleting!)}
+      >
+        {deleting && <JobConfirmSummary jobName={deleting.name} jobRef={deleting.id} />}
+      </JobConfirmDialog>
     </div>
   );
 }

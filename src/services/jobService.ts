@@ -25,7 +25,11 @@ import {
   collaboratorsRequireAwf,
   resolveNewJobIsAwf,
 } from '../lib/jobPermissions';
-import { parseJobCategory } from '../lib/jobCategories';
+import {
+  normalizeJobQuantity,
+  parseJobCategory,
+  validateJobQuantity,
+} from '../lib/jobCategories';
 import { inventoryCol } from './inventoryService';
 import {
   parseAssignedRole,
@@ -182,6 +186,15 @@ export interface JobInput {
   isAwf?: boolean;
 }
 
+/** Service-layer guard mirroring the client form: quantity must satisfy the
+ *  category's centralized config even for manually crafted requests. */
+function assertValidJobQuantity(category: JobCategory, quantity: number): number {
+  const normalized = normalizeJobQuantity(category, quantity);
+  const error = validateJobQuantity(category, normalized);
+  if (error) throw new Error(error);
+  return normalized;
+}
+
 /** All active roles may create jobs. AWF creators are always classified AWF;
  *  only manager/admin requests may opt another new job into that pipeline. */
 export async function addJob(
@@ -193,7 +206,7 @@ export async function addJob(
   await addDoc(jobsCol, {
     name: input.name,
     customer: input.customer,
-    quantity: input.quantity,
+    quantity: assertValidJobQuantity(input.category, input.quantity),
     dueDate: Timestamp.fromDate(input.dueDate),
     status: 'pending',
     category: input.category,
@@ -423,26 +436,35 @@ export async function completeJob(actor: Actor, self: Assigner, jobId: string): 
   });
 }
 
-/** Manager/admin: send a completed job back into the pipeline. */
+/** Manager/admin: send a completed job back into the pipeline. This is the
+ *  only supported completed → pending transition; anything else is rejected. */
 export async function restoreJob(actor: Actor, jobId: string): Promise<void> {
   const byName = actorDisplayName(actor);
-  await updateDoc(doc(db, 'jobs', jobId), {
-    status: 'pending',
-    assignedToUid: '',
-    assignedToName: '',
-    assignedToRole: '',
-    collaborators: [],
-    collaboratorUids: [],
-    assignedByUid: deleteField(),
-    assignedByName: deleteField(),
-    assignedAt: deleteField(),
-    startedAt: deleteField(),
-    completedAt: deleteField(),
-    completedByUid: deleteField(),
-    completedByName: deleteField(),
-    updatedAt: serverTimestamp(),
-    updatedByUid: actor.uid,
-    updatedByName: byName,
+  const ref = doc(db, 'jobs', jobId);
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error('This job no longer exists.');
+    if (parseJobStatus(snap.data().status) !== 'completed') {
+      throw new Error('Only completed jobs can be restored.');
+    }
+    tx.update(ref, {
+      status: 'pending',
+      assignedToUid: '',
+      assignedToName: '',
+      assignedToRole: '',
+      collaborators: [],
+      collaboratorUids: [],
+      assignedByUid: deleteField(),
+      assignedByName: deleteField(),
+      assignedAt: deleteField(),
+      startedAt: deleteField(),
+      completedAt: deleteField(),
+      completedByUid: deleteField(),
+      completedByName: deleteField(),
+      updatedAt: serverTimestamp(),
+      updatedByUid: actor.uid,
+      updatedByName: byName,
+    });
   });
 }
 
@@ -473,11 +495,30 @@ export async function editJob(
   };
   if (edit.name !== undefined) patch.name = edit.name;
   if (edit.customer !== undefined) patch.customer = edit.customer;
-  if (edit.quantity !== undefined) patch.quantity = edit.quantity;
   if (edit.dueDate !== undefined) patch.dueDate = Timestamp.fromDate(edit.dueDate);
   if (edit.category !== undefined) patch.category = edit.category;
   if (edit.isAwf !== undefined) patch.isAwf = edit.isAwf;
-  await updateDoc(doc(db, 'jobs', jobId), patch);
+
+  const touchesQuantity = edit.quantity !== undefined || edit.category !== undefined;
+  if (!touchesQuantity) {
+    await updateDoc(doc(db, 'jobs', jobId), patch);
+    return;
+  }
+
+  // Quantity/category edits re-read the job so the effective pair is validated
+  // against the centralized config. Legacy over-limit records stay readable and
+  // accept non-quantity updates, but must comply once edited here.
+  const ref = doc(db, 'jobs', jobId);
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error('This job no longer exists.');
+    const data = snap.data();
+    const category = edit.category ?? parseJobCategory(data.category);
+    const quantity =
+      edit.quantity ?? (typeof data.quantity === 'number' ? data.quantity : 0);
+    patch.quantity = assertValidJobQuantity(category, quantity);
+    tx.update(ref, patch);
+  });
 }
 
 /** Admin only. */
