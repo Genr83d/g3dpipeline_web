@@ -31,6 +31,7 @@ import {
   validateJobQuantity,
 } from '../lib/jobCategories';
 import { inventoryCol } from './inventoryService';
+import { isSameCalendarDate } from '../lib/format';
 import {
   parseAssignedRole,
   parseJobStatus,
@@ -156,6 +157,11 @@ export function parseJob(id: string, data: Record<string, unknown>): Job {
     completedByName: (data.completedByName as string) ?? '',
     updatedByUid: (data.updatedByUid as string) ?? '',
     updatedByName: (data.updatedByName as string) ?? '',
+    dueDateChangeNote: typeof data.dueDateChangeNote === 'string' ? data.dueDateChangeNote : '',
+    previousDueDate: toDate(data.previousDueDate),
+    dueDateChangedAt: toDate(data.dueDateChangedAt),
+    dueDateChangedByUid: (data.dueDateChangedByUid as string) ?? '',
+    dueDateChangedByName: (data.dueDateChangedByName as string) ?? '',
   };
 }
 
@@ -475,10 +481,19 @@ export interface JobEdit {
   dueDate?: Date;
   category?: JobCategory;
   isAwf?: boolean;
+  /** Required explanation captured when the due date's calendar day changes. */
+  dueDateChangeNote?: string;
 }
 
 /** Manager/admin: edit core fields and, when supplied, the persistent AWF
- *  classification. Never touches createdBy* / createdAt. */
+ *  classification. Never touches createdBy* / createdAt.
+ *
+ *  A due-date or quantity/category edit re-reads the job in a transaction so
+ *  the change is validated against the latest stored document, not stale client
+ *  data. Deadlines are compared by calendar day: a genuine change must carry a
+ *  non-empty reason and is persisted with a full audit trail
+ *  (previousDueDate / dueDateChangedAt / dueDateChangedByUid / …); re-selecting
+ *  the same day (or editing other fields) leaves that trail untouched. */
 export async function editJob(
   actor: Actor,
   self: Assigner,
@@ -488,35 +503,59 @@ export async function editJob(
   if (!isManagerOrAdminRole(self.role)) {
     throw new Error('Only managers and admins can edit jobs.');
   }
+  const byName = actorDisplayName(actor);
   const patch: Record<string, unknown> = {
     updatedAt: serverTimestamp(),
     updatedByUid: actor.uid,
-    updatedByName: actorDisplayName(actor),
+    updatedByName: byName,
   };
   if (edit.name !== undefined) patch.name = edit.name;
   if (edit.customer !== undefined) patch.customer = edit.customer;
-  if (edit.dueDate !== undefined) patch.dueDate = Timestamp.fromDate(edit.dueDate);
   if (edit.category !== undefined) patch.category = edit.category;
   if (edit.isAwf !== undefined) patch.isAwf = edit.isAwf;
 
+  const editsDueDate = edit.dueDate !== undefined;
   const touchesQuantity = edit.quantity !== undefined || edit.category !== undefined;
-  if (!touchesQuantity) {
+  if (!editsDueDate && !touchesQuantity) {
     await updateDoc(doc(db, 'jobs', jobId), patch);
     return;
   }
 
-  // Quantity/category edits re-read the job so the effective pair is validated
-  // against the centralized config. Legacy over-limit records stay readable and
-  // accept non-quantity updates, but must comply once edited here.
   const ref = doc(db, 'jobs', jobId);
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists()) throw new Error('This job no longer exists.');
     const data = snap.data();
-    const category = edit.category ?? parseJobCategory(data.category);
-    const quantity =
-      edit.quantity ?? (typeof data.quantity === 'number' ? data.quantity : 0);
-    patch.quantity = assertValidJobQuantity(category, quantity);
+
+    // Quantity/category edits validate the effective pair against the
+    // centralized config. Legacy over-limit records stay readable and accept
+    // non-quantity updates, but must comply once edited here.
+    if (touchesQuantity) {
+      const category = edit.category ?? parseJobCategory(data.category);
+      const quantity =
+        edit.quantity ?? (typeof data.quantity === 'number' ? data.quantity : 0);
+      patch.quantity = assertValidJobQuantity(category, quantity);
+    }
+
+    // Compare against the freshly-read deadline by calendar day. dueDate (and
+    // its audit trail) is only rewritten when the day genuinely changes, so a
+    // same-day edit never disturbs the stored deadline or its history.
+    if (editsDueDate) {
+      const storedDueDate = toDate(data.dueDate);
+      const dueDateChanged =
+        !storedDueDate || !isSameCalendarDate(storedDueDate, edit.dueDate!);
+      if (dueDateChanged) {
+        const note = (edit.dueDateChangeNote ?? '').trim();
+        if (!note) throw new Error('Add a reason for changing the deadline.');
+        patch.dueDate = Timestamp.fromDate(edit.dueDate!);
+        patch.previousDueDate = data.dueDate ?? null;
+        patch.dueDateChangeNote = note;
+        patch.dueDateChangedAt = serverTimestamp();
+        patch.dueDateChangedByUid = actor.uid;
+        patch.dueDateChangedByName = byName;
+      }
+    }
+
     tx.update(ref, patch);
   });
 }

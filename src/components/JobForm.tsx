@@ -20,6 +20,8 @@ export interface JobFormValues {
   dueDate: Date;
   category: JobCategory;
   isAwf: boolean;
+  /** Set only when editing shifts the deadline to a different calendar day. */
+  dueDateChangeNote?: string;
 }
 
 export function JobForm({
@@ -43,9 +45,15 @@ export function JobForm({
     initial?.category ?? DEFAULT_JOB_CATEGORY,
   );
   const [isAwf, setIsAwf] = useState(initial?.isAwf ?? profile?.role === 'awf');
+  const [dueDateChangeNote, setDueDateChangeNote] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const today = toDateInputValue(new Date());
+
+  // Compare calendar days: a note is required only while editing an existing job
+  // whose deadline now lands on a different day. Re-selecting the original day
+  // (or creating a new job) clears the requirement.
+  const dueDateChanged = Boolean(initial) && dueDate !== toDateInputValue(initial!.dueDate);
 
   const quantityConfig = jobQuantityConfig(category);
   const parsedQuantity = Number(quantity.trim());
@@ -80,6 +88,9 @@ export function JobForm({
     if (parsedDueDate.getTime() < startOfToday.getTime()) {
       return setError('Deadline cannot be in the past.');
     }
+    if (dueDateChanged && !dueDateChangeNote.trim()) {
+      return setError('Add a reason for changing the deadline.');
+    }
     setError('');
     setBusy(true);
     try {
@@ -90,6 +101,7 @@ export function JobForm({
         dueDate: parsedDueDate,
         category,
         isAwf: profile?.role === 'awf' ? true : isAwf,
+        dueDateChangeNote: dueDateChanged ? dueDateChangeNote.trim() : undefined,
       });
     } finally {
       setBusy(false);
@@ -198,6 +210,27 @@ export function JobForm({
           />
         </div>
       </div>
+      {dueDateChanged && (
+        <div>
+          <label
+            htmlFor="due-date-change-note-field"
+            className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200"
+          >
+            Reason for deadline change
+          </label>
+          <textarea
+            id="due-date-change-note-field"
+            className="field min-h-20 resize-y"
+            rows={3}
+            value={dueDateChangeNote}
+            onChange={(e) => setDueDateChangeNote(e.target.value)}
+            placeholder="Why is the deadline moving?"
+          />
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Required when the due date changes
+          </p>
+        </div>
+      )}
       {canChooseAwf && (
         <label
           htmlFor="job-awf"
