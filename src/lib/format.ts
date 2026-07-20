@@ -62,3 +62,8 @@ export function fromDateInputValue(v: string): Date {
   const [y, m, d] = v.split('-').map(Number);
   return new Date(y, m - 1, d, 23, 59, 59);
 }
+
+/** True when two dates fall on the same local calendar day, ignoring time of day. */
+export function isSameCalendarDate(a: Date, b: Date): boolean {
+  return toDateInputValue(a) === toDateInputValue(b);
+}

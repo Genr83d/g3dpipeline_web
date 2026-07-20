@@ -13,7 +13,7 @@ import {
 import { isManagerOrAdminRole, roleLabel } from '../lib/roles';
 import { jobCategoryLabel, jobQuantityConfig } from '../lib/jobCategories';
 import { StatusPill } from './StatusPill';
-import { IconBox, IconCalendar, IconCheck, IconChevron, IconCode, IconEdit, IconGear, IconPalette, IconPlay, IconRestore, IconTag, IconTrash, IconUser, IconUserPlus, IconUsers, IconWrench } from './icons';
+import { IconBox, IconCalendar, IconCheck, IconChevron, IconCode, IconEdit, IconGear, IconHistory, IconPalette, IconPlay, IconRestore, IconTag, IconTrash, IconUser, IconUserPlus, IconUsers, IconWrench } from './icons';
 import { useAuth } from '../context/AuthProvider';
 import { useAppearance } from '../context/AppearanceProvider';
 
@@ -229,6 +229,15 @@ export function JobCard({
           </span>
           <strong className="shrink-0">{formatDate(job.dueDate)}</strong>
         </span>
+        {job.dueDateChangeNote && (
+          <span className="flex items-center justify-between gap-3 py-2.5">
+            <span className="inline-flex min-w-0 items-center gap-2">
+              <IconHistory className="h-4 w-4 shrink-0 text-slate-400" />
+              <span className="truncate">Deadline changed</span>
+            </span>
+            <strong className="min-w-0 truncate text-right">{job.dueDateChangeNote}</strong>
+          </span>
+        )}
         {!isCompleted &&
           (job.collaborators.length > 0 ? (
             <CollaboratorList job={job} />

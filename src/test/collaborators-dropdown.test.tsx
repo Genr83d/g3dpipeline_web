@@ -79,6 +79,11 @@ function job(overrides: Partial<Job> = {}): Job {
     completedByName: '',
     updatedByUid: '',
     updatedByName: '',
+    dueDateChangeNote: '',
+    previousDueDate: null,
+    dueDateChangedAt: null,
+    dueDateChangedByUid: '',
+    dueDateChangedByName: '',
     ...overrides,
   };
 }

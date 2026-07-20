@@ -44,6 +44,13 @@ export interface Job {
   completedByName: string;
   updatedByUid: string;
   updatedByName: string;
+  /** Latest deadline-change reason; legacy jobs without one read as ''. */
+  dueDateChangeNote: string;
+  /** Deadline that preceded the latest change; null when never changed. */
+  previousDueDate: Date | null;
+  dueDateChangedAt: Date | null;
+  dueDateChangedByUid: string;
+  dueDateChangedByName: string;
 }
 
 export interface Material {
