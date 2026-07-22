@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthProvider';
 import { useAppearance } from '../context/AppearanceProvider';
 import { AccountMenu } from '../components/AccountMenu';
 import { BrandMark } from '../components/BrandMark';
+import { IconHelp } from '../components/icons';
 
 const tabs = [
   { to: '/', label: 'Jobs', end: true, tour: 'nav-jobs' },
@@ -103,7 +104,19 @@ export function Workspace() {
               </NavLink>
             ))}
           </nav>
-          <AccountMenu />
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              to="/settings/help"
+              data-tour="help-button"
+              className="btn-ghost h-10 px-2.5 sm:px-3"
+              aria-label="Help and walkthroughs"
+              title="Help and walkthroughs"
+            >
+              <IconHelp className="h-5 w-5" />
+              <span className="hidden lg:inline">Help</span>
+            </Link>
+            <AccountMenu />
+          </div>
         </div>
       </header>
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
