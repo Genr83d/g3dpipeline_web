@@ -117,10 +117,10 @@ function applicationSteps(role: UserRole): TutorialStep[] {
 
   steps.push(
     step(
-      'Help is always nearby',
-      'Open your account menu for settings and Help. You can restart this tour or choose a shorter walkthrough at any time.',
+      'Help is always visible',
+      'Choose Help whenever you need an answer. You can restart this tour or open a shorter walkthrough at any time.',
       '/',
-      '[data-tour="account-menu"]',
+      '[data-tour="help-button"]',
     ),
   );
 
