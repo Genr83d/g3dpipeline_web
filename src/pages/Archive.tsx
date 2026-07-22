@@ -47,7 +47,7 @@ export default function Archive() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-tour="archive-page">
       <PageHeader
         title="Archive"
         eyebrow="Completed output"

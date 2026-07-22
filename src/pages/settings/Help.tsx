@@ -1,4 +1,8 @@
 import { SettingsShell } from './SettingsShell';
+import { useAuth } from '../../context/AuthProvider';
+import { useOnboarding } from '../../onboarding/OnboardingProvider';
+import { IconHelp, IconPlay } from '../../components/icons';
+import { roleLabel } from '../../lib/roles';
 
 const faqs = [
   {
@@ -24,8 +28,40 @@ const faqs = [
 ];
 
 export default function Help() {
+  const { profile } = useAuth();
+  const { tutorials, startTutorial } = useOnboarding();
+
   return (
-    <SettingsShell title="Help" subtitle="Quick answers about the pipeline">
+    <SettingsShell title="Help" subtitle="Quick answers and guided walkthroughs">
+      <section className="surface-strong space-y-4 p-5" aria-labelledby="walkthrough-heading">
+        <div className="flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary dark:bg-primary/20 dark:text-indigo-300">
+            <IconHelp className="h-5 w-5" />
+          </span>
+          <div>
+            <h2 id="walkthrough-heading" className="font-display text-lg font-bold">Application walkthrough</h2>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              Choose a short guide and follow it in the real app. {profile ? `These guides match your ${roleLabel(profile.role)} access.` : ''}
+            </p>
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {tutorials.map((tutorial) => (
+            <button
+              key={tutorial.id}
+              type="button"
+              className="surface surface-hover flex cursor-pointer items-start gap-3 p-4 text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+              onClick={() => startTutorial(tutorial.id)}
+            >
+              <IconPlay className="mt-0.5 h-4 w-4 shrink-0 text-primary dark:text-indigo-300" />
+              <span>
+                <span className="block text-sm font-bold">{tutorial.id === 'application' ? 'Restart application walkthrough' : tutorial.title}</span>
+                <span className="mt-1 block text-xs leading-5 text-slate-500 dark:text-slate-400">{tutorial.description}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
       <div className="space-y-3">
         {faqs.map((f) => (
           <details key={f.q} className="surface surface-hover group p-4">

@@ -6,6 +6,7 @@ import { ToastProvider } from './components/Toast';
 import { AuthGate } from './routes/AuthGate';
 import { Workspace } from './routes/Workspace';
 import { PageHeaderSkeleton, Skeleton } from './components/Skeleton';
+import { OnboardingProvider } from './onboarding/OnboardingProvider';
 
 const SignIn = lazy(() => import('./pages/SignIn'));
 const SignUp = lazy(() => import('./pages/SignUp'));
@@ -37,7 +38,11 @@ function NonAwfOnly({ children }: { children: ReactNode }) {
 function RoleScopedWorkspace() {
   const { profile } = useAuth();
   if (!profile) return null;
-  return <Workspace key={`${profile.uid}:${profile.role}`} />;
+  return (
+    <OnboardingProvider key={`${profile.uid}:${profile.role}`}>
+      <Workspace />
+    </OnboardingProvider>
+  );
 }
 
 function SettingsFallback() {

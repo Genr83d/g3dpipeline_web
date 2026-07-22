@@ -153,6 +153,7 @@ export function JobCard({
 
   return (
     <motion.article
+      data-tour="job-card"
       layout={!motionReduced}
       initial={motionReduced ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}

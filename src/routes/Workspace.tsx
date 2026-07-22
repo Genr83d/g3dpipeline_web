@@ -10,11 +10,11 @@ import { AccountMenu } from '../components/AccountMenu';
 import { BrandMark } from '../components/BrandMark';
 
 const tabs = [
-  { to: '/', label: 'Jobs', end: true },
-  { to: '/inventory', label: 'Inventory', end: false },
-  { to: '/maintenance', label: 'Maintenance', end: false },
-  { to: '/summary', label: 'Summary', end: false },
-  { to: '/archive', label: 'Archive', end: false },
+  { to: '/', label: 'Jobs', end: true, tour: 'nav-jobs' },
+  { to: '/inventory', label: 'Inventory', end: false, tour: 'nav-inventory' },
+  { to: '/maintenance', label: 'Maintenance', end: false, tour: 'nav-maintenance' },
+  { to: '/summary', label: 'Summary', end: false, tour: 'nav-summary' },
+  { to: '/archive', label: 'Archive', end: false, tour: 'nav-archive' },
 ];
 
 const awfTabs = tabs.filter(
@@ -83,6 +83,7 @@ export function Workspace() {
                 key={tab.to}
                 to={tab.to}
                 end={tab.end}
+                data-tour={tab.tour}
                 className="relative shrink-0 rounded-md px-2.5 py-1.5 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none sm:px-4"
               >
                 {({ isActive: active }) => (

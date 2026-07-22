@@ -112,13 +112,13 @@ export default function Inventory() {
   }
 
   const addButton = (
-    <button className="btn-primary" onClick={() => setAdding(true)}>
+    <button className="btn-primary" onClick={() => setAdding(true)} data-tour="add-material">
       <IconLayers className="h-4 w-4" /> Add material
     </button>
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-tour="inventory-page">
       <PageHeader
         title="Inventory"
         eyebrow="Materials control"

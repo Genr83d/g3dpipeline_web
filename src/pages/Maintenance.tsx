@@ -398,13 +398,13 @@ export default function Maintenance() {
   }
 
   const addButton = (
-    <button className="btn-primary" onClick={() => setAdding(true)}>
+    <button className="btn-primary" onClick={() => setAdding(true)} data-tour="add-machine">
       <IconPlus className="h-4 w-4" /> Add machine
     </button>
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-tour="maintenance-page">
       <PageHeader
         title="Maintenance"
         eyebrow="Machine readiness"
