@@ -9,7 +9,7 @@ export function SettingsShell({ title, subtitle, children, wide = false }: {
   wide?: boolean;
 }) {
   return (
-    <div className={`mx-auto space-y-6 ${wide ? 'max-w-5xl' : 'max-w-2xl'}`}>
+    <div data-tour="settings-page" className={`mx-auto space-y-6 ${wide ? 'max-w-5xl' : 'max-w-2xl'}`}>
       <div>
         <Link to="/" className="btn-ghost mb-3 px-3 py-2">
           <IconBack className="h-4 w-4" /> Back to jobs

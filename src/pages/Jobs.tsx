@@ -133,14 +133,14 @@ export default function Jobs() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-tour="jobs-page">
       <PageHeader
         title="Jobs"
         eyebrow="Live pipeline"
         subtitle={loading ? 'Loading shared jobs...' : `${pipeline.length} active job${pipeline.length === 1 ? '' : 's'} in the pipeline`}
         actions={
           <>
-          <div className="relative w-full sm:w-auto">
+          <div className="relative w-full sm:w-auto" data-tour="job-filters">
             <IconFilter
               className={`pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transition-colors ${
                 categoryFilter === 'all'
@@ -173,13 +173,14 @@ export default function Jobs() {
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>
-          <button className="btn-primary" onClick={() => setAdding(true)}>
+          <button className="btn-primary" onClick={() => setAdding(true)} data-tour="add-job">
             <IconPlus className="h-4 w-4" /> Add job
           </button>
           </>
         }
       />
 
+      <div className="space-y-6" data-tour="job-board">
       {loading ? (
         <>
           <div className="surface flex items-center justify-center gap-3 px-4 py-5" role="status">
@@ -272,6 +273,7 @@ export default function Jobs() {
           </div>
         </>
       )}
+      </div>
 
       <AssignJobModal
         job={assigning}

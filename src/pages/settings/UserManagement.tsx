@@ -62,6 +62,7 @@ export default function UserManagement() {
   }
 
   return (
+    <div data-tour="user-management">
     <SettingsShell title="User management" subtitle="Approve and manage user accounts" wide>
       {error && (
         <p className="rounded-md border border-danger/20 bg-danger-soft/70 px-3 py-2 text-sm font-medium text-danger dark:bg-red-950/40 dark:text-red-300" role="alert">
@@ -102,5 +103,6 @@ export default function UserManagement() {
         Roles can only be changed in the Firebase Console; the app never writes roles.
       </p>
     </SettingsShell>
+    </div>
   );
 }

@@ -49,6 +49,7 @@ export function AccountMenu() {
   return (
     <div className="relative" ref={ref}>
       <button
+        data-tour="account-menu"
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}

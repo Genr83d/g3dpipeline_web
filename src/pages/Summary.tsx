@@ -35,7 +35,7 @@ export default function Summary() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-tour="summary-page">
       <PageHeader
         title="Summary"
         eyebrow="Operations overview"
