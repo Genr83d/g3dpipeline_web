@@ -6,7 +6,7 @@ import { signOut } from '../services/authService';
 import { useAppearance } from '../context/AppearanceProvider';
 import { roleLabel } from '../lib/roles';
 import {
-  IconUser, IconShield, IconMoon, IconUsers, IconHelp, IconInfo, IconLogout, IconMail,
+  IconUser, IconShield, IconMoon, IconUsers, IconInfo, IconLogout, IconMail,
 } from './icons';
 
 export function AccountMenu() {
@@ -42,7 +42,6 @@ export function AccountMenu() {
     ...(isAdmin
       ? [{ to: '/settings/users', icon: <IconUsers className="h-4 w-4" />, label: 'User management' }]
       : []),
-    { to: '/settings/help', icon: <IconHelp className="h-4 w-4" />, label: 'Help' },
     { to: '/settings/about', icon: <IconInfo className="h-4 w-4" />, label: 'About & privacy' },
   ];
 
