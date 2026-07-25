@@ -26,9 +26,10 @@ vi.mock('../context/AppearanceProvider', () => ({ useAppearance: () => ({ motion
 
 function job(overrides: Partial<Job> = {}): Job {
   return {
-    id: 'job-1', name: 'Badge batch', customer: 'Client', quantity: 15,
+    id: 'job-1', orderNumber: 'G3D-JOB-1', name: 'Badge batch', customer: 'Client', quantity: 15,
     completedQuantity: 12, dueDate: new Date('2099-01-01'), status: 'started',
-    category: 'manufacturing', isAwf: false, createdByUid: 'creator', createdByName: 'Creator',
+    category: 'manufacturing', repairProcesses: [],
+    isAwf: false, createdByUid: 'creator', createdByName: 'Creator',
     createdByEmail: '', assignedToUid: 'worker-1', assignedToName: 'Worker', assignedToRole: 'staff',
     assignedByUid: '', assignedByName: '', assignedAt: null,
     collaborators: [{ uid: 'worker-1', name: 'Worker', role: 'staff' }],

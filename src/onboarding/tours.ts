@@ -40,6 +40,9 @@ function applicationSteps(role: UserRole): TutorialStep[] {
     admin: 'This quick tour includes daily work, team oversight, and account management.',
   };
 
+  // The tour reads top to bottom the way the app is used: where the work
+  // lives, how to read one job, how to find the right one, how to add work,
+  // then how to act on it.
   const steps: TutorialStep[] = [
     step('Welcome to GENR8 Pipeline', roleIntro[role]),
     step(
@@ -47,6 +50,12 @@ function applicationSteps(role: UserRole): TutorialStep[] {
       'Jobs is your main work area. Use it to see what is waiting, in progress, or overdue.',
       '/',
       '[data-tour="nav-jobs"]',
+    ),
+    step(
+      'Every job has an order number',
+      'Each card starts with its job order number, such as G3D-ABC123XY. Quote it when you discuss a job with the team: it never changes and reads the same on every device.',
+      '/',
+      '[data-tour="job-board"] > *:first-child',
     ),
     step(
       'Find the right work',
@@ -63,10 +72,10 @@ function applicationSteps(role: UserRole): TutorialStep[] {
     step(
       role === 'manager' || role === 'admin' ? 'Manage the work' : 'Work from each card',
       role === 'manager' || role === 'admin'
-        ? 'Open a job card to edit details, choose its team, start work, or record progress.'
-        : 'Each card shows the deadline, team, and progress. Use its actions when you start or finish your work.',
+        ? 'Open a job card to edit details, choose its team, start work, or record progress. Repair jobs also track each process, such as Cleaning or Welding.'
+        : 'Each card shows the deadline, team, and progress. Use its actions when you start work, record progress, or finish. Repair jobs track each process separately.',
       '/',
-      '[data-tour="job-board"] > *:first-child',
+      '[data-tour="job-card"]',
     ),
   ];
 
@@ -91,8 +100,8 @@ function applicationSteps(role: UserRole): TutorialStep[] {
     step(
       'See the bigger picture',
       role === 'awf'
-        ? 'Summary gives you a quick view of AWF work. Use it to check workload and finished output.'
-        : 'Summary brings workload, completed jobs, overdue work, and stock warnings together.',
+        ? 'Summary gives you a quick view of AWF work. Use it to check workload, the closest deadlines, and finished output.'
+        : 'Summary brings workload, completed jobs, the most urgent deadlines, and stock warnings together.',
       '/summary',
       '[data-tour="summary-page"] h1',
     ),
@@ -143,6 +152,8 @@ export function tutorialsForRole(role: UserRole): Tutorial[] {
         step('Open Jobs', 'New work starts on the Jobs page.', '/', '[data-tour="nav-jobs"]'),
         step('Choose Add job', 'Use this when a confirmed piece of work needs to enter the pipeline.', '/', '[data-tour="add-job"]'),
         step('Add the details', 'Enter clear work details and a realistic due date so everyone knows what is needed.', '/', '[data-tour="add-job"]'),
+        step('List repair processes', 'Choosing the Repair job type adds a process list. Enter one process per line, such as Cleaning, Welding, Machining, or Spraying, and each one tracks its own percentage.', '/', '[data-tour="add-job"]'),
+        step('Save the job', 'Saving gives the job its permanent order number, such as G3D-ABC123XY. Share that number when the job comes up later.', '/', '[data-tour="add-job"]'),
       ],
     },
     {
@@ -150,10 +161,11 @@ export function tutorialsForRole(role: UserRole): Tutorial[] {
       title: 'Start and complete work',
       description: 'Follow a job from waiting to finished.',
       steps: [
-        step('Choose a job', 'Check the due date and team before starting. This helps avoid taking the wrong work.', '/', '[data-tour="job-board"] > *:first-child'),
+        step('Choose a job', 'Check the order number, due date, and team before starting. This helps avoid taking the wrong work.', '/', '[data-tour="job-board"] > *:first-child'),
         step('Start the work', 'Choose Start when production actually begins. The job will move to in progress.', '/', '[data-tour="job-card"]'),
         step('Record progress', 'Update the completed quantity during longer jobs so the team can see what remains.', '/', '[data-tour="job-card"]'),
-        step('Complete the job', 'Choose Complete only when the work is finished. The job will move to Archive.', '/', '[data-tour="job-card"]'),
+        step('Update repair processes', 'A repair job lists its processes with a bar each. Use Update repair process progress to move a percentage; the overall figure is their average.', '/', '[data-tour="job-card"]'),
+        step('Complete the job', 'Choose Complete only when the work is finished. Every repair process is set to 100% and the job moves to Archive.', '/', '[data-tour="job-card"]'),
       ],
     },
     {
@@ -163,6 +175,7 @@ export function tutorialsForRole(role: UserRole): Tutorial[] {
       steps: [
         step('Open Summary', 'Use Summary when you need a quick status update without opening every job.', '/summary', '[data-tour="nav-summary"]'),
         step('Read the overview', 'Compare waiting, active, completed, and overdue work to find areas that need attention.', '/summary', '[data-tour="summary-page"] h1'),
+        step('Act on urgent jobs', 'The urgent list shows the closest deadlines with their order numbers, so you can raise the right job with the team.', '/summary', '[data-tour="urgent-jobs"]'),
       ],
     },
     {
@@ -184,7 +197,8 @@ export function tutorialsForRole(role: UserRole): Tutorial[] {
         description: 'Correct details while keeping the team informed.',
         steps: [
           step('Find the job', 'Open the job that needs a correction or updated deadline.', '/', '[data-tour="job-board"] > *:first-child'),
-          step('Choose Edit', 'Use Edit when requirements change. Add a reason when changing a deadline.', '/', '[data-tour="job-card"]'),
+          step('Choose Edit', 'Use Edit when requirements change. Add a reason when changing a deadline; the job order number stays the same.', '/', '[data-tour="job-card"]'),
+          step('Keep repair processes current', 'On a repair job, add or remove processes in the same form. Every process you keep holds the percentage it already had.', '/', '[data-tour="job-card"]'),
         ],
       },
       {

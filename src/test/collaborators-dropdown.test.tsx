@@ -53,6 +53,7 @@ function setRole(role: UserRole, uid = 'current-user') {
 function job(overrides: Partial<Job> = {}): Job {
   return {
     id: 'job-1',
+    orderNumber: 'G3D-JOB-1',
     name: 'Event badges',
     customer: 'Receiver',
     quantity: 10,
@@ -60,6 +61,7 @@ function job(overrides: Partial<Job> = {}): Job {
     dueDate: new Date('2099-06-15T23:59:59'),
     status: 'pending',
     category: 'manufacturing',
+    repairProcesses: [],
     isAwf: false,
     createdByUid: 'creator',
     createdByName: 'Creator',

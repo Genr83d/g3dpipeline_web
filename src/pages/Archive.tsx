@@ -102,7 +102,7 @@ export default function Archive() {
         onCancel={() => setDeleting(null)}
         onConfirm={() => handleDelete(deleting!)}
       >
-        {deleting && <JobConfirmSummary jobName={deleting.name} jobRef={deleting.id} />}
+        {deleting && <JobConfirmSummary jobName={deleting.name} jobRef={deleting.orderNumber} />}
       </JobConfirmDialog>
     </div>
   );

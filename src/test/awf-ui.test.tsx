@@ -123,6 +123,7 @@ function setRole(role: UserRole, uid = 'current-user') {
 function job(overrides: Partial<Job> = {}): Job {
   return {
     id: 'job-1',
+    orderNumber: 'G3D-JOB-1',
     name: 'Event badges',
     customer: 'Receiver',
     quantity: 10,
@@ -130,6 +131,7 @@ function job(overrides: Partial<Job> = {}): Job {
     dueDate: new Date('2099-06-15T23:59:59'),
     status: 'pending',
     category: 'manufacturing',
+    repairProcesses: [],
     isAwf: false,
     createdByUid: 'creator',
     createdByName: 'Creator',
@@ -254,8 +256,11 @@ describe('AWF job form', () => {
 
     expect(screen.getByLabelText('Job Type')).toHaveValue('design');
     await user.selectOptions(screen.getByLabelText('Job Type'), 'repair');
+    await user.type(screen.getByLabelText('Repair processes'), 'Cleaning\nWelding');
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
-    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ category: 'repair' }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ category: 'repair', repairProcessNames: ['Cleaning', 'Welding'] }),
+    );
   });
 });
 

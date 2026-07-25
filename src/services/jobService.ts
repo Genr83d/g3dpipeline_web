@@ -1,7 +1,7 @@
 import {
   collection,
   doc,
-  addDoc,
+  setDoc,
   deleteDoc,
   updateDoc,
   getDocs,
@@ -33,6 +33,17 @@ import {
 import { inventoryCol } from './inventoryService';
 import { isSameCalendarDate } from '../lib/format';
 import { resolvedCompletedQuantity, validateCompletedQuantity } from '../lib/jobProgress';
+import { jobOrderNumber, orderNumberFromDocumentId } from '../lib/jobOrderNumber';
+import {
+  applyRepairProgressUpdates,
+  completedRepairProcesses,
+  mergeRepairProcesses,
+  parseRepairProcesses,
+  repairProcessesForCategory,
+  resetRepairProcesses,
+  validateRepairProcesses,
+  REPAIR_PROCESS_REQUIRED_MESSAGE,
+} from '../lib/repairProcesses';
 import {
   parseAssignedRole,
   parseJobStatus,
@@ -41,6 +52,7 @@ import {
   type Job,
   type JobCategory,
   type JobCollaborator,
+  type RepairProcess,
   type UserRole,
 } from '../types';
 
@@ -139,6 +151,7 @@ export function parseJob(id: string, data: Record<string, unknown>): Job {
   const quantity = typeof data.quantity === 'number' ? data.quantity : 0;
   return {
     id,
+    orderNumber: jobOrderNumber(data.orderNumber, id),
     name: typeof data.name === 'string' ? data.name : '',
     customer: typeof data.customer === 'string' ? data.customer : '',
     quantity,
@@ -146,6 +159,7 @@ export function parseJob(id: string, data: Record<string, unknown>): Job {
     dueDate: toDate(data.dueDate) ?? new Date(),
     status,
     category: parseJobCategory(data.category),
+    repairProcesses: parseRepairProcesses(data.repairProcesses),
     isAwf: data.isAwf === true,
     createdByUid: (data.createdByUid as string) ?? '',
     createdByName: (data.createdByName as string) ?? '',
@@ -199,6 +213,22 @@ export interface JobInput {
   dueDate: Date;
   category: JobCategory;
   isAwf?: boolean;
+  /** Repair jobs only. Percentages are never entered here — every new process
+   *  starts at 0% and moves through the progress dialog. */
+  repairProcessNames?: string[];
+}
+
+/** Builds the stored process list for a save and rejects a repair job that
+ *  would be left without one. Non-repair categories always resolve to []. */
+function resolveRepairProcesses(
+  category: JobCategory,
+  existing: readonly RepairProcess[],
+  names: readonly string[],
+): RepairProcess[] {
+  const processes = repairProcessesForCategory(category, mergeRepairProcesses(existing, names));
+  const error = validateRepairProcesses(category, processes);
+  if (error) throw new Error(error);
+  return processes;
 }
 
 /** Service-layer guard mirroring the client form: quantity must satisfy the
@@ -211,21 +241,34 @@ function assertValidJobQuantity(category: JobCategory, quantity: number): number
 }
 
 /** All active roles may create jobs. AWF creators are always classified AWF;
- *  only manager/admin requests may opt another new job into that pipeline. */
+ *  only manager/admin requests may opt another new job into that pipeline.
+ *
+ *  The document reference is generated up front so the job's permanent order
+ *  number can be derived from its own ID before the first write. No later
+ *  update rewrites orderNumber. */
 export async function addJob(
   actor: Actor,
   self: Assigner,
   input: JobInput,
 ): Promise<void> {
   const byName = actorDisplayName(actor);
-  await addDoc(jobsCol, {
+  const quantity = assertValidJobQuantity(input.category, input.quantity);
+  const repairProcesses = resolveRepairProcesses(
+    input.category,
+    [],
+    input.repairProcessNames ?? [],
+  );
+  const ref = doc(jobsCol);
+  await setDoc(ref, {
+    orderNumber: orderNumberFromDocumentId(ref.id),
     name: input.name,
     customer: input.customer,
-    quantity: assertValidJobQuantity(input.category, input.quantity),
+    quantity,
     completedQuantity: 0,
     dueDate: Timestamp.fromDate(input.dueDate),
     status: 'pending',
     category: input.category,
+    repairProcesses,
     isAwf: resolveNewJobIsAwf(self.role, input.isAwf),
     createdByUid: actor.uid,
     createdByName: byName,
@@ -398,6 +441,7 @@ export async function completeJob(actor: Actor, self: Assigner, jobId: string): 
 
     const name = (data.name as string) ?? '';
     const quantity = typeof data.quantity === 'number' ? data.quantity : 0;
+    const repairProcesses = parseRepairProcesses(data.repairProcesses);
 
     if (isPinJob(name) && quantity > 0) {
       if (!pinBacksRef) throw new Error('No “Pin Backs” material found in inventory.');
@@ -442,6 +486,10 @@ export async function completeJob(actor: Actor, self: Assigner, jobId: string): 
     tx.update(jobRef, {
       status: 'completed',
       completedQuantity: quantity,
+      // Finishing a repair job finishes each of its processes.
+      ...(repairProcesses.length > 0
+        ? { repairProcesses: completedRepairProcesses(repairProcesses) }
+        : {}),
       completedAt: serverTimestamp(),
       completedByUid: actor.uid,
       completedByName: byName,
@@ -453,19 +501,27 @@ export async function completeJob(actor: Actor, self: Assigner, jobId: string): 
 }
 
 /** Manager/admin: send a completed job back into the pipeline. This is the
- *  only supported completed → pending transition; anything else is rejected. */
+ *  only supported completed → pending transition; anything else is rejected.
+ *
+ *  A restored repair job keeps its process definitions and starts them over at
+ *  0%, matching the reset completed quantity. */
 export async function restoreJob(actor: Actor, jobId: string): Promise<void> {
   const byName = actorDisplayName(actor);
   const ref = doc(db, 'jobs', jobId);
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists()) throw new Error('This job no longer exists.');
-    if (parseJobStatus(snap.data().status) !== 'completed') {
+    const data = snap.data();
+    if (parseJobStatus(data.status) !== 'completed') {
       throw new Error('Only completed jobs can be restored.');
     }
+    const repairProcesses = parseRepairProcesses(data.repairProcesses);
     tx.update(ref, {
       status: 'pending',
       completedQuantity: 0,
+      ...(repairProcesses.length > 0
+        ? { repairProcesses: resetRepairProcesses(repairProcesses) }
+        : {}),
       assignedToUid: '',
       assignedToName: '',
       assignedToRole: '',
@@ -494,6 +550,9 @@ export interface JobEdit {
   isAwf?: boolean;
   /** Required explanation captured when the due date's calendar day changes. */
   dueDateChangeNote?: string;
+  /** Repair-process names as they should stand after the edit. Percentages are
+   *  carried over from the stored job by name; omit to leave the list alone. */
+  repairProcessNames?: string[];
 }
 
 /** Manager/admin: edit core fields and, when supplied, the persistent AWF
@@ -527,7 +586,9 @@ export async function editJob(
 
   const editsDueDate = edit.dueDate !== undefined;
   const touchesQuantity = edit.quantity !== undefined || edit.category !== undefined;
-  if (!editsDueDate && !touchesQuantity) {
+  const touchesRepairProcesses =
+    edit.repairProcessNames !== undefined || edit.category !== undefined;
+  if (!editsDueDate && !touchesQuantity && !touchesRepairProcesses) {
     await updateDoc(doc(db, 'jobs', jobId), patch);
     return;
   }
@@ -555,6 +616,16 @@ export async function editJob(
         throw new Error('The total quantity cannot be less than the completed quantity.');
       }
       patch.quantity = nextQuantity;
+    }
+
+    // Repair processes are merged against the stored list so an unchanged name
+    // keeps its percentage, a new name starts at 0%, and a dropped name leaves
+    // Firestore. Switching away from Repair clears the list entirely.
+    if (touchesRepairProcesses) {
+      const category = edit.category ?? parseJobCategory(data.category);
+      const stored = parseRepairProcesses(data.repairProcesses);
+      const names = edit.repairProcessNames ?? stored.map((process) => process.name);
+      patch.repairProcesses = resolveRepairProcesses(category, stored, names);
     }
 
     // Compare against the freshly-read deadline by calendar day. dueDate (and
@@ -612,6 +683,51 @@ export async function updateJobProgress({
     if (validationError) throw new Error(validationError);
     tx.update(ref, {
       completedQuantity,
+      updatedAt: serverTimestamp(),
+      updatedByUid: currentUser.uid,
+      updatedByName: actorDisplayName(currentUser),
+    });
+  });
+}
+
+export interface UpdateRepairProgressInput {
+  jobId: string;
+  processes: readonly RepairProcess[];
+  currentUser: Actor & { role: UserRole };
+}
+
+/** Repair-process transaction. Each process carries its own percentage, so the
+ *  whole array is rewritten from the freshly-read stored definitions — a stale
+ *  dialog can never reintroduce a renamed or removed process. Permissions match
+ *  quantity progress: an assigned collaborator, a manager, or an admin, while
+ *  the job is still pending or started. The server rules stay authoritative. */
+export async function updateRepairProgress({
+  jobId,
+  processes,
+  currentUser,
+}: UpdateRepairProgressInput): Promise<void> {
+  const ref = doc(db, 'jobs', jobId);
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error('This job no longer exists.');
+    const data = snap.data();
+    const status = parseJobStatus(data.status);
+    if (status !== 'pending' && status !== 'started') {
+      throw new Error('Completed jobs cannot have their repair progress updated.');
+    }
+    if (parseJobCategory(data.category) !== 'repair') {
+      throw new Error('Only repair jobs track repair processes.');
+    }
+    const collaborators = parseCollaborators(data);
+    const collaboratorUids = parseCollaboratorUids(data, collaborators);
+    if (!collaboratorUids.includes(currentUser.uid) && !isManagerOrAdminRole(currentUser.role)) {
+      throw new Error('Only a collaborator, manager, or admin can update repair progress.');
+    }
+    const stored = parseRepairProcesses(data.repairProcesses);
+    const updated = applyRepairProgressUpdates(stored, processes);
+    if (updated.length === 0) throw new Error(REPAIR_PROCESS_REQUIRED_MESSAGE);
+    tx.update(ref, {
+      repairProcesses: updated,
       updatedAt: serverTimestamp(),
       updatedByUid: currentUser.uid,
       updatedByName: actorDisplayName(currentUser),

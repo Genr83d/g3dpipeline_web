@@ -149,7 +149,7 @@ describe('delete confirmation dialog', () => {
         onCancel={vi.fn()}
         onConfirm={onConfirm}
       >
-        <JobConfirmSummary jobName="Event badges" jobRef="job-1" />
+        <JobConfirmSummary jobName="Event badges" jobRef="G3D-ABC123XY" />
       </JobConfirmDialog>,
     );
     return onConfirm;
@@ -160,7 +160,7 @@ describe('delete confirmation dialog', () => {
     const dialog = screen.getByRole('dialog');
     expect(dialog).toHaveTextContent('Delete Job?');
     expect(dialog).toHaveTextContent('Event badges');
-    expect(dialog).toHaveTextContent('Job ID: job-1');
+    expect(dialog).toHaveTextContent('Job order: G3D-ABC123XY');
     expect(dialog).toHaveTextContent(JOB_DELETE_WARNING);
     expect(within(dialog).getByRole('button', { name: 'Delete Job' }).className).toContain(
       'btn-danger',

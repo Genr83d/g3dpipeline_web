@@ -98,6 +98,7 @@ export function JobConfirmSummary({
   targetStatus,
 }: {
   jobName: string;
+  /** The job's order number — the reference the shop and the Flutter app share. */
   jobRef?: string;
   currentStatus?: string;
   targetStatus?: string;
@@ -108,7 +109,7 @@ export function JobConfirmSummary({
         {jobName.trim() || UNTITLED_JOB_FALLBACK}
       </p>
       {jobRef && (
-        <p className="text-xs text-slate-500 dark:text-slate-400">Job ID: {jobRef}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">Job order: {jobRef}</p>
       )}
       {currentStatus && targetStatus && (
         <p className="text-slate-600 dark:text-slate-300">

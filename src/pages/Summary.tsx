@@ -7,9 +7,13 @@ import { JobProgressGauge } from '../components/JobProgressGauge';
 import { EmptyState } from '../components/EmptyState';
 import { PageHeader } from '../components/PageHeader';
 import { Skeleton, StatCardSkeleton } from '../components/Skeleton';
-import { formatQuantity } from '../lib/format';
+import { StatusPill } from '../components/StatusPill';
+import { formatDate, formatQuantity } from '../lib/format';
 import { isOverdue } from '../types';
 import { IconAlert, IconBox, IconCheck, IconClock, IconCloudOff, IconPlay } from '../components/icons';
+
+/** How many of the most pressing jobs the urgent list surfaces. */
+const URGENT_JOB_LIMIT = 5;
 
 export default function Summary() {
   const { jobs, loading, error, retry } = useJobsOutlet();
@@ -27,6 +31,16 @@ export default function Summary() {
     const overdue = jobs.filter((j) => isOverdue(j)).length;
     return { pending, started, completed, pipelineQty, overdue };
   }, [jobs]);
+
+  /** Active work by closest deadline — overdue jobs surface first. */
+  const urgentJobs = useMemo(
+    () =>
+      jobs
+        .filter((job) => job.status !== 'completed')
+        .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
+        .slice(0, URGENT_JOB_LIMIT),
+    [jobs],
+  );
 
   /** Lowest stock percentage first. */
   const lowStock = useMemo(
@@ -99,6 +113,51 @@ export default function Summary() {
               icon={<IconAlert className="h-5 w-5" />}
             />
           </div>
+
+          {urgentJobs.length > 0 && (
+            <section
+              aria-labelledby="urgent-jobs-heading"
+              className="surface p-4"
+              data-tour="urgent-jobs"
+            >
+              <h2
+                id="urgent-jobs-heading"
+                className="mb-3 flex items-center gap-2 font-display text-lg font-bold"
+              >
+                <IconClock className="h-5 w-5 text-slate-400" /> Urgent jobs
+              </h2>
+              <ul className="divide-y divide-slate-200/70 dark:divide-slate-800/80">
+                {urgentJobs.map((job) => (
+                  <li key={job.id} className="flex items-center justify-between gap-3 py-2.5">
+                    <div className="min-w-0">
+                      <p className="technical-label truncate">
+                        Job order
+                        {job.orderNumber && (
+                          <>
+                            {' • '}
+                            <span className="font-bold text-primary dark:text-indigo-300">
+                              {job.orderNumber}
+                            </span>
+                          </>
+                        )}
+                      </p>
+                      <p className="truncate font-medium">{job.name}</p>
+                      <p
+                        className={`text-sm ${
+                          isOverdue(job)
+                            ? 'font-semibold text-danger dark:text-red-300'
+                            : 'text-slate-500 dark:text-slate-400'
+                        }`}
+                      >
+                        Due {formatDate(job.dueDate)}
+                      </p>
+                    </div>
+                    <StatusPill status={job.status} overdue={isOverdue(job)} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {!isAwf && (inventoryLoading ? (
             <section aria-label="Loading low stock materials" className="surface p-4">

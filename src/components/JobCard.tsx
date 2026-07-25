@@ -14,6 +14,7 @@ import {
 import { isManagerOrAdminRole, roleLabel } from '../lib/roles';
 import { jobCategoryLabel, jobQuantityConfig } from '../lib/jobCategories';
 import { jobCompletionRatio } from '../lib/jobProgress';
+import { overallRepairProgress, usesRepairProcesses } from '../lib/repairProcesses';
 import { StatusPill } from './StatusPill';
 import { IconBox, IconCalendar, IconCheck, IconChevron, IconCode, IconEdit, IconGear, IconHistory, IconPalette, IconPlay, IconRestore, IconTag, IconTrash, IconUser, IconUserPlus, IconUsers, IconWrench } from './icons';
 import { useAuth } from '../context/AuthProvider';
@@ -99,6 +100,37 @@ function JobCategoryIcon({ category }: { category: JobCategory }) {
   }
 }
 
+/** Per-process bar for a repair job. Every role sees these; only an assigned
+ *  collaborator, a manager, or an admin gets the edit control above them. */
+function RepairProcessList({ job }: { job: Job }) {
+  return (
+    <ul className="mt-2 space-y-2" data-testid={`repair-processes-${job.id}`}>
+      {job.repairProcesses.map((process) => (
+        <li key={process.name}>
+          <div className="flex min-w-0 items-center justify-between gap-3 text-xs font-semibold text-slate-600 dark:text-slate-300">
+            <span className="truncate">{process.name}</span>
+            <span className="shrink-0 tabular-nums">{process.progress}%</span>
+          </div>
+          <div
+            className="mt-1 h-[5px] overflow-hidden rounded-full bg-amber-500/15"
+            role="progressbar"
+            aria-label={`${process.name} progress`}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={process.progress}
+          >
+            <div
+              data-testid={`repair-process-fill-${job.id}-${process.name.toLowerCase()}`}
+              className="h-full rounded-full bg-amber-500"
+              style={{ width: `${process.progress}%` }}
+            />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function JobCard({
   job,
   onStart,
@@ -108,6 +140,7 @@ export function JobCard({
   onRestore,
   onAssign,
   onUpdateProgress,
+  onUpdateRepairProgress,
 }: {
   job: Job;
   onStart?: (job: Job) => void;
@@ -117,6 +150,7 @@ export function JobCard({
   onRestore?: (job: Job) => void;
   onAssign?: (job: Job) => void;
   onUpdateProgress?: (job: Job) => void;
+  onUpdateRepairProgress?: (job: Job) => void;
 }) {
   const { profile } = useAuth();
   const { motionReduced } = useAppearance();
@@ -137,6 +171,14 @@ export function JobCard({
     showsQuantity &&
     job.quantity !== 1 &&
     onUpdateProgress &&
+    canUpdateJobProgress(job, viewer),
+  );
+  const showsRepairProcesses = usesRepairProcesses(job.category) && job.repairProcesses.length > 0;
+  const repairProgress = overallRepairProgress(job.repairProcesses);
+  const canUpdateRepairProgress = Boolean(
+    viewer &&
+    showsRepairProcesses &&
+    onUpdateRepairProgress &&
     canUpdateJobProgress(job, viewer),
   );
   const completionRatio = jobCompletionRatio(job.completedQuantity, job.quantity);
@@ -171,7 +213,17 @@ export function JobCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1 pl-2">
-          <p className="technical-label">Job order</p>
+          <p className="technical-label" data-testid={`job-order-number-${job.id}`}>
+            Job order
+            {job.orderNumber && (
+              <>
+                {' • '}
+                <span className="font-bold text-primary dark:text-indigo-300">
+                  {job.orderNumber}
+                </span>
+              </>
+            )}
+          </p>
           <h3 className="line-clamp-2 font-display text-lg font-bold leading-6 text-ink dark:text-slate-50">
             {job.name}
           </h3>
@@ -244,6 +296,31 @@ export function JobCard({
               )}
             </span>
           </span>
+        )}
+        {showsRepairProcesses && (
+          <div className="py-2.5">
+            <div className="flex items-center justify-between gap-3">
+              <span className="inline-flex min-w-0 items-center gap-2">
+                <IconWrench className="h-4 w-4 shrink-0 text-slate-400" />
+                <span className="truncate">Repair processes</span>
+              </span>
+              <span className="inline-flex shrink-0 items-center gap-1.5">
+                <strong className="tabular-nums">{repairProgress}% overall</strong>
+                {canUpdateRepairProgress && (
+                  <button
+                    type="button"
+                    className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none dark:hover:bg-slate-800"
+                    aria-label="Update repair process progress"
+                    title="Update repair process progress"
+                    onClick={() => onUpdateRepairProgress?.(job)}
+                  >
+                    <IconEdit className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </span>
+            </div>
+            <RepairProcessList job={job} />
+          </div>
         )}
         <span className={`flex items-center justify-between gap-3 py-2.5 ${
           overdue
