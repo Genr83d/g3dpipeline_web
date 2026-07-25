@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { UserRole } from '../types';
 
+/** Stands in for the ID Firestore generates for a new job document. */
+const GENERATED_JOB_ID = 'abc123xyz789';
+
 const firestore = vi.hoisted(() => {
   const transactionGet = vi.fn(async (_ref: unknown) => ({
     exists: () => true,
@@ -10,12 +13,19 @@ const firestore = vi.hoisted(() => {
 
   return {
     collection: vi.fn((_db: unknown, name: string) => ({ kind: 'collection', name })),
-    doc: vi.fn((_db: unknown, collectionName: string, id: string) => ({
-      kind: 'doc',
-      collectionName,
-      id,
-    })),
+    // doc(db, collection, id) addresses an existing document; doc(collection)
+    // generates a reference — and its ID — before the first write.
+    doc: vi.fn((target: unknown, collectionName?: string, id?: string) =>
+      typeof collectionName === 'string' && typeof id === 'string'
+        ? { kind: 'doc', collectionName, id }
+        : {
+            kind: 'doc',
+            collectionName: (target as { name?: string } | null)?.name ?? '',
+            id: GENERATED_JOB_ID,
+          },
+    ),
     addDoc: vi.fn(async (_collection: unknown, _data: unknown) => ({ id: 'new-job' })),
+    setDoc: vi.fn(async (_ref: unknown, _data: unknown) => undefined),
     deleteDoc: vi.fn(async (_ref: unknown) => undefined),
     updateDoc: vi.fn(async (_ref: unknown, _data: unknown) => undefined),
     getDocs: vi.fn(async (_query: unknown) => ({ docs: [] })),
@@ -59,6 +69,7 @@ vi.mock('firebase/firestore', () => ({
   collection: firestore.collection,
   doc: firestore.doc,
   addDoc: firestore.addDoc,
+  setDoc: firestore.setDoc,
   deleteDoc: firestore.deleteDoc,
   updateDoc: firestore.updateDoc,
   getDocs: firestore.getDocs,
@@ -114,7 +125,7 @@ function self(role: UserRole): Assigner {
   return { uid: actor.uid, name: 'Avery Example', role };
 }
 
-function lastWritePayload(mock: typeof firestore.addDoc | typeof firestore.updateDoc) {
+function lastWritePayload(mock: typeof firestore.setDoc | typeof firestore.updateDoc) {
   return mock.mock.calls.at(-1)?.[1] as Record<string, unknown>;
 }
 
@@ -231,7 +242,7 @@ describe('legacy job parsing and collaborator normalization', () => {
 describe('job category persistence', () => {
   it('stores the selected category when creating a job', async () => {
     await addJob(actor, self('staff'), { ...input, category: 'softwareDevelopment' });
-    expect(lastWritePayload(firestore.addDoc)).toMatchObject({
+    expect(lastWritePayload(firestore.setDoc)).toMatchObject({
       category: 'softwareDevelopment',
     });
   });
@@ -244,10 +255,12 @@ describe('job category persistence', () => {
     await editJob(actor, self('manager'), 'job-1', {
       name: 'Updated job',
       category: 'repair',
+      repairProcessNames: ['Cleaning'],
     });
     expect(firestore.transactionUpdate.mock.calls.at(-1)?.[1]).toMatchObject({
       name: 'Updated job',
       category: 'repair',
+      repairProcesses: [{ name: 'Cleaning', progress: 0 }],
     });
   });
 
@@ -301,7 +314,7 @@ describe('job category persistence', () => {
 describe('persistent AWF classification writes', () => {
   it('forces AWF-created jobs to true even when false is requested', async () => {
     await addJob(actor, self('awf'), { ...input, isAwf: false });
-    expect(lastWritePayload(firestore.addDoc)).toMatchObject({ isAwf: true });
+    expect(lastWritePayload(firestore.setDoc)).toMatchObject({ isAwf: true });
   });
 
   it.each([
@@ -313,7 +326,7 @@ describe('persistent AWF classification writes', () => {
     ['staff', false, false],
   ] as const)('%s creation with requested=%s writes isAwf=%s', async (role, requested, expected) => {
     await addJob(actor, self(role), { ...input, isAwf: requested });
-    expect(lastWritePayload(firestore.addDoc)).toMatchObject({ isAwf: expected });
+    expect(lastWritePayload(firestore.setDoc)).toMatchObject({ isAwf: expected });
   });
 
   it('allows managers and admins to explicitly change classification while editing', async () => {

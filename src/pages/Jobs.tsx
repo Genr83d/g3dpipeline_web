@@ -6,6 +6,7 @@ import { useToast } from '../components/Toast';
 import { JobCard } from '../components/JobCard';
 import { JobForm, type JobFormValues } from '../components/JobForm';
 import { JobProgressModal } from '../components/JobProgressModal';
+import { RepairProgressModal } from '../components/RepairProgressModal';
 import { Modal } from '../components/Modal';
 import {
   JOB_DELETE_WARNING,
@@ -26,7 +27,8 @@ import {
   jobCategoryLabel,
   type JobCategoryFilter,
 } from '../lib/jobCategories';
-import { isOverdue, type Job } from '../types';
+import { overallRepairProgress } from '../lib/repairProcesses';
+import { isOverdue, type Job, type RepairProcess } from '../types';
 import type { AssignTarget } from '../services/jobService';
 import * as jobService from '../services/jobService';
 
@@ -52,6 +54,7 @@ export default function Jobs() {
   const [starting, setStarting] = useState<Job | null>(null);
   const [completing, setCompleting] = useState<Job | null>(null);
   const [updatingProgress, setUpdatingProgress] = useState<Job | null>(null);
+  const [updatingRepairProgress, setUpdatingRepairProgress] = useState<Job | null>(null);
 
   const activeJobs = useMemo(
     () => jobs.filter((job) => job.status !== 'completed'),
@@ -130,6 +133,17 @@ export default function Jobs() {
     });
     toast(`Progress updated to ${completedQuantity}/${updatingProgress.quantity} units.`, 'success');
     setUpdatingProgress(null);
+  }
+
+  async function handleUpdateRepairProgress(processes: RepairProcess[]) {
+    if (!updatingRepairProgress) return;
+    await jobService.updateRepairProgress({
+      jobId: updatingRepairProgress.id,
+      processes,
+      currentUser: { ...actor!, role: assigner!.role },
+    });
+    toast(`Repair progress updated to ${overallRepairProgress(processes)}% overall.`, 'success');
+    setUpdatingRepairProgress(null);
   }
 
   return (
@@ -267,6 +281,7 @@ export default function Jobs() {
                   onDelete={isAdmin ? setDeleting : undefined}
                   onAssign={isManagerOrAdmin ? setAssigning : undefined}
                   onUpdateProgress={setUpdatingProgress}
+                  onUpdateRepairProgress={setUpdatingRepairProgress}
                 />
               ))}
             </AnimatePresence>
@@ -286,6 +301,12 @@ export default function Jobs() {
         job={updatingProgress}
         onSave={handleUpdateProgress}
         onClose={() => setUpdatingProgress(null)}
+      />
+
+      <RepairProgressModal
+        job={updatingRepairProgress}
+        onSave={handleUpdateRepairProgress}
+        onClose={() => setUpdatingRepairProgress(null)}
       />
 
       <Modal open={adding} title="Add job" onClose={() => setAdding(false)}>
@@ -337,7 +358,7 @@ export default function Jobs() {
         {completing && (
           <JobConfirmSummary
             jobName={completing.name}
-            jobRef={completing.id}
+            jobRef={completing.orderNumber}
             currentStatus="In Progress"
             targetStatus="Completed"
           />
@@ -358,7 +379,7 @@ export default function Jobs() {
           setDeleting(null);
         }}
       >
-        {deleting && <JobConfirmSummary jobName={deleting.name} jobRef={deleting.id} />}
+        {deleting && <JobConfirmSummary jobName={deleting.name} jobRef={deleting.orderNumber} />}
       </JobConfirmDialog>
     </div>
   );

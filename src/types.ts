@@ -16,8 +16,17 @@ export interface JobCollaborator {
   role: UserRole;
 }
 
+/** One step of a repair job, tracking its own completion percentage (0–100). */
+export interface RepairProcess {
+  name: string;
+  progress: number;
+}
+
 export interface Job {
   id: string;
+  /** Stable display reference such as G3D-ABC123XY. Jobs created before the
+   *  field existed derive one from their document ID — never blank in practice. */
+  orderNumber: string;
   name: string;
   customer: string;
   quantity: number;
@@ -25,6 +34,8 @@ export interface Job {
   dueDate: Date;
   status: JobStatus;
   category: JobCategory;
+  /** Repair jobs only; every other category keeps this empty. */
+  repairProcesses: RepairProcess[];
   isAwf: boolean;
   createdByUid: string;
   createdByName: string;

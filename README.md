@@ -44,8 +44,21 @@ the same source so the identity stays consistent.
   can't start the same job. Only the claimer can complete it. Managers and
   admins can edit and restore; only admins can delete. The UI hides any
   action the rules would reject.
+- **Order numbers** — every job carries a permanent `orderNumber` such as
+  `G3D-ABC123XY`, derived from the first eight characters of its document ID
+  when the job is created and never rewritten by a later update. Jobs written
+  before the field existed derive the same number at read time, so no
+  migration is needed.
+- **Repair processes** — a repair job stores a `repairProcesses` array of
+  `{ name, progress }` steps (for example Cleaning, Welding, Machining,
+  Spraying), each tracking its own 0–100 percentage. The card shows a bar per
+  process with their rounded average; a collaborator, manager, or admin can
+  update them while the job is pending or started. Completing a job sets every
+  process to 100%, restoring one resets them to 0% and keeps the names, and
+  every other category stores an empty array.
 - **Tabs** — Jobs (live board with sorting and overdue flags), Summary
-  (live stats), Archive (completed, newest first, with restore).
+  (live stats plus the most urgent jobs), Archive (completed, newest first,
+  with restore).
 - **Settings** — profile, personal info (self-updatable fields), security
   (change password / reset email), appearance (light/dark/system theme,
   high contrast, reduced motion, text size — persisted to localStorage),
