@@ -38,7 +38,11 @@ export default defineConfig({
   // Two workers, everywhere. All of them share one Firestore emulator, and
   // past two concurrent browser contexts its first-sync latency (WebKit worst)
   // grows past any sensible assertion timeout.
-  workers: 2,
+  //
+  // Override with E2E_WORKERS on a memory-constrained machine: two WebKit
+  // workers plus the emulator's JVM is enough to get the run OOM-killed, which
+  // surfaces as processes vanishing mid-run rather than as a test failure.
+  workers: Number(process.env.E2E_WORKERS ?? 2),
   timeout: 60_000,
   // Covers the first assertion after a cold navigation, which waits on that
   // first sync. Later assertions in a warm page resolve immediately.
@@ -127,7 +131,11 @@ export default defineConfig({
       // and a cold chunk can outlast an action timeout when several workers
       // navigate at once. Building first also means the suite exercises what
       // actually ships. `npm run dev:e2e` remains for interactive debugging.
-      command: `npm run build:e2e && npm run preview:e2e -- --port ${PORT} --strictPort`,
+      //
+      // Served by e2e/scripts/serve.mjs rather than `vite preview`, which did
+      // not survive a full WebKit run — and Playwright hangs on a webServer
+      // that dies rather than failing the run.
+      command: 'npm run build:e2e && npm run preview:e2e',
       url: baseURL,
       // Never reuse: a preview server left over from an earlier run serves the
       // bundle built from the *old* source, so a suite could pass against code

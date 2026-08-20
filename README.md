@@ -96,6 +96,10 @@ and WebKit, plus tablet and phone viewports. `npm run test:e2e` starts
 everything it needs (emulators, a production build, a preview server), seeds a
 fixed set of accounts and records, and tears the emulators down afterwards.
 
+WebKit is the heaviest engine here. If processes disappear mid-run (Playwright
+reporting `Killed`, or the app server vanishing), the machine is out of memory —
+run it with `E2E_WORKERS=1 npm run test:e2e:webkit`.
+
 If a run appears to stop making progress, check that the preview server on
 :5174 is still up (`curl -sI http://127.0.0.1:5174/`). Playwright waits on its
 webServer rather than failing when one dies mid-run, so a dead app server looks
