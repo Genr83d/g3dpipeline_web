@@ -35,15 +35,18 @@ import { isSameCalendarDate } from '../lib/format';
 import { resolvedCompletedQuantity, validateCompletedQuantity } from '../lib/jobProgress';
 import { jobOrderNumber, orderNumberFromDocumentId } from '../lib/jobOrderNumber';
 import {
-  applyRepairProgressUpdates,
-  completedRepairProcesses,
-  mergeRepairProcesses,
-  parseRepairProcesses,
-  repairProcessesForCategory,
-  resetRepairProcesses,
-  validateRepairProcesses,
-  REPAIR_PROCESS_REQUIRED_MESSAGE,
-} from '../lib/repairProcesses';
+  applySectionProgressUpdates,
+  clampSectionProgress,
+  clearRemovedCollaborators,
+  completedJobSections,
+  mergeJobSections,
+  parseJobSections,
+  resetJobSections,
+  sectionRequiredMessage,
+  sectionsToFirestore,
+  validateJobSections,
+  validateSectionAssignments,
+} from '../lib/jobSections';
 import {
   parseAssignedRole,
   parseJobStatus,
@@ -52,7 +55,7 @@ import {
   type Job,
   type JobCategory,
   type JobCollaborator,
-  type RepairProcess,
+  type JobSection,
   type UserRole,
 } from '../types';
 
@@ -159,7 +162,7 @@ export function parseJob(id: string, data: Record<string, unknown>): Job {
     dueDate: toDate(data.dueDate) ?? new Date(),
     status,
     category: parseJobCategory(data.category),
-    repairProcesses: parseRepairProcesses(data.repairProcesses),
+    repairProcesses: parseJobSections(data.repairProcesses),
     isAwf: data.isAwf === true,
     createdByUid: (data.createdByUid as string) ?? '',
     createdByName: (data.createdByName as string) ?? '',
@@ -213,22 +216,24 @@ export interface JobInput {
   dueDate: Date;
   category: JobCategory;
   isAwf?: boolean;
-  /** Repair jobs only. Percentages are never entered here — every new process
-   *  starts at 0% and moves through the progress dialog. */
-  repairProcessNames?: string[];
+  /** Section names, one per line in the form. Percentages are never entered
+   *  here — every new section starts at 0%, unassigned, and moves through the
+   *  section-progress dialog. Required for every category. */
+  sectionNames?: string[];
 }
 
-/** Builds the stored process list for a save and rejects a repair job that
- *  would be left without one. Non-repair categories always resolve to []. */
-function resolveRepairProcesses(
+/** Builds the stored section list for a save and rejects a job that would be
+ *  left without one. Names carried over from `existing` keep their percentage
+ *  and their assigned collaborator. */
+function resolveJobSections(
   category: JobCategory,
-  existing: readonly RepairProcess[],
+  existing: readonly JobSection[],
   names: readonly string[],
-): RepairProcess[] {
-  const processes = repairProcessesForCategory(category, mergeRepairProcesses(existing, names));
-  const error = validateRepairProcesses(category, processes);
+): JobSection[] {
+  const sections = mergeJobSections(existing, names);
+  const error = validateJobSections(category, sections);
   if (error) throw new Error(error);
-  return processes;
+  return sections;
 }
 
 /** Service-layer guard mirroring the client form: quantity must satisfy the
@@ -253,11 +258,7 @@ export async function addJob(
 ): Promise<void> {
   const byName = actorDisplayName(actor);
   const quantity = assertValidJobQuantity(input.category, input.quantity);
-  const repairProcesses = resolveRepairProcesses(
-    input.category,
-    [],
-    input.repairProcessNames ?? [],
-  );
+  const sections = resolveJobSections(input.category, [], input.sectionNames ?? []);
   const ref = doc(jobsCol);
   await setDoc(ref, {
     orderNumber: orderNumberFromDocumentId(ref.id),
@@ -268,7 +269,7 @@ export async function addJob(
     dueDate: Timestamp.fromDate(input.dueDate),
     status: 'pending',
     category: input.category,
-    repairProcesses,
+    repairProcesses: sectionsToFirestore(sections),
     isAwf: resolveNewJobIsAwf(self.role, input.isAwf),
     createdByUid: actor.uid,
     createdByName: byName,
@@ -337,6 +338,7 @@ export async function assignJob(
   self: Assigner,
   jobId: string,
   targets: AssignTarget[],
+  sections?: readonly JobSection[],
 ): Promise<void> {
   if (!isManagerOrAdminRole(self.role)) {
     throw new Error('Only managers and admins can change collaborators.');
@@ -347,13 +349,14 @@ export async function assignJob(
     throw new Error('Your role cannot assign one or more selected collaborators.');
   }
   const [primary] = collaborators;
+  const collaboratorUids = collaborators.map((c) => c.uid);
   const byName = actorDisplayName(actor);
   const patch: Record<string, unknown> = {
     assignedToUid: primary.uid,
     assignedToName: primary.name,
     assignedToRole: primary.role,
     collaborators,
-    collaboratorUids: collaborators.map((c) => c.uid),
+    collaboratorUids,
     assignedByUid: actor.uid,
     assignedByName: byName,
     assignedAt: serverTimestamp(),
@@ -361,14 +364,31 @@ export async function assignJob(
     updatedByUid: actor.uid,
     updatedByName: byName,
   };
+  // Section ownership travels with the assignment: every section must belong to
+  // someone who is still on the job after this save.
+  if (sections && sections.length > 0) {
+    const assignmentError = validateSectionAssignments(sections, collaboratorUids);
+    if (assignmentError) throw new Error(assignmentError);
+    patch.repairProcesses = sectionsToFirestore(sections);
+  }
   if (collaboratorsRequireAwf(collaborators)) patch.isAwf = true;
   await updateDoc(doc(db, 'jobs', jobId), patch);
 }
 
 /** Manager/admin: clear assignment/collaborators. Rules remain the source of truth. */
-export async function unassignJob(actor: Actor, jobId: string): Promise<void> {
+export async function unassignJob(
+  actor: Actor,
+  jobId: string,
+  sections: readonly JobSection[] = [],
+): Promise<void> {
   const byName = actorDisplayName(actor);
+  // Clearing the team leaves every section unassigned until someone reassigns
+  // it. Names and percentages are untouched.
+  const unassignedSections = clearRemovedCollaborators(sections, []);
   await updateDoc(doc(db, 'jobs', jobId), {
+    ...(unassignedSections.length > 0
+      ? { repairProcesses: sectionsToFirestore(unassignedSections) }
+      : {}),
     assignedToUid: '',
     assignedToName: '',
     assignedToRole: '',
@@ -441,7 +461,7 @@ export async function completeJob(actor: Actor, self: Assigner, jobId: string): 
 
     const name = (data.name as string) ?? '';
     const quantity = typeof data.quantity === 'number' ? data.quantity : 0;
-    const repairProcesses = parseRepairProcesses(data.repairProcesses);
+    const sections = parseJobSections(data.repairProcesses);
 
     if (isPinJob(name) && quantity > 0) {
       if (!pinBacksRef) throw new Error('No “Pin Backs” material found in inventory.');
@@ -486,9 +506,9 @@ export async function completeJob(actor: Actor, self: Assigner, jobId: string): 
     tx.update(jobRef, {
       status: 'completed',
       completedQuantity: quantity,
-      // Finishing a repair job finishes each of its processes.
-      ...(repairProcesses.length > 0
-        ? { repairProcesses: completedRepairProcesses(repairProcesses) }
+      // Finishing a job finishes each of its sections, owners intact.
+      ...(sections.length > 0
+        ? { repairProcesses: sectionsToFirestore(completedJobSections(sections)) }
         : {}),
       completedAt: serverTimestamp(),
       completedByUid: actor.uid,
@@ -503,8 +523,9 @@ export async function completeJob(actor: Actor, self: Assigner, jobId: string): 
 /** Manager/admin: send a completed job back into the pipeline. This is the
  *  only supported completed → pending transition; anything else is rejected.
  *
- *  A restored repair job keeps its process definitions and starts them over at
- *  0%, matching the reset completed quantity. */
+ *  A restored job keeps its section names and starts them over at 0%, matching
+ *  the reset completed quantity. Because restoring also clears the team, every
+ *  section returns to unassigned. */
 export async function restoreJob(actor: Actor, jobId: string): Promise<void> {
   const byName = actorDisplayName(actor);
   const ref = doc(db, 'jobs', jobId);
@@ -515,12 +536,14 @@ export async function restoreJob(actor: Actor, jobId: string): Promise<void> {
     if (parseJobStatus(data.status) !== 'completed') {
       throw new Error('Only completed jobs can be restored.');
     }
-    const repairProcesses = parseRepairProcesses(data.repairProcesses);
+    // Sections keep their names but lose their owners along with the team,
+    // and start over at 0% to match the reset completed quantity.
+    const sections = clearRemovedCollaborators(parseJobSections(data.repairProcesses), []);
     tx.update(ref, {
       status: 'pending',
       completedQuantity: 0,
-      ...(repairProcesses.length > 0
-        ? { repairProcesses: resetRepairProcesses(repairProcesses) }
+      ...(sections.length > 0
+        ? { repairProcesses: sectionsToFirestore(resetJobSections(sections)) }
         : {}),
       assignedToUid: '',
       assignedToName: '',
@@ -550,9 +573,10 @@ export interface JobEdit {
   isAwf?: boolean;
   /** Required explanation captured when the due date's calendar day changes. */
   dueDateChangeNote?: string;
-  /** Repair-process names as they should stand after the edit. Percentages are
-   *  carried over from the stored job by name; omit to leave the list alone. */
-  repairProcessNames?: string[];
+  /** Section names as they should stand after the edit. Percentages and
+   *  assigned collaborators are carried over from the stored job by name; omit
+   *  to leave the list alone. */
+  sectionNames?: string[];
 }
 
 /** Manager/admin: edit core fields and, when supplied, the persistent AWF
@@ -586,9 +610,8 @@ export async function editJob(
 
   const editsDueDate = edit.dueDate !== undefined;
   const touchesQuantity = edit.quantity !== undefined || edit.category !== undefined;
-  const touchesRepairProcesses =
-    edit.repairProcessNames !== undefined || edit.category !== undefined;
-  if (!editsDueDate && !touchesQuantity && !touchesRepairProcesses) {
+  const touchesSections = edit.sectionNames !== undefined;
+  if (!editsDueDate && !touchesQuantity && !touchesSections) {
     await updateDoc(doc(db, 'jobs', jobId), patch);
     return;
   }
@@ -618,14 +641,16 @@ export async function editJob(
       patch.quantity = nextQuantity;
     }
 
-    // Repair processes are merged against the stored list so an unchanged name
-    // keeps its percentage, a new name starts at 0%, and a dropped name leaves
-    // Firestore. Switching away from Repair clears the list entirely.
-    if (touchesRepairProcesses) {
+    // Sections are merged against the stored list so an unchanged name keeps
+    // its percentage and its assigned collaborator, a new name starts at 0%
+    // unassigned, and a dropped name leaves Firestore. Changing the job's
+    // category only changes the wording, never the list.
+    if (touchesSections) {
       const category = edit.category ?? parseJobCategory(data.category);
-      const stored = parseRepairProcesses(data.repairProcesses);
-      const names = edit.repairProcessNames ?? stored.map((process) => process.name);
-      patch.repairProcesses = resolveRepairProcesses(category, stored, names);
+      const stored = parseJobSections(data.repairProcesses);
+      patch.repairProcesses = sectionsToFirestore(
+        resolveJobSections(category, stored, edit.sectionNames ?? []),
+      );
     }
 
     // Compare against the freshly-read deadline by calendar day. dueDate (and
@@ -690,22 +715,32 @@ export async function updateJobProgress({
   });
 }
 
-export interface UpdateRepairProgressInput {
+export interface UpdateSectionProgressInput {
   jobId: string;
-  processes: readonly RepairProcess[];
+  sections: readonly JobSection[];
   currentUser: Actor & { role: UserRole };
 }
 
-/** Repair-process transaction. Each process carries its own percentage, so the
- *  whole array is rewritten from the freshly-read stored definitions — a stale
- *  dialog can never reintroduce a renamed or removed process. Permissions match
- *  quantity progress: an assigned collaborator, a manager, or an admin, while
- *  the job is still pending or started. The server rules stay authoritative. */
-export async function updateRepairProgress({
+export const SECTION_NAMES_LOCKED_MESSAGE = 'Job sections cannot be changed here.';
+export const SECTION_OWNERS_LOCKED_MESSAGE = 'Section assignments cannot be changed here.';
+export const FOREIGN_SECTION_MESSAGE =
+  'You can only update progress for sections assigned to you.';
+
+/** Section-progress transaction, shared by every job category. Each section
+ *  carries its own percentage, so the whole array is rewritten from the
+ *  freshly-read stored definitions — a stale dialog can never reintroduce a
+ *  renamed or removed section, nor rewrite who owns one.
+ *
+ *  Managers and admins may move any section. Everyone else must be a
+ *  collaborator on the job and may only move sections assigned to their own
+ *  UID: a submission that renames a section, reassigns one, or nudges someone
+ *  else's percentage is rejected outright rather than silently dropped. The
+ *  server rules stay authoritative. */
+export async function updateSectionProgress({
   jobId,
-  processes,
+  sections,
   currentUser,
-}: UpdateRepairProgressInput): Promise<void> {
+}: UpdateSectionProgressInput): Promise<void> {
   const ref = doc(db, 'jobs', jobId);
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
@@ -713,21 +748,39 @@ export async function updateRepairProgress({
     const data = snap.data();
     const status = parseJobStatus(data.status);
     if (status !== 'pending' && status !== 'started') {
-      throw new Error('Completed jobs cannot have their repair progress updated.');
-    }
-    if (parseJobCategory(data.category) !== 'repair') {
-      throw new Error('Only repair jobs track repair processes.');
+      throw new Error('Completed jobs cannot have their section progress updated.');
     }
     const collaborators = parseCollaborators(data);
     const collaboratorUids = parseCollaboratorUids(data, collaborators);
-    if (!collaboratorUids.includes(currentUser.uid) && !isManagerOrAdminRole(currentUser.role)) {
-      throw new Error('Only a collaborator, manager, or admin can update repair progress.');
+    const isManager = isManagerOrAdminRole(currentUser.role);
+    if (!collaboratorUids.includes(currentUser.uid) && !isManager) {
+      throw new Error('Only a collaborator, manager, or admin can update section progress.');
     }
-    const stored = parseRepairProcesses(data.repairProcesses);
-    const updated = applyRepairProgressUpdates(stored, processes);
-    if (updated.length === 0) throw new Error(REPAIR_PROCESS_REQUIRED_MESSAGE);
+    const stored = parseJobSections(data.repairProcesses);
+
+    if (!isManager) {
+      const storedByName = new Map(
+        stored.map((section) => [section.name.trim().toLowerCase(), section]),
+      );
+      for (const section of sections) {
+        const existing = storedByName.get(section.name.trim().toLowerCase());
+        if (!existing) throw new Error(SECTION_NAMES_LOCKED_MESSAGE);
+        if (section.collaboratorUid.trim() !== existing.collaboratorUid) {
+          throw new Error(SECTION_OWNERS_LOCKED_MESSAGE);
+        }
+        if (
+          existing.collaboratorUid !== currentUser.uid &&
+          clampSectionProgress(section.progress) !== existing.progress
+        ) {
+          throw new Error(FOREIGN_SECTION_MESSAGE);
+        }
+      }
+    }
+
+    const updated = applySectionProgressUpdates(stored, sections);
+    if (updated.length === 0) throw new Error(sectionRequiredMessage(parseJobCategory(data.category)));
     tx.update(ref, {
-      repairProcesses: updated,
+      repairProcesses: sectionsToFirestore(updated),
       updatedAt: serverTimestamp(),
       updatedByUid: currentUser.uid,
       updatedByName: actorDisplayName(currentUser),

@@ -6,7 +6,7 @@ import { useToast } from '../components/Toast';
 import { JobCard } from '../components/JobCard';
 import { JobForm, type JobFormValues } from '../components/JobForm';
 import { JobProgressModal } from '../components/JobProgressModal';
-import { RepairProgressModal } from '../components/RepairProgressModal';
+import { SectionProgressModal } from '../components/SectionProgressModal';
 import { Modal } from '../components/Modal';
 import {
   JOB_DELETE_WARNING,
@@ -27,8 +27,8 @@ import {
   jobCategoryLabel,
   type JobCategoryFilter,
 } from '../lib/jobCategories';
-import { overallRepairProgress } from '../lib/repairProcesses';
-import { isOverdue, type Job, type RepairProcess } from '../types';
+import { overallSectionProgress } from '../lib/jobSections';
+import { isOverdue, type Job, type JobSection } from '../types';
 import type { AssignTarget } from '../services/jobService';
 import * as jobService from '../services/jobService';
 
@@ -54,7 +54,7 @@ export default function Jobs() {
   const [starting, setStarting] = useState<Job | null>(null);
   const [completing, setCompleting] = useState<Job | null>(null);
   const [updatingProgress, setUpdatingProgress] = useState<Job | null>(null);
-  const [updatingRepairProgress, setUpdatingRepairProgress] = useState<Job | null>(null);
+  const [updatingSections, setUpdatingSections] = useState<Job | null>(null);
 
   const activeJobs = useMemo(
     () => jobs.filter((job) => job.status !== 'completed'),
@@ -110,8 +110,12 @@ export default function Jobs() {
     if (saved) setEditing(null);
   }
 
-  async function handleSaveCollaborators(job: Job, collaborators: AssignTarget[]) {
-    await jobService.assignJob(actor!, assigner!, job.id, collaborators);
+  async function handleSaveCollaborators(
+    job: Job,
+    collaborators: AssignTarget[],
+    sections: JobSection[],
+  ) {
+    await jobService.assignJob(actor!, assigner!, job.id, collaborators, sections);
     const [primary] = collaborators;
     const suffix = collaborators.length > 1 ? ` + ${collaborators.length - 1}` : '';
     toast(`“${job.name}” collaborators updated: ${primary.name}${suffix}.`, 'success');
@@ -119,7 +123,7 @@ export default function Jobs() {
   }
 
   async function handleClearCollaborators(job: Job) {
-    await jobService.unassignJob(actor!, job.id);
+    await jobService.unassignJob(actor!, job.id, job.repairProcesses);
     toast(`“${job.name}” is unassigned.`, 'success');
     setAssigning(null);
   }
@@ -135,15 +139,15 @@ export default function Jobs() {
     setUpdatingProgress(null);
   }
 
-  async function handleUpdateRepairProgress(processes: RepairProcess[]) {
-    if (!updatingRepairProgress) return;
-    await jobService.updateRepairProgress({
-      jobId: updatingRepairProgress.id,
-      processes,
+  async function handleUpdateSectionProgress(sections: JobSection[]) {
+    if (!updatingSections) return;
+    await jobService.updateSectionProgress({
+      jobId: updatingSections.id,
+      sections,
       currentUser: { ...actor!, role: assigner!.role },
     });
-    toast(`Repair progress updated to ${overallRepairProgress(processes)}% overall.`, 'success');
-    setUpdatingRepairProgress(null);
+    toast(`Section progress updated to ${overallSectionProgress(sections)}% overall.`, 'success');
+    setUpdatingSections(null);
   }
 
   return (
@@ -281,7 +285,7 @@ export default function Jobs() {
                   onDelete={isAdmin ? setDeleting : undefined}
                   onAssign={isManagerOrAdmin ? setAssigning : undefined}
                   onUpdateProgress={setUpdatingProgress}
-                  onUpdateRepairProgress={setUpdatingRepairProgress}
+                  onUpdateSectionProgress={setUpdatingSections}
                 />
               ))}
             </AnimatePresence>
@@ -303,10 +307,10 @@ export default function Jobs() {
         onClose={() => setUpdatingProgress(null)}
       />
 
-      <RepairProgressModal
-        job={updatingRepairProgress}
-        onSave={handleUpdateRepairProgress}
-        onClose={() => setUpdatingRepairProgress(null)}
+      <SectionProgressModal
+        job={updatingSections}
+        onSave={handleUpdateSectionProgress}
+        onClose={() => setUpdatingSections(null)}
       />
 
       <Modal open={adding} title="Add job" onClose={() => setAdding(false)}>

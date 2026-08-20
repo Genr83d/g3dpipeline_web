@@ -119,6 +119,7 @@ const input: JobInput = {
   quantity: 12,
   dueDate: new Date('2030-01-02T23:59:59.000Z'),
   category: 'manufacturing',
+  sectionNames: ['Design', 'Routing'],
 };
 
 function self(role: UserRole): Assigner {
@@ -255,7 +256,7 @@ describe('job category persistence', () => {
     await editJob(actor, self('manager'), 'job-1', {
       name: 'Updated job',
       category: 'repair',
-      repairProcessNames: ['Cleaning'],
+      sectionNames: ['Cleaning'],
     });
     expect(firestore.transactionUpdate.mock.calls.at(-1)?.[1]).toMatchObject({
       name: 'Updated job',

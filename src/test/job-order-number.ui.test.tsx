@@ -35,7 +35,7 @@ vi.mock('../services/jobService', () => ({
   startJob: vi.fn(),
   unassignJob: vi.fn(),
   updateJobProgress: vi.fn(),
-  updateRepairProgress: vi.fn(),
+  updateSectionProgress: vi.fn(),
 }));
 vi.mock('../services/inventoryService', () => ({
   isLowStock: () => false,

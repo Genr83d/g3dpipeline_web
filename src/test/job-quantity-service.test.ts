@@ -109,6 +109,7 @@ function input(overrides: Partial<JobInput> = {}): JobInput {
     quantity: 12,
     dueDate: new Date('2030-01-02T23:59:59.000Z'),
     category: 'manufacturing',
+    sectionNames: ['Design', 'Routing'],
     ...overrides,
   };
 }

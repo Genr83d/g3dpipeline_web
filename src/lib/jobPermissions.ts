@@ -1,5 +1,5 @@
 import { canSelfStartUnassigned, isManagerOrAdminRole } from './roles';
-import type { JobStatus, UserRole } from '../types';
+import type { JobSection, JobStatus, UserRole } from '../types';
 
 export interface JobPermissionUser {
   uid: string;
@@ -34,6 +34,28 @@ export function canCompleteJob(job: JobPermissionTarget, user: JobPermissionUser
 export function canUpdateJobProgress(job: JobPermissionTarget, user: JobPermissionUser): boolean {
   if (job.status !== 'pending' && job.status !== 'started') return false;
   return collaboratorUids(job).has(user.uid) || isManagerOrAdminRole(user.role);
+}
+
+/** The section-progress dialog is for managers/admins and for collaborators
+ *  who own at least one section on this job. A collaborator with no section of
+ *  their own has nothing to edit, so the control stays hidden. */
+export function canUpdateSectionProgress(
+  job: { status: JobStatus; sections: readonly JobSection[] },
+  user: JobPermissionUser,
+): boolean {
+  if (job.status !== 'pending' && job.status !== 'started') return false;
+  if (job.sections.length === 0) return false;
+  if (isManagerOrAdminRole(user.role)) return true;
+  return job.sections.some((section) => section.collaboratorUid === user.uid);
+}
+
+/** Within the dialog, a collaborator may move only their own sections.
+ *  Everything else is visible but disabled. */
+export function canEditSectionProgress(
+  section: JobSection,
+  user: JobPermissionUser,
+): boolean {
+  return isManagerOrAdminRole(user.role) || section.collaboratorUid === user.uid;
 }
 
 export function canEditJob(status: JobStatus, role: UserRole): boolean {

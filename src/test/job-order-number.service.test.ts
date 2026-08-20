@@ -100,6 +100,7 @@ const input: JobInput = {
   quantity: 1,
   dueDate: new Date('2030-01-02T23:59:59.000Z'),
   category: 'manufacturing',
+  sectionNames: ['Design', 'Routing'],
 };
 
 function self(role: UserRole): Assigner {
@@ -168,7 +169,10 @@ describe('order numbers are written once, at creation', () => {
     expect(ref.id).toBe(GENERATED_JOB_ID);
     expect(createdPayload()).toMatchObject({
       orderNumber: 'G3D-ABC123XY',
-      repairProcesses: [],
+      repairProcesses: [
+        { name: 'Design', progress: 0 },
+        { name: 'Routing', progress: 0 },
+      ],
       completedQuantity: 0,
       status: 'pending',
     });
