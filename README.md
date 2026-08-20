@@ -96,6 +96,11 @@ and WebKit, plus tablet and phone viewports. `npm run test:e2e` starts
 everything it needs (emulators, a production build, a preview server), seeds a
 fixed set of accounts and records, and tears the emulators down afterwards.
 
+If a run appears to stop making progress, check that the preview server on
+:5174 is still up (`curl -sI http://127.0.0.1:5174/`). Playwright waits on its
+webServer rather than failing when one dies mid-run, so a dead app server looks
+exactly like a very slow test.
+
 Run **one project at a time** — `npm run test:e2e:chromium`, then `:firefox`,
 then `:webkit`, then `:responsive`. All projects share a single Firestore
 emulator, and running every engine at once saturates it: listeners take longer
