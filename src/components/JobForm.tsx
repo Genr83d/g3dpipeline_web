@@ -10,12 +10,13 @@ import {
 } from '../lib/jobCategories';
 import { isManagerOrAdminRole } from '../lib/roles';
 import {
-  parseRepairProcessNames,
-  repairProcessesToText,
-  usesRepairProcesses,
-  REPAIR_PROCESS_HELPER_TEXT,
-  REPAIR_PROCESS_REQUIRED_MESSAGE,
-} from '../lib/repairProcesses';
+  parseSectionNames,
+  sectionHelperText,
+  sectionRequiredMessage,
+  sectionsHeading,
+  sectionsToText,
+  usesRepairVocabulary,
+} from '../lib/jobSections';
 import type { Job, JobCategory } from '../types';
 import { useAuth } from '../context/AuthProvider';
 import { IconMinus, IconPlus } from './icons';
@@ -29,9 +30,10 @@ export interface JobFormValues {
   isAwf: boolean;
   /** Set only when editing shifts the deadline to a different calendar day. */
   dueDateChangeNote?: string;
-  /** Repair jobs only; empty for every other category. Percentages are not
-   *  edited here — unchanged names keep the progress they already had. */
-  repairProcessNames: string[];
+  /** One section name per line, required for every category. Percentages and
+   *  collaborators are not edited here — unchanged names keep the progress and
+   *  the owner they already had. */
+  sectionNames: string[];
 }
 
 export function JobForm({
@@ -55,8 +57,8 @@ export function JobForm({
     initial?.category ?? DEFAULT_JOB_CATEGORY,
   );
   const [isAwf, setIsAwf] = useState(initial?.isAwf ?? profile?.role === 'awf');
-  const [repairProcessText, setRepairProcessText] = useState(
-    repairProcessesToText(initial?.repairProcesses ?? []),
+  const [sectionText, setSectionText] = useState(
+    sectionsToText(initial?.repairProcesses ?? []),
   );
   const [dueDateChangeNote, setDueDateChangeNote] = useState('');
   const [error, setError] = useState('');
@@ -68,8 +70,8 @@ export function JobForm({
   // (or creating a new job) clears the requirement.
   const dueDateChanged = Boolean(initial) && dueDate !== toDateInputValue(initial!.dueDate);
 
-  const showsRepairProcesses = usesRepairProcesses(category);
-  const repairProcessNames = parseRepairProcessNames(repairProcessText);
+  const sectionLabel = sectionsHeading(category);
+  const sectionNames = parseSectionNames(sectionText);
   const quantityConfig = jobQuantityConfig(category);
   const parsedQuantity = Number(quantity.trim());
   const atMinimum =
@@ -113,8 +115,8 @@ export function JobForm({
     if (dueDateChanged && !dueDateChangeNote.trim()) {
       return setError('Add a reason for changing the deadline.');
     }
-    if (showsRepairProcesses && repairProcessNames.length === 0) {
-      return setError(REPAIR_PROCESS_REQUIRED_MESSAGE);
+    if (sectionNames.length === 0) {
+      return setError(sectionRequiredMessage(category));
     }
     setError('');
     setBusy(true);
@@ -127,7 +129,7 @@ export function JobForm({
         category,
         isAwf: profile?.role === 'awf' ? true : isAwf,
         dueDateChangeNote: dueDateChanged ? dueDateChangeNote.trim() : undefined,
-        repairProcessNames: showsRepairProcesses ? repairProcessNames : [],
+        sectionNames,
       });
     } finally {
       setBusy(false);
@@ -179,28 +181,30 @@ export function JobForm({
           ))}
         </select>
       </div>
-      {showsRepairProcesses && (
-        <div>
-          <label
-            htmlFor="job-repair-processes"
-            className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200"
-          >
-            Repair processes
-          </label>
-          <textarea
-            id="job-repair-processes"
-            className="field min-h-24 resize-y"
-            rows={4}
-            value={repairProcessText}
-            onChange={(e) => setRepairProcessText(e.target.value)}
-            placeholder={'Cleaning\nWelding\nMachining\nSpraying'}
-          />
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            {REPAIR_PROCESS_HELPER_TEXT} Each process tracks its own percentage
-            {initial ? '; renaming one starts it back at 0%.' : ', starting at 0%.'}
-          </p>
-        </div>
-      )}
+      <div>
+        <label
+          htmlFor="job-sections"
+          className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200"
+        >
+          {sectionLabel}
+        </label>
+        <textarea
+          id="job-sections"
+          className="field min-h-24 resize-y"
+          rows={4}
+          value={sectionText}
+          onChange={(e) => setSectionText(e.target.value)}
+          placeholder={
+            usesRepairVocabulary(category)
+              ? 'Cleaning\nWelding\nMachining\nSpraying'
+              : 'Design\nRouting\nMetalworking'
+          }
+        />
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          {sectionHelperText(category)}
+          {initial ? ' Renaming one resets it to 0% and unassigned.' : ''}
+        </p>
+      </div>
       <div className="grid gap-3 sm:grid-cols-2">
         {quantityConfig.usesQuantity && (
           <div>

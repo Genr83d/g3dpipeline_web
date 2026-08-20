@@ -36,7 +36,7 @@ function job(overrides: Partial<Job> = {}): Job {
     dueDate: new Date('2099-06-15T23:59:59'),
     status: 'pending',
     category: 'manufacturing',
-    repairProcesses: [],
+    repairProcesses: [{ name: 'Design', progress: 0, collaboratorUid: '' }],
     isAwf: false,
     createdByUid: 'creator',
     createdByName: 'Creator',

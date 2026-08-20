@@ -16,11 +16,19 @@ export interface JobCollaborator {
   role: UserRole;
 }
 
-/** One step of a repair job, tracking its own completion percentage (0–100). */
-export interface RepairProcess {
+/** One unit of work inside a job, tracking its own completion percentage
+ *  (0–100) and the collaborator responsible for it. Repair jobs label these
+ *  "repair processes"; every other category labels them "job sections". Legacy
+ *  documents written before section ownership existed read collaboratorUid
+ *  as ''. */
+export interface JobSection {
   name: string;
   progress: number;
+  collaboratorUid: string;
 }
+
+/** Historical name for {@link JobSection}, kept for the repair vocabulary. */
+export type RepairProcess = JobSection;
 
 export interface Job {
   id: string;
@@ -34,8 +42,10 @@ export interface Job {
   dueDate: Date;
   status: JobStatus;
   category: JobCategory;
-  /** Repair jobs only; every other category keeps this empty. */
-  repairProcesses: RepairProcess[];
+  /** Every category's section list. The Firestore field keeps its original
+   *  `repairProcesses` name so repair jobs written before sections existed
+   *  keep working untouched. */
+  repairProcesses: JobSection[];
   isAwf: boolean;
   createdByUid: string;
   createdByName: string;

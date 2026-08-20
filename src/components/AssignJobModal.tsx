@@ -6,8 +6,14 @@ import { Skeleton } from './Skeleton';
 import { IconClose, IconPlus } from './icons';
 import { canClearCollaborators } from '../lib/jobPermissions';
 import { assignableRolesFor, isManagerOrAdminRole, roleLabel } from '../lib/roles';
+import {
+  clearRemovedCollaborators,
+  sectionsHeading,
+  validateSectionAssignments,
+  SECTION_ASSIGNMENT_REQUIRED_MESSAGE,
+} from '../lib/jobSections';
 import type { AssignTarget } from '../services/jobService';
-import type { AppUser, Job, UserRole } from '../types';
+import type { AppUser, Job, JobSection, UserRole } from '../types';
 
 interface SelectedCollaborator extends AssignTarget {
   email?: string;
@@ -22,6 +28,7 @@ function saveErrorMessage(err: unknown): string {
     const code = (err as { code?: string }).code ?? '';
     if (code.endsWith('permission-denied')) return 'Your role cannot change this assignment.';
     if (err.message === 'Add at least one collaborator.') return err.message;
+    if (err.message === SECTION_ASSIGNMENT_REQUIRED_MESSAGE) return err.message;
   }
   return 'Unable to update this assignment. It may have changed.';
 }
@@ -33,7 +40,11 @@ export function AssignJobModal({
   onClose,
 }: {
   job: Job | null;
-  onSave: (job: Job, collaborators: AssignTarget[]) => Promise<void>;
+  onSave: (
+    job: Job,
+    collaborators: AssignTarget[],
+    sections: JobSection[],
+  ) => Promise<void>;
   onClear: (job: Job) => Promise<void>;
   onClose: () => void;
 }) {
@@ -42,6 +53,7 @@ export function AssignJobModal({
   const [users, setUsers] = useState<AppUser[]>([]);
   const [selectedUid, setSelectedUid] = useState('');
   const [selected, setSelected] = useState<SelectedCollaborator[]>([]);
+  const [sections, setSections] = useState<JobSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -64,6 +76,7 @@ export function AssignJobModal({
     if (!job) return;
     setRole('staff');
     setSelected(job.collaborators.map((c) => ({ ...c })));
+    setSections(job.repairProcesses.map((section) => ({ ...section })));
     setSelectedUid('');
     setLoadError(null);
     setSaveError(null);
@@ -127,10 +140,34 @@ export function AssignJobModal({
     setSaveError(null);
   }
 
+  /** Dropping a collaborator leaves any section they owned unassigned, so the
+   *  manager has to hand it to someone still on the job before saving. */
+  function removeCollaborator(uid: string) {
+    const remaining = selected.filter((c) => c.uid !== uid);
+    setSelected(remaining);
+    setSections((prev) => clearRemovedCollaborators(prev, remaining.map((c) => c.uid)));
+  }
+
+  function assignSection(name: string, uid: string) {
+    setSections((prev) =>
+      prev.map((section) =>
+        section.name === name ? { ...section, collaboratorUid: uid } : section,
+      ),
+    );
+  }
+
   async function handleSave() {
     if (!job) return;
     if (selected.length === 0) {
       setSaveError('Add at least one collaborator.');
+      return;
+    }
+    const assignmentError = validateSectionAssignments(
+      sections,
+      selected.map((c) => c.uid),
+    );
+    if (assignmentError) {
+      setSaveError(assignmentError);
       return;
     }
     setSaving(true);
@@ -139,6 +176,7 @@ export function AssignJobModal({
       await onSave(
         job,
         selected.map((c) => ({ uid: c.uid, name: c.name, role: c.role })),
+        sections,
       );
     } catch (err) {
       setSaveError(saveErrorMessage(err));
@@ -259,9 +297,7 @@ export function AssignJobModal({
                       title="Remove collaborator"
                       disabled={saving || clearing}
                       className="rounded-full p-0.5 hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                      onClick={() =>
-                        setSelected((prev) => prev.filter((c) => c.uid !== collaborator.uid))
-                      }
+                      onClick={() => removeCollaborator(collaborator.uid)}
                     >
                       <IconClose className="h-3.5 w-3.5" />
                     </button>
@@ -270,6 +306,50 @@ export function AssignJobModal({
               </div>
             )}
           </div>
+
+          {sections.length > 0 && (
+            <div className="space-y-2" data-testid={`section-assignments-${job.id}`}>
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                {sectionsHeading(job.category)}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Every section needs an owner. One collaborator can hold several.
+              </p>
+              {sections.map((section) => {
+                const fieldId = `section-owner-${section.name.toLowerCase().replace(/\s+/g, '-')}`;
+                return (
+                  <div key={section.name}>
+                    <label
+                      htmlFor={fieldId}
+                      className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300"
+                    >
+                      {section.name}
+                    </label>
+                    <select
+                      id={fieldId}
+                      className="field"
+                      value={
+                        selected.some((c) => c.uid === section.collaboratorUid)
+                          ? section.collaboratorUid
+                          : ''
+                      }
+                      disabled={saving || clearing || selected.length === 0}
+                      onChange={(e) => assignSection(section.name, e.target.value)}
+                    >
+                      <option value="">
+                        {selected.length === 0 ? 'Add collaborators first' : 'Unassigned'}
+                      </option>
+                      {selected.map((collaborator) => (
+                        <option key={collaborator.uid} value={collaborator.uid}>
+                          {collaboratorName(collaborator)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {saveError && (
             <p className="rounded-md border border-danger/20 bg-danger-soft/70 px-3 py-2 text-sm font-medium text-danger dark:bg-red-950/40 dark:text-red-300" role="alert">

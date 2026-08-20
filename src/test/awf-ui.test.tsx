@@ -234,6 +234,7 @@ describe('AWF job form', () => {
     await user.type(screen.getByLabelText('Job Name'), 'Production run');
     await user.type(screen.getByLabelText('Name of Receiver'), 'Customer');
     await user.type(screen.getByLabelText('Quantity'), '5');
+    await user.type(screen.getByLabelText('Job sections'), 'Design\nRouting');
     fireEvent.change(screen.getByLabelText('Deadline'), { target: { value: '2099-01-01' } });
     await user.click(screen.getByRole('button', { name: 'Add job' }));
 
@@ -259,7 +260,7 @@ describe('AWF job form', () => {
     await user.type(screen.getByLabelText('Repair processes'), 'Cleaning\nWelding');
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
     expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({ category: 'repair', repairProcessNames: ['Cleaning', 'Welding'] }),
+      expect.objectContaining({ category: 'repair', sectionNames: ['Cleaning', 'Welding'] }),
     );
   });
 });

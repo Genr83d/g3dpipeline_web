@@ -95,6 +95,7 @@ function renderForm(onSubmit = vi.fn(async (_values: JobFormValues) => undefined
 async function fillBasics(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText('Job Name'), 'Pin order');
   await user.type(screen.getByLabelText('Name of Receiver'), 'Receiver');
+  await user.type(screen.getByLabelText('Job sections'), 'Design\nRouting');
   const due = screen.getByLabelText('Deadline');
   await user.clear(due);
   await user.type(due, '2099-06-15');
