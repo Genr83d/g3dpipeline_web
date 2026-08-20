@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    name: Typecheck, unit tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  e2e:
+    name: End-to-end (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      # Every engine reports independently, so one browser's failure never
+      # hides another's result.
+      fail-fast: false
+      matrix:
+        # `visual` is deliberately absent: the app resolves its fonts from the
+        # system, so screenshot baselines are specific to the machine that made
+        # them. Until baselines are regenerated on this runner image and
+        # committed, running them here would fail for reasons unrelated to the
+        # change under review. Run `npm run test:e2e:visual` locally instead.
+        project: [chromium, firefox, webkit, responsive]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # The Firestore emulator is a Java process.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - run: npm ci
+
+      # Cache the emulator jars the Firebase CLI downloads on first run.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ runner.os }}
+
+      - name: Install Playwright browsers
+        # --with-deps installs the system libraries WebKit needs; without them
+        # WebKit cannot launch at all.
+        run: npx playwright install --with-deps ${{ matrix.project == 'responsive' && 'chromium webkit' || matrix.project }}
+
+      - name: Run E2E tests
+        run: |
+          if [ "${{ matrix.project }}" = "responsive" ]; then
+            npm run test:e2e:responsive
+          else
+            npx playwright test --project=${{ matrix.project }}
+          fi
+
+      - name: Upload report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.project }}
+          path: |
+            e2e/.report
+            e2e/.artifacts
+          retention-days: 7
+          if-no-files-found: ignore

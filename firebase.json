@@ -1,0 +1,20 @@
+{
+  "firestore": {
+    "rules": "e2e/firestore.emulator.rules",
+    "predeploy": [
+      "node e2e/scripts/refuse-deploy.mjs"
+    ]
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "ui": {
+      "enabled": false
+    },
+    "singleProjectMode": true
+  }
+}

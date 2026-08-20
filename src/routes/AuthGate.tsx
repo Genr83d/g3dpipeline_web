@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useAuth } from '../context/AuthProvider';
-import { PendingApproval, AccountInactive } from '../pages/AccountStatus';
+import { AccountInactive, AccountUnavailable, PendingApproval } from '../pages/AccountStatus';
 import { BrandMark } from '../components/BrandMark';
 import { Skeleton } from '../components/Skeleton';
 
@@ -20,11 +20,14 @@ function FullPageLoader() {
 
 /** Wraps the signed-in app: pending/disabled users never reach children. */
 export function AuthGate({ children, signedOut }: { children: ReactNode; signedOut: ReactNode }) {
-  const { authUser, profile } = useAuth();
+  const { authUser, profile, profileError } = useAuth();
 
   if (authUser === undefined) return <FullPageLoader />;
   if (authUser === null) return <>{signedOut}</>;
   if (profile === undefined) return <FullPageLoader />;
+  // A failed read is not the same as a missing document, and must not be
+  // reported to an approved user as "waiting for approval".
+  if (profileError) return <AccountUnavailable />;
   if (profile === null || profile.status === 'pending') return <PendingApproval />;
   if (profile.status !== 'active') return <AccountInactive />;
   return <>{children}</>;

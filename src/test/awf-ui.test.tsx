@@ -107,6 +107,7 @@ function setRole(role: UserRole, uid = 'current-user') {
     authUser: { uid, email: currentProfile.email } as AuthState['authUser'],
     profile: currentProfile,
     firstName: 'Alex',
+    profileError: false,
     isActive: true,
     isAdmin: role === 'admin',
     isManagerOrAdmin: role === 'manager' || role === 'admin',
