@@ -52,6 +52,14 @@ test('the tour can be closed with its exit control', async ({ page, context }) =
 test('the help page lists role-appropriate walkthroughs and can launch one', async ({ page }) => {
   await page.goto('/settings/help');
 
+  // The tour auto-starts here too, and its tooltip sits over the page. Close
+  // it first: this test is about launching a guide deliberately, not about
+  // the one that starts itself.
+  const autoTour = page.getByTestId('onboarding-tooltip');
+  await expect(autoTour).toBeVisible();
+  await autoTour.getByRole('button', { name: 'Exit tutorial' }).click();
+  await expect(page.getByTestId('onboarding-tooltip')).toBeHidden();
+
   await expect(page.getByRole('heading', { name: 'Application walkthrough' })).toBeVisible();
   await expect(page.getByRole('button', { name: /Create a job/ })).toBeVisible();
   // Staff never see the manager-only guides.

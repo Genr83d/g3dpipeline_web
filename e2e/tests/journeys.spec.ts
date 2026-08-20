@@ -29,6 +29,11 @@ test.use({ storageState: storageStatePath('manager') });
 test('manager plans a job, staff works it to completion, manager restores it', async ({
   browser,
 }) => {
+  // The longest test in the suite by far: two live sessions, a full job
+  // lifecycle, and several cross-session propagations. It earns the extra
+  // budget rather than being trimmed into something less useful.
+  test.slow();
+
   const jobName = uniqueName(CREATED_PREFIX);
   cleanup.track('jobs', jobName);
 

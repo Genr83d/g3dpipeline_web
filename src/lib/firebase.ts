@@ -5,7 +5,11 @@ import {
   connectAuthEmulator,
   setPersistence,
 } from 'firebase/auth';
-import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
+import {
+  connectFirestoreEmulator,
+  getFirestore,
+  initializeFirestore,
+} from 'firebase/firestore';
 
 /** Opt-in, and only ever opt-in: an unset flag behaves exactly like production.
  *  The E2E suite sets this in .env.e2e, which carries no real credentials. */
@@ -26,7 +30,19 @@ const app = initializeApp({
 });
 
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+/** Production keeps the default transport, which auto-detects whether the
+ *  network can carry Firestore's streaming channel.
+ *
+ *  Against the emulator that detection is unreliable in WebKit: the emulator
+ *  is a different origin (a different port), and WebKit intermittently blocks
+ *  or stalls the streaming request, leaving a listener that never delivers its
+ *  first snapshot — the app sits on its loading screen forever. Forcing long
+ *  polling removes the negotiation entirely. This only ever applies to an
+ *  emulator session. */
+export const db = useEmulators
+  ? initializeFirestore(app, { experimentalForceLongPolling: true })
+  : getFirestore(app);
 
 if (useEmulators) {
   connectAuthEmulator(auth, `http://${emulatorHost}:${authEmulatorPort}`, {

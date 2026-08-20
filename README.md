@@ -96,6 +96,14 @@ and WebKit, plus tablet and phone viewports. `npm run test:e2e` starts
 everything it needs (emulators, a production build, a preview server), seeds a
 fixed set of accounts and records, and tears the emulators down afterwards.
 
+Run **one project at a time** — `npm run test:e2e:chromium`, then `:firefox`,
+then `:webkit`, then `:responsive`. All projects share a single Firestore
+emulator, and running every engine at once saturates it: listeners take longer
+to deliver their first snapshot than any sensible timeout allows, and tests
+fail on a slow emulator rather than on the change under review. CI does the
+same thing, one engine per job. `npm run test:e2e` with no arguments runs
+everything and is best kept for a machine with cores to spare.
+
 Requirements beyond `npm install`:
 
 - **Java 17+** — the Firestore emulator runs on the JVM.

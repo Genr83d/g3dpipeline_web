@@ -12,7 +12,12 @@ import { ACCOUNTS, PASSWORD, SEEDED } from '../support/seed';
 const FIRESTORE_CHANNEL = '**/google.firestore.v1.Firestore/**';
 const SIGN_IN_ENDPOINT = '**/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword*';
 
-const NETWORK_NOISE = /(Failed to load resource|net::ERR_FAILED|WebChannelConnection)/i;
+/** These tests break the network on purpose, so the browser complains. Each
+ *  alternative is a transport-level message, never an application one:
+ *  `Beacon API cannot load` is WebKit failing to send Firestore's terminate
+ *  beacon once the context is offline. */
+const NETWORK_NOISE =
+  /(Failed to load resource|net::ERR_FAILED|WebChannelConnection|Beacon API cannot load)/i;
 
 test.describe('failed sign-in requests', () => {
   test.use({ storageState: { cookies: [], origins: [] }, allowedErrors: NETWORK_NOISE });
