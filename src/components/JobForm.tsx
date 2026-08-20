@@ -201,9 +201,8 @@ export function JobForm({
           }
         />
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-          {sectionHelperText(category)} Each one tracks its own percentage and is
-          assigned to a collaborator
-          {initial ? '; renaming one starts it back at 0% and unassigned.' : '.'}
+          {sectionHelperText(category)}
+          {initial ? ' Renaming one resets it to 0% and unassigned.' : ''}
         </p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
