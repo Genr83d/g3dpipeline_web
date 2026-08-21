@@ -12,12 +12,28 @@ import { ACCOUNTS, PASSWORD, SEEDED } from '../support/seed';
 const FIRESTORE_CHANNEL = '**/google.firestore.v1.Firestore/**';
 const SIGN_IN_ENDPOINT = '**/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword*';
 
-/** These tests break the network on purpose, so the browser complains. Each
- *  alternative is a transport-level message, never an application one:
- *  `Beacon API cannot load` is WebKit failing to send Firestore's terminate
- *  beacon once the context is offline. */
-const NETWORK_NOISE =
-  /(Failed to load resource|net::ERR_FAILED|WebChannelConnection|Beacon API cannot load)/i;
+/** These tests break the network on purpose, so the browser complains — each
+ *  engine in its own dialect, all of them saying "the request you killed,
+ *  died":
+ *    - Chromium: `Failed to load resource` / `net::ERR_FAILED`
+ *    - WebKit:   `Beacon API cannot load` (Firestore's terminate beacon, once
+ *                the context is offline)
+ *    - Firefox:  `Cross-Origin Request Blocked ... CORS request did not
+ *                succeed`, which is how it words a transport-level failure
+ *
+ *  The Firefox pattern is pinned to the Firestore emulator's own host so it
+ *  cannot mask a genuine CORS problem anywhere else, and it is scoped to this
+ *  file rather than the global allowlist for the same reason. */
+const NETWORK_NOISE = new RegExp(
+  [
+    'Failed to load resource',
+    'net::ERR_FAILED',
+    'WebChannelConnection',
+    'Beacon API cannot load',
+    'Cross-Origin Request Blocked.*127\\.0\\.0\\.1:8080',
+  ].join('|'),
+  'i',
+);
 
 test.describe('failed sign-in requests', () => {
   test.use({ storageState: { cookies: [], origins: [] }, allowedErrors: NETWORK_NOISE });
