@@ -38,6 +38,41 @@ The six `VITE_FIREBASE_*` values come from the Firebase Console
 | `npm run test:e2e:report` | open the last HTML report |
 | `npm run emulators` | start the Firebase emulators on their own |
 
+## Typography
+
+Inter is loaded from **Fontsource via jsDelivr**, declared as an `@font-face`
+in `src/index.css` and pinned to an exact version:
+
+```
+https://cdn.jsdelivr.net/fontsource/fonts/inter:vf@5.3.0/latin-wght-normal.woff2
+```
+
+Worth knowing:
+
+- **The version is pinned on purpose.** A floating tag would let the
+  typography — and every visual baseline — change without a commit. Bumping it
+  is a deliberate edit plus `npm run test:e2e:update-snapshots`.
+- **It is the variable font**, so weights 100–900 come from that one file. The
+  app uses no italics, so only the normal style is fetched.
+- **The `@font-face` is declared locally** rather than importing Fontsource's
+  remote stylesheet: one external request instead of two, and the declaration
+  stays under our control.
+- **System fonts are fallbacks only.** `system-ui`, `-apple-system`,
+  `BlinkMacSystemFont`, `Segoe UI` and the generic `sans-serif` are what the
+  browser uses while Inter loads, or if it never arrives.
+- **Internet access is required for Inter itself.** If jsDelivr is unreachable
+  the app renders in the fallback stack — different letterforms, everything
+  still legible and functional. `font-display: swap` means text is never
+  invisible while waiting.
+- The app has **no Content Security Policy** today (`vercel.json` only carries
+  SPA rewrites). If one is added later it needs `font-src` to include
+  `https://cdn.jsdelivr.net`; no `style-src` entry is needed, because no remote
+  stylesheet is loaded.
+
+The E2E suite guards this: a request to the previously used `rsms.me` fails a
+test, a failed font request fails a test, and `smoke.spec.ts` asserts the
+pinned Fontsource URL is the one actually fetched.
+
 ## Brand assets
 
 The supplied GENR8 artwork is preserved at `public/brand/g3d-logo.png`. Product
@@ -153,12 +188,12 @@ Requirements beyond `npm install`:
   device, is still its own test pass.
 - **Email delivery.** Password-reset emails are captured by the Auth emulator
   and never sent, so the suite asserts the app's confirmation, not the mail.
-- **Visual baselines** are machine-specific. The app resolves `Inter` /
-  `G3DSans` from the system rather than bundling them, so a machine with a
-  different font set renders differently. The committed baselines come from
-  Linux + Chromium, and for that reason the `visual` project is **not** part of
-  CI — run `npm run test:e2e:visual` locally, and
-  `npm run test:e2e:update-snapshots` when a visual change is intended.
+- **Visual baselines** are still machine-specific. Inter itself is pinned (see
+  Typography), but the rest of the stack — the display face, the fallbacks, and
+  the platform's rasterisation — is not, so a different OS renders differently.
+  The committed baselines come from Linux + Chromium, and for that reason the
+  `visual` project is **not** part of CI. Run `npm run test:e2e:visual` locally,
+  and `npm run test:e2e:update-snapshots` when a visual change is intended.
 
 ### What is covered
 

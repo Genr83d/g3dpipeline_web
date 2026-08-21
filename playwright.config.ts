@@ -56,7 +56,11 @@ export default defineConfig({
     baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    // Video is recorded for *every* test and thrown away on pass, which is a
+    // real memory and disk cost across a hundred tests. CI has the headroom
+    // and needs the artefact; a developer machine running the suite next to
+    // an editor and a browser generally does not.
+    video: isCI ? 'retain-on-failure' : 'off',
     actionTimeout: 15_000,
     navigationTimeout: 20_000,
     // Makes framer-motion resolve instantly through the app's own
@@ -123,8 +127,11 @@ export default defineConfig({
       url: 'http://127.0.0.1:9099/',
       reuseExistingServer: !isCI,
       timeout: 120_000,
+      // Both ignored deliberately: the emulator's own output goes to
+      // e2e/.logs/emulators.log rather than through these pipes. See the note
+      // in e2e/scripts/emulators.mjs.
       stdout: 'ignore',
-      stderr: 'pipe',
+      stderr: 'ignore',
     },
     {
       // The built bundle, not the dev server: Vite compiles routes on demand,

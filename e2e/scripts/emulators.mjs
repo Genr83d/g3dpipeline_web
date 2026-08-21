@@ -12,6 +12,7 @@
  * exit signal, and sweep up an orphan from a previous run before starting.
  */
 import { spawn, spawnSync } from 'node:child_process';
+import { mkdirSync, openSync } from 'node:fs';
 import { createConnection } from 'node:net';
 
 const PROJECT = process.env.E2E_FIREBASE_PROJECT ?? 'g3d-pipeline-e2e';
@@ -89,10 +90,20 @@ async function main() {
     }
   }
 
+  // The emulator logs a line for every auth operation, and a hundred tests
+  // produce a lot of them. Inheriting stdio sends all of it up through
+  // Playwright's webServer pipes; once nothing drains those, the writer blocks
+  // or takes an EPIPE and this wrapper dies — which Playwright answers by
+  // tearing down the *app* server too, leaving every remaining test failing
+  // with ERR_CONNECTION_REFUSED. Writing to a file keeps it off the pipe.
+  mkdirSync('e2e/.logs', { recursive: true });
+  const logFd = openSync('e2e/.logs/emulators.log', 'a');
+  console.log('[emulators] starting; output in e2e/.logs/emulators.log');
+
   const child = spawn(
     'npx',
     ['firebase', 'emulators:start', '--project', PROJECT, '--only', 'auth,firestore'],
-    { stdio: 'inherit', detached: true },
+    { stdio: ['ignore', logFd, logFd], detached: true },
   );
 
   let stopping = false;

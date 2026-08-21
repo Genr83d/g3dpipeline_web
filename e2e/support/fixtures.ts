@@ -52,6 +52,9 @@ const DEFAULT_ALLOWED_ERRORS: RegExp[] = [
   /Cross-Origin Request Blocked.*127\.0\.0\.1:9099/i,
 ];
 
+/** The font host this app deliberately no longer uses. */
+const RETIRED_FONT_HOST = /rsms\.me/i;
+
 export interface AppFixtures {
   /** One pattern of console-error noise this test tolerates, e.g. the 4xx a
    *  rejected-credentials test provokes on purpose. Use alternation for
@@ -80,6 +83,16 @@ export const test = base.extend<AppFixtures>({
       page.on('console', (message) => {
         if (message.type() !== 'error') return;
         problems.push(`console.error: ${message.text()}`);
+      });
+
+      // The app used to pull Inter from rsms.me, which failed CORS and left the
+      // page on fallback fonts. Inter now comes from a pinned Fontsource build
+      // on jsDelivr, so any request back to the old host means the change was
+      // partly reverted — that is a failure, not noise to tolerate.
+      page.on('request', (request) => {
+        if (RETIRED_FONT_HOST.test(request.url())) {
+          problems.push(`retired font host requested: ${request.url()}`);
+        }
       });
 
       await use(problems);

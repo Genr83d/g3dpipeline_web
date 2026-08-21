@@ -16,6 +16,49 @@ test.describe('signed-out smoke', () => {
     await expect(page.getByRole('button', { name: 'Sign in' })).toBeEnabled();
   });
 
+  /** Inter comes from a pinned Fontsource build on jsDelivr. Pinned matters:
+   *  a floating version would change the typography — and every visual
+   *  baseline — without a commit. The request is made for real rather than
+   *  stubbed, so a broken font URL fails here instead of silently dropping the
+   *  app onto fallback fonts. */
+  test('Inter loads from the pinned Fontsource CDN, not the retired host', async ({ page }) => {
+    const fontRequests: string[] = [];
+    const failedFonts: string[] = [];
+    page.on('request', (request) => {
+      if (request.resourceType() === 'font') fontRequests.push(request.url());
+    });
+    page.on('requestfailed', (request) => {
+      if (request.resourceType() === 'font') {
+        failedFonts.push(`${request.url()} (${request.failure()?.errorText})`);
+      }
+    });
+
+    await page.goto('/sign-in');
+    await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
+
+    // Wait for the browser to settle its font loading before asserting.
+    await expect
+      .poll(async () => page.evaluate(() => document.fonts.status))
+      .toBe('loaded');
+
+    expect(failedFonts, 'no font request may fail').toEqual([]);
+    expect(
+      fontRequests.filter((url) => /rsms\.me/i.test(url)),
+      'nothing may load from the retired font host',
+    ).toEqual([]);
+    expect(
+      fontRequests.some((url) =>
+        url.startsWith('https://cdn.jsdelivr.net/fontsource/fonts/inter:vf@5.3.0/'),
+      ),
+      `expected the pinned Fontsource Inter, saw: ${fontRequests.join(', ')}`,
+    ).toBe(true);
+
+    // The face is actually usable, not merely fetched.
+    await expect
+      .poll(async () => page.evaluate(() => document.fonts.check('1rem "Inter Variable"')))
+      .toBe(true);
+  });
+
   test('sign-up and forgot-password pages render', async ({ page }) => {
     await page.goto('/sign-up');
     await expect(page.getByRole('heading', { name: 'Create account' })).toBeVisible();
