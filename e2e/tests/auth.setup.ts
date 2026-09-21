@@ -2,6 +2,7 @@ import { test as setup, expect } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { ACCOUNTS, PASSWORD, type AccountKey } from '../support/seed';
 import { storageStatePath } from '../support/fixtures';
+import { serveInterFromDisk } from '../support/fonts';
 
 /** Signs in through the real form once per role and saves the session, so the
  *  suites that follow start signed in without repeating the login flow.
@@ -17,6 +18,11 @@ setup.beforeAll(() => {
 for (const role of ROLES) {
   setup(`sign in as ${role}`, async ({ page }) => {
     const account = ACCOUNTS[role];
+
+    // This project uses the base `test`, so it misses the fixture that does
+    // this for every other spec; without it the setup would be the one thing
+    // in the run still fetching Inter from jsDelivr.
+    await serveInterFromDisk(page.context());
 
     await page.goto('/sign-in');
     await page.getByLabel('Email').fill(account.email);

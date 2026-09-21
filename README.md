@@ -73,6 +73,19 @@ The E2E suite guards this: a request to the previously used `rsms.me` fails a
 test, a failed font request fails a test, and `smoke.spec.ts` asserts the
 pinned Fontsource URL is the one actually fetched.
 
+The suite does not fetch it from jsDelivr, though. `e2e/support/fonts.ts`
+intercepts that one exact URL and answers it with
+`e2e/assets/inter-vf-5.3.0-latin-wght-normal.woff2`, a byte-for-byte copy of
+the pinned file. The browser still *makes* the request, so all three guards
+above still see it; what goes away is the CDN's ability to fail a run — a slow
+jsDelivr used to fail every test in the run at once, because Firefox logs
+`downloadable font: download failed` as a console error. Only the pinned URL
+is served locally, so a bumped version or a different host is still fetched
+for real and still fails. **Bumping the version means three edits**:
+`src/index.css`, `PINNED_INTER_URL` in `e2e/support/fonts.ts`, and a
+re-download of the committed `.woff2` (the file name carries the version),
+followed by `npm run test:e2e:update-snapshots`.
+
 ## Brand assets
 
 The supplied GENR8 artwork is preserved at `public/brand/g3d-logo.png`. Product

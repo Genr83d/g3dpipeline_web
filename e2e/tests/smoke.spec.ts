@@ -1,6 +1,7 @@
 import { test, expect, waitForWorkspace } from '../support/fixtures';
 import { storageStatePath } from '../support/fixtures';
 import { SEEDED } from '../support/seed';
+import { PINNED_INTER_URL } from '../support/fonts';
 
 /** P0: the application starts, the shell renders, and every route a signed-in
  *  user can reach loads real content rather than a crash or a spinner. */
@@ -18,9 +19,14 @@ test.describe('signed-out smoke', () => {
 
   /** Inter comes from a pinned Fontsource build on jsDelivr. Pinned matters:
    *  a floating version would change the typography — and every visual
-   *  baseline — without a commit. The request is made for real rather than
-   *  stubbed, so a broken font URL fails here instead of silently dropping the
-   *  app onto fallback fonts. */
+   *  baseline — without a commit.
+   *
+   *  The browser makes the request for real; only the response is served from
+   *  the committed copy of that exact file (e2e/support/fonts.ts), so this
+   *  still fails when the app asks for the wrong URL — a bumped version, the
+   *  retired host, or no @font-face at all — without depending on jsDelivr
+   *  being reachable while the suite runs. Any URL other than the pinned one
+   *  is not stubbed, so it goes to the network and `failedFonts` catches it. */
   test('Inter loads from the pinned Fontsource CDN, not the retired host', async ({ page }) => {
     const fontRequests: string[] = [];
     const failedFonts: string[] = [];
@@ -47,11 +53,9 @@ test.describe('signed-out smoke', () => {
       'nothing may load from the retired font host',
     ).toEqual([]);
     expect(
-      fontRequests.some((url) =>
-        url.startsWith('https://cdn.jsdelivr.net/fontsource/fonts/inter:vf@5.3.0/'),
-      ),
-      `expected the pinned Fontsource Inter, saw: ${fontRequests.join(', ')}`,
-    ).toBe(true);
+      fontRequests,
+      `expected the pinned Fontsource Inter, saw: ${fontRequests.join(', ') || 'no font request at all'}`,
+    ).toContain(PINNED_INTER_URL);
 
     // The face is actually usable, not merely fetched.
     await expect
