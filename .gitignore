@@ -6,3 +6,11 @@ dist
 .env.*.local
 *.log
 .DS_Store
+e2e/.auth
+e2e/.artifacts
+e2e/.report
+e2e/.cache
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+e2e/.logs

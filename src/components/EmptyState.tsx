@@ -28,7 +28,9 @@ export function EmptyState({
       }`}>
         {icon}
       </div>
-      <p className="font-display text-lg font-bold">{title}</p>
+      {/* A heading, not a paragraph: this is the main message of an otherwise
+          empty region, and screen-reader users navigate regions by heading. */}
+      <h2 className="font-display text-lg font-bold">{title}</h2>
       {subtitle && <p className="max-w-md text-sm leading-6 text-slate-600 dark:text-slate-300">{subtitle}</p>}
       {action && <div className="mt-3">{action}</div>}
     </div>

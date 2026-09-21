@@ -3,9 +3,25 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "vite",
+    "dev:e2e": "vite --mode e2e",
+    "build:e2e": "vite build --mode e2e",
+    "preview:e2e": "node e2e/scripts/serve.mjs",
+    "typecheck": "tsc -b && tsc -p tsconfig.e2e.json",
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:chromium": "playwright test --project=chromium",
+    "test:e2e:firefox": "playwright test --project=firefox",
+    "test:e2e:webkit": "playwright test --project=webkit",
+    "test:e2e:responsive": "playwright test --project=tablet --project=mobile-safari --project=mobile-chrome",
+    "test:e2e:visual": "playwright test --project=visual",
+    "test:e2e:update-snapshots": "playwright test --project=visual --update-snapshots",
+    "test:e2e:report": "playwright show-report e2e/.report",
+    "emulators": "node e2e/scripts/emulators.mjs",
     "preview": "vite preview"
   },
   "repository": {
@@ -25,6 +41,7 @@
     "react-router-dom": "^7.18.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/vite": "^4.3.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

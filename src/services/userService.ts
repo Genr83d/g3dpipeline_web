@@ -41,8 +41,16 @@ export function parseUser(uid: string, data: Record<string, unknown>): AppUser {
   };
 }
 
-/** Live-subscribe to a single user's profile doc. Emits null while the doc
- *  doesn't exist yet (fresh sign-up before the profile write lands). */
+/** Live-subscribe to a single user's profile doc. Emits null once the *server*
+ *  confirms the document does not exist — a fresh sign-up whose profile write
+ *  has not landed yet.
+ *
+ *  A "missing" document served from the local cache is deliberately not
+ *  reported. When the backend is unreachable the SDK answers a listener from
+ *  its cache, and an empty cache looks exactly like a deleted account; passing
+ *  that on told signed-in users their account was awaiting approval whenever
+ *  the connection failed. Staying silent leaves the caller in its loading
+ *  state, which is what "we have not heard from the server" actually means. */
 export function watchUser(
   uid: string,
   onUser: (user: AppUser | null) => void,
@@ -50,7 +58,13 @@ export function watchUser(
 ): Unsubscribe {
   return onSnapshot(
     doc(db, 'users', uid),
-    (snap) => onUser(snap.exists() ? parseUser(snap.id, snap.data()) : null),
+    (snap) => {
+      if (snap.exists()) {
+        onUser(parseUser(snap.id, snap.data()));
+        return;
+      }
+      if (!snap.metadata.fromCache) onUser(null);
+    },
     onError,
   );
 }

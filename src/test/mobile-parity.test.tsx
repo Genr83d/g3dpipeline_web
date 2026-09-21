@@ -71,6 +71,7 @@ function setRole(role: UserRole, uid = 'current-user') {
       updatedAt: null,
     },
     firstName: 'Alex',
+    profileError: false,
     isActive: true,
     isAdmin: role === 'admin',
     isManagerOrAdmin: role === 'manager' || role === 'admin',
