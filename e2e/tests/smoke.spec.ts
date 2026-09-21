@@ -105,11 +105,13 @@ test.describe('signed-in smoke', () => {
     await expect(page.getByText('Overdue', { exact: true })).toBeVisible();
   });
 
-  test('archive lists completed work', async ({ page }) => {
+  test('archive lists completed work and offers its month filter', async ({ page }) => {
     await page.goto('/archive');
 
     await expect(page.getByRole('heading', { name: 'Archive', level: 1 })).toBeVisible();
     await expect(page.getByText(SEEDED.completedJob)).toBeVisible();
+    // Above the list, defaulted to every month. archive.spec covers what it does.
+    await expect(page.getByLabel('Filter by completion month')).toHaveValue('all');
   });
 
   test('settings pages render', async ({ page }) => {

@@ -111,7 +111,17 @@ the same source so the identity stays consistent.
   existed read `collaboratorUid` as `''`.
 - **Tabs** — Jobs (live board with sorting and overdue flags), Summary
   (live stats plus the most urgent jobs), Archive (completed, newest first,
-  with restore).
+  filtered by completion month, with restore).
+- **Archive months** — the archive filters by the month a job was *completed*,
+  read from `completedAt` in the reader's own timezone, never from its
+  deadline: a job due in August and shipped in September files under
+  September. The dropdown lists only months that hold completed jobs, newest
+  first, labelled with the full month and year so two Septembers a year apart
+  stay apart. Completed jobs with no `completedAt` — records written before
+  the field existed — gather under "Unknown month" and, under "All months",
+  sort last by deadline. The list is live: a month appears as soon as a job
+  completes into it, and selecting a month that later empties (a restore, a
+  delete) falls back to All months on its own.
 - **Settings** — profile, personal info (self-updatable fields), security
   (change password / reset email), appearance (light/dark/system theme,
   high contrast, reduced motion, text size — persisted to localStorage),
@@ -211,6 +221,11 @@ Requirements beyond `npm install`:
 - **Jobs** — the create → read → update → delete lifecycle, confirmation
   dialogs and their cancel paths, form validation and quantity boundaries,
   filters, sorting, and per-type empty states.
+- **Archive** — the completion-month filter: which months it offers and in
+  what order, a job filed by its completion rather than its deadline, two
+  Septembers a year apart kept separate, undated completions under "Unknown
+  month", pending and in-progress work never appearing, and the fallback to
+  All months when the month in view is emptied by a restore.
 - **Job sections** — reading them on a card, assigning every section to a
   collaborator, unassigning a removed collaborator, and who may move which
   section's progress.

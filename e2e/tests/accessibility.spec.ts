@@ -19,11 +19,8 @@ test('landmarks and headings describe each page', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Jobs');
 });
 
-test('every interactive control on the board has an accessible name', async ({ page }) => {
-  await page.goto('/');
-  await waitForWorkspace(page);
-
-  const unnamed = await page.evaluate(() => {
+async function unnamedControls(page: import('@playwright/test').Page): Promise<string[]> {
+  return page.evaluate(() => {
     const selector = 'button, a[href], input, select, textarea';
     return Array.from(document.querySelectorAll<HTMLElement>(selector))
       .filter((element) => {
@@ -42,8 +39,50 @@ test('every interactive control on the board has an accessible name', async ({ p
       })
       .map((element) => `${element.tagName.toLowerCase()}.${element.className.split(' ')[0]}`);
   });
+}
 
+test('every interactive control on the board has an accessible name', async ({ page }) => {
+  await page.goto('/');
+  await waitForWorkspace(page);
+
+  const unnamed = await unnamedControls(page);
   expect(unnamed, `controls without an accessible name: ${unnamed.join(', ')}`).toEqual([]);
+});
+
+test('every interactive control in the archive has an accessible name', async ({ page }) => {
+  await page.goto('/archive');
+  await waitForWorkspace(page);
+  await expect(page.getByLabel('Filter by completion month')).toBeVisible();
+
+  const unnamed = await unnamedControls(page);
+  expect(unnamed, `controls without an accessible name: ${unnamed.join(', ')}`).toEqual([]);
+});
+
+test('the archive month filter is named, labelled, and reachable from the keyboard', async ({
+  page,
+}) => {
+  await page.goto('/archive');
+  await waitForWorkspace(page);
+
+  // getByRole resolves through the accessible name; getByLabel through a real
+  // label association. The control has to satisfy both.
+  const filter = page.getByRole('combobox', { name: 'Filter by completion month' });
+  await expect(filter).toBeVisible();
+  await expect(page.getByLabel('Filter by completion month')).toBeVisible();
+  await expect(filter).toHaveValue('all');
+
+  // Reachable by tabbing, rather than only by clicking it.
+  let reached = false;
+  for (let press = 0; press < 20 && !reached; press += 1) {
+    await page.keyboard.press('Tab');
+    reached = await filter.evaluate((element) => element === document.activeElement);
+  }
+  expect(reached, 'the month filter is reachable in the tab order').toBe(true);
+
+  // And it filters once there, without a pointer.
+  await filter.selectOption('2023-09');
+  await expect(filter).toHaveValue('2023-09');
+  await expect(page.getByText(SEEDED.completedSeptember2023Job)).toBeVisible();
 });
 
 test.describe('signed-out pages', () => {

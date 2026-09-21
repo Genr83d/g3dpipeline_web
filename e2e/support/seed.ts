@@ -40,6 +40,15 @@ export const SEEDED = {
   starterRepairJob: 'Seed Starter Repair',
   overdueJob: 'Seed Overdue Frame',
   completedJob: 'Seed Shipped Panels',
+  /** Completed a month after its deadline: the archive files a job by the
+   *  month it shipped, never by the month it was due. */
+  completedSeptember2023Job: 'Seed Autumn Plaques',
+  /** The same calendar month as the job above, a year later — the pair the
+   *  archive's month filter has to keep apart. */
+  completedSeptember2024Job: 'Seed Harvest Signage',
+  /** Completed with no completedAt at all, the way records written before the
+   *  field existed still read. It belongs to the archive's "Unknown month". */
+  completedUndatedJob: 'Seed Undated Fixtures',
   awfJob: 'Seed AWF Trays',
   healthyMaterial: 'Seed Aluminium Sheet',
   lowMaterial: 'Seed Pin Backs',
@@ -51,6 +60,13 @@ export const SEEDED = {
 const FUTURE = new Date('2099-06-15T23:59:59.000Z');
 const PAST = new Date('2020-03-04T23:59:59.000Z');
 const CREATED = new Date('2024-01-02T09:00:00.000Z');
+
+/** Midday UTC, mid-month: the local calendar month these land in is the same
+ *  one in every timezone the suite could run in, so the archive's month filter
+ *  has fixed buckets ("2023-09" and "2024-01") to assert against. */
+const SHIPPED_SEPTEMBER_2023 = new Date('2023-09-15T12:00:00.000Z');
+const SHIPPED_SEPTEMBER_2024 = new Date('2024-09-15T12:00:00.000Z');
+const DUE_AUGUST_2023 = new Date('2023-08-20T12:00:00.000Z');
 
 export interface SeededUser {
   uid: string;
@@ -210,6 +226,77 @@ async function seedJobs(users: SeededUsers): Promise<void> {
     collaboratorUids: [staff.uid],
     startedAt: CREATED,
     completedAt: CREATED,
+    completedByUid: staff.uid,
+    completedByName: staff.name,
+  });
+
+  // Due in August, shipped in September — the fixture that proves the archive
+  // files a job by its completion month rather than its deadline.
+  await addDocument('jobs', {
+    ...jobDefaults(manager),
+    orderNumber: 'G3D-SEEDAUTM',
+    name: SEEDED.completedSeptember2023Job,
+    customer: 'Seed Heritage Trust',
+    quantity: 2,
+    completedQuantity: 2,
+    dueDate: DUE_AUGUST_2023,
+    status: 'completed',
+    category: 'manufacturing',
+    repairProcesses: [section('Cast', 100, staff.uid), section('Engrave', 100, staff.uid)],
+    assignedToUid: staff.uid,
+    assignedToName: staff.name,
+    assignedToRole: staff.role,
+    collaborators: [collaborator(staff)],
+    collaboratorUids: [staff.uid],
+    startedAt: DUE_AUGUST_2023,
+    completedAt: SHIPPED_SEPTEMBER_2023,
+    completedByUid: staff.uid,
+    completedByName: staff.name,
+  });
+
+  // September again, one year on. Two Septembers are what prove the filter
+  // qualifies a month by its year.
+  await addDocument('jobs', {
+    ...jobDefaults(manager),
+    orderNumber: 'G3D-SEEDHARV',
+    name: SEEDED.completedSeptember2024Job,
+    customer: 'Seed Heritage Trust',
+    quantity: 3,
+    completedQuantity: 3,
+    dueDate: SHIPPED_SEPTEMBER_2024,
+    status: 'completed',
+    category: 'design',
+    repairProcesses: [section('Concept', 100, staff.uid), section('Print', 100, staff.uid)],
+    assignedToUid: staff.uid,
+    assignedToName: staff.name,
+    assignedToRole: staff.role,
+    collaborators: [collaborator(staff)],
+    collaboratorUids: [staff.uid],
+    startedAt: CREATED,
+    completedAt: SHIPPED_SEPTEMBER_2024,
+    completedByUid: staff.uid,
+    completedByName: staff.name,
+  });
+
+  // Completed, but with no completedAt written at all: the archive still has
+  // to reach it, under "Unknown month".
+  await addDocument('jobs', {
+    ...jobDefaults(manager),
+    orderNumber: 'G3D-SEEDNODT',
+    name: SEEDED.completedUndatedJob,
+    customer: 'Seed Customer',
+    quantity: 5,
+    completedQuantity: 5,
+    dueDate: PAST,
+    status: 'completed',
+    category: 'miscellaneous',
+    repairProcesses: [section('Fit', 100, staff.uid)],
+    assignedToUid: staff.uid,
+    assignedToName: staff.name,
+    assignedToRole: staff.role,
+    collaborators: [collaborator(staff)],
+    collaboratorUids: [staff.uid],
+    startedAt: CREATED,
     completedByUid: staff.uid,
     completedByName: staff.name,
   });
