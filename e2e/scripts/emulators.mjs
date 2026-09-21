@@ -24,6 +24,29 @@ const PORTS = [
 /** Matches only this emulator's jar, never an unrelated Java process. */
 const ORPHAN_PATTERN = 'cloud-firestore-emulator';
 
+/** The CLI is an external requirement, like Java — see the README. Without
+ *  this check its absence surfaces as `npx` exiting 1 into a log file nobody
+ *  reads, and Playwright reporting only that config.webServer would not
+ *  start. */
+function requireFirebaseCli() {
+  const probe = spawnSync('npx', ['--no-install', 'firebase', '--version'], {
+    encoding: 'utf8',
+  });
+  if (probe.status === 0) return;
+  console.error(
+    [
+      '[emulators] the Firebase CLI is not available.',
+      '',
+      'The E2E suite drives the Firebase Emulator Suite through it. Install it with:',
+      '',
+      '  npm install -g firebase-tools',
+      '',
+      'See the Testing section of the README for the full list of requirements.',
+    ].join('\n'),
+  );
+  process.exit(1);
+}
+
 function portOpen(port) {
   return new Promise((resolve) => {
     const socket = createConnection({ host: '127.0.0.1', port });
@@ -96,6 +119,8 @@ async function main() {
   // or takes an EPIPE and this wrapper dies — which Playwright answers by
   // tearing down the *app* server too, leaving every remaining test failing
   // with ERR_CONNECTION_REFUSED. Writing to a file keeps it off the pipe.
+  requireFirebaseCli();
+
   mkdirSync('e2e/.logs', { recursive: true });
   const logFd = openSync('e2e/.logs/emulators.log', 'a');
   console.log('[emulators] starting; output in e2e/.logs/emulators.log');
