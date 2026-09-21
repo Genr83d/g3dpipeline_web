@@ -12,8 +12,18 @@ import {
 } from '../components/JobConfirmDialog';
 import { JobCardSkeleton, Skeleton } from '../components/Skeleton';
 import { PageHeader } from '../components/PageHeader';
-import { IconCheck, IconCloudOff } from '../components/icons';
+import { IconCalendar, IconCheck, IconCloudOff } from '../components/icons';
 import { errorMessage } from '../lib/format';
+import {
+  ARCHIVE_ALL_MONTHS,
+  ARCHIVE_ALL_MONTHS_LABEL,
+  archiveMonthLabel,
+  archiveMonthOptions,
+  archivedJobs,
+  filterJobsByArchiveMonth,
+  isArchiveMonthAvailable,
+  type ArchiveMonthFilter,
+} from '../lib/archiveMonths';
 import { deleteJob, restoreJob } from '../services/jobService';
 import type { Job } from '../types';
 
@@ -22,13 +32,19 @@ export default function Archive() {
   const { actor, isAdmin, isManagerOrAdmin } = useAuth();
   const { toast } = useToast();
   const [deleting, setDeleting] = useState<Job | null>(null);
+  const [month, setMonth] = useState<ArchiveMonthFilter>(ARCHIVE_ALL_MONTHS);
 
-  const archived = useMemo(
-    () =>
-      jobs
-        .filter((j) => j.status === 'completed')
-        .sort((a, b) => (b.completedAt?.getTime() ?? 0) - (a.completedAt?.getTime() ?? 0)),
-    [jobs],
+  const archived = useMemo(() => archivedJobs(jobs), [jobs]);
+  const monthOptions = useMemo(() => archiveMonthOptions(archived), [archived]);
+
+  // Restoring or deleting the last job of the month in view empties it while
+  // the user is looking at it. Falling back during this render — rather than
+  // in an effect — means the select never paints a value no option carries.
+  if (!isArchiveMonthAvailable(month, monthOptions)) setMonth(ARCHIVE_ALL_MONTHS);
+
+  const visible = useMemo(
+    () => filterJobsByArchiveMonth(archived, month),
+    [archived, month],
   );
 
   async function handleRestore(jobId: string, name: string) {
@@ -46,12 +62,53 @@ export default function Archive() {
     setDeleting(null);
   }
 
+  const count = month === ARCHIVE_ALL_MONTHS ? archived.length : visible.length;
+  const subtitle = loading
+    ? 'Connecting to shipped jobs...'
+    : `${count} completed job${count === 1 ? '' : 's'}${
+        month === ARCHIVE_ALL_MONTHS ? ', newest first' : ` in ${archiveMonthLabel(month)}`
+      }`;
+
   return (
     <div className="space-y-6" data-tour="archive-page">
       <PageHeader
         title="Archive"
         eyebrow="Completed output"
-        subtitle={loading ? 'Connecting to shipped jobs...' : `${archived.length} completed job${archived.length === 1 ? '' : 's'}, newest first`}
+        subtitle={subtitle}
+        actions={
+          !loading && !error && archived.length > 0 ? (
+            <div className="relative w-full sm:w-auto" data-tour="archive-month-filter">
+              <IconCalendar
+                className={`pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transition-colors ${
+                  month === ARCHIVE_ALL_MONTHS
+                    ? 'text-slate-400'
+                    : 'text-primary dark:text-indigo-300'
+                }`}
+              />
+              <label htmlFor="archive-month-filter" className="sr-only">
+                Filter by completion month
+              </label>
+              <select
+                id="archive-month-filter"
+                aria-label="Filter by completion month"
+                className={`field w-full py-2 pl-9 sm:w-auto ${
+                  month === ARCHIVE_ALL_MONTHS
+                    ? ''
+                    : 'border-primary/45 text-primary dark:border-indigo-400/45 dark:text-indigo-200'
+                }`}
+                value={month}
+                onChange={(e) => setMonth(e.target.value as ArchiveMonthFilter)}
+              >
+                <option value={ARCHIVE_ALL_MONTHS}>{ARCHIVE_ALL_MONTHS_LABEL}</option>
+                {monthOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : undefined
+        }
       />
 
       {loading ? (
@@ -80,7 +137,7 @@ export default function Archive() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <AnimatePresence mode="popLayout">
-            {archived.map((job) => (
+            {visible.map((job) => (
               <JobCard
                 key={job.id}
                 job={job}

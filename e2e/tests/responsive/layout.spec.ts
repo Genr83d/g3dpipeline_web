@@ -26,7 +26,7 @@ async function expectNoHorizontalOverflow(page: import('@playwright/test').Page,
 
 test('the jobs board fits, its tabs navigate, and its card actions stay tappable', async ({
   page,
-}) => {
+}, testInfo) => {
   await page.goto('/');
   await waitForWorkspace(page);
 
@@ -54,6 +54,21 @@ test('the jobs board fits, its tabs navigate, and its card actions stay tappable
   await tabs.getByRole('link', { name: 'Archive' }).click();
   await expect(page.getByRole('heading', { name: 'Archive', level: 1 })).toBeVisible();
   await expectNoHorizontalOverflow(page, 'archive');
+
+  // The completion-month filter sits above the list and has to stay usable at
+  // this width: a real touch target, and no sideways push from its own width.
+  const monthFilter = page.getByLabel('Filter by completion month');
+  await expect(monthFilter).toBeVisible();
+  const filterBox = await monthFilter.boundingBox();
+  expect(filterBox, 'the month filter has a layout box').not.toBeNull();
+  if (filterBox) {
+    expect(filterBox.height, 'month filter touch target').toBeGreaterThanOrEqual(28);
+    expect(filterBox.width).toBeLessThanOrEqual(testInfo.project.use.viewport!.width);
+  }
+  await monthFilter.selectOption('2023-09');
+  await expect(jobCard(page, SEEDED.completedSeptember2023Job)).toBeVisible();
+  await expect(jobCard(page, SEEDED.completedJob)).toHaveCount(0);
+  await expectNoHorizontalOverflow(page, 'archive with a month selected');
 
   await tabs.getByRole('link', { name: 'Summary' }).click();
   await expect(page.getByRole('heading', { name: 'Summary', level: 1 })).toBeVisible();
