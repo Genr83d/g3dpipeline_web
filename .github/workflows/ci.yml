@@ -70,9 +70,20 @@ jobs:
           key: firebase-emulators-${{ runner.os }}
 
       - name: Install Playwright browsers
+        # Chromium is installed for every engine, not just its own job: the
+        # `setup` project signs in once per role with Desktop Chrome and saves
+        # the storage state the other projects reuse, so a Firefox or WebKit
+        # run still launches Chromium before its first test.
+        #
         # --with-deps installs the system libraries WebKit needs; without them
         # WebKit cannot launch at all.
-        run: npx playwright install --with-deps ${{ matrix.project == 'responsive' && 'chromium webkit' || matrix.project }}
+        run: |
+          case "${{ matrix.project }}" in
+            chromium)   browsers="chromium" ;;
+            responsive) browsers="chromium webkit" ;;
+            *)          browsers="chromium ${{ matrix.project }}" ;;
+          esac
+          npx playwright install --with-deps $browsers
 
       - name: Run E2E tests
         run: |
