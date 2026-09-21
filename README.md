@@ -154,7 +154,8 @@ Requirements beyond `npm install`:
 - **The Firebase CLI** — `npm install -g firebase-tools`. The suite drives the
   Emulator Suite through it; `npm run emulators` stops with an explanation if
   it is missing.
-- **Java 17+** — the Firestore emulator runs on the JVM.
+- **Java 21+** — the Firestore emulator runs on the JVM, and the Firebase
+  CLI refuses to start it on anything older.
 - **Playwright browsers** — `npx playwright install --with-deps`. The
   `--with-deps` part matters: WebKit needs system libraries (on Ubuntu,
   `libevent-2.1-7t64` and `libgstreamer-plugins-bad1.0-0`) and will not launch
