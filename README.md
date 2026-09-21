@@ -119,7 +119,8 @@ the same source so the identity stays consistent.
 
 ## Testing
 
-Two layers, both runnable from a clean `npm install`:
+Unit tests run from a clean `npm install`. The E2E suite needs the three
+external tools listed under *Requirements beyond `npm install`* below.
 
 **Unit and component tests** (`npm test`) — Vitest + Testing Library over the
 pure logic and the React components, with Firestore mocked. Fast, and where
@@ -150,6 +151,9 @@ everything and is best kept for a machine with cores to spare.
 
 Requirements beyond `npm install`:
 
+- **The Firebase CLI** — `npm install -g firebase-tools`. The suite drives the
+  Emulator Suite through it; `npm run emulators` stops with an explanation if
+  it is missing.
 - **Java 17+** — the Firestore emulator runs on the JVM.
 - **Playwright browsers** — `npx playwright install --with-deps`. The
   `--with-deps` part matters: WebKit needs system libraries (on Ubuntu,

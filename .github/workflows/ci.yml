@@ -53,6 +53,15 @@ jobs:
 
       - run: npm ci
 
+      # The emulators are driven through `npx firebase`, which resolves to
+      # whatever Firebase CLI is on PATH. Nothing in package.json provides one
+      # — it is an external requirement like Java, documented in the README —
+      # so the runner needs its own. Pinned, because the CLI carries the
+      # emulator versions with it and a floating release would change the test
+      # backend without a commit.
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools@15.23.0
+
       # Cache the emulator jars the Firebase CLI downloads on first run.
       - uses: actions/cache@v4
         with:
@@ -71,6 +80,13 @@ jobs:
           else
             npx playwright test --project=${{ matrix.project }}
           fi
+
+      # The emulator's output is deliberately kept off Playwright's webServer
+      # pipes, which means a failure to start leaves nothing in the job log but
+      # "Process from config.webServer was not able to start".
+      - name: Emulator log
+        if: ${{ failure() }}
+        run: cat e2e/.logs/emulators.log || echo 'no emulator log produced'
 
       - name: Upload report
         if: ${{ !cancelled() }}
