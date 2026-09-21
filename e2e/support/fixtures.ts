@@ -5,6 +5,7 @@ import {
   type BrowserContext,
   type Page,
 } from '@playwright/test';
+import { INTER_ABORTED_BY_NAVIGATION, serveInterFromDisk } from './fonts';
 
 /** Where the sign-in setup project parks each role's storage state. */
 export function storageStatePath(role: string): string {
@@ -50,6 +51,11 @@ const DEFAULT_ALLOWED_ERRORS: RegExp[] = [
   // it is cut short by a navigation. Pinned to the emulator's own host and
   // port, so the same message from a production endpoint would still fail.
   /Cross-Origin Request Blocked.*127\.0\.0\.1:9099/i,
+  // Firefox logs a font fetch that a navigation cancelled as a download
+  // failure. Pinned to NS_BINDING_ABORTED and to the pinned font URL, so a
+  // font that genuinely fails to load still fails the test — see
+  // e2e/support/fonts.ts, which explains why the request is repeated at all.
+  INTER_ABORTED_BY_NAVIGATION,
 ];
 
 /** The font host this app deliberately no longer uses. */
@@ -78,6 +84,12 @@ export const test = base.extend<AppFixtures>({
     async ({ page, suppressOnboarding, allowedErrors }, use, testInfo) => {
       const problems: string[] = [];
       if (suppressOnboarding) await page.addInitScript(SUPPRESS_ONBOARDING);
+
+      // Inter comes from the committed copy rather than jsDelivr. The request
+      // is still made with the pinned URL, so the guards below and in
+      // smoke.spec.ts are unchanged; what goes away is a whole run's worth of
+      // tests failing because a CDN was slow. See e2e/support/fonts.ts.
+      await serveInterFromDisk(page.context());
 
       page.on('pageerror', (error) => problems.push(`pageerror: ${error.message}`));
       page.on('console', (message) => {
@@ -132,6 +144,7 @@ export async function newAppContext(
     reducedMotion: 'reduce',
   });
   await context.addInitScript(SUPPRESS_ONBOARDING);
+  await serveInterFromDisk(context);
   return context;
 }
 

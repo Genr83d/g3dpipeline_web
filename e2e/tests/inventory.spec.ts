@@ -110,17 +110,27 @@ test.describe('material form validation', () => {
   });
 
   test('cancelling writes nothing', async ({ page }) => {
-    const before = (await listDocuments('inventory')).length;
+    // This test's own name, not the size of the collection: the suite is
+    // fullyParallel, and other workers create and clean up materials while
+    // this one runs.
+    const name = uniqueName(CREATED_PREFIX);
+    // Nothing should be written; this clears the record if something is.
+    cleanup.track('inventory', name);
+
     await page.goto('/inventory');
     await page.getByRole('button', { name: 'Add material', exact: true }).first().click();
 
     const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Material Name').fill(uniqueName(CREATED_PREFIX));
+    await dialog.getByLabel('Material Name').fill(name);
     await dialog.getByLabel('Unit').fill('kg');
     await dialog.getByLabel('Current Stock').fill('1');
     await dialog.getByLabel('Full Stock Quantity').fill('2');
     await dialog.getByRole('button', { name: 'Cancel' }).click();
 
-    expect((await listDocuments('inventory')).length).toBe(before);
+    await expect(page.getByRole('dialog')).toBeHidden();
+    const written = (await listDocuments('inventory')).filter(
+      (material) => material.data.name === name,
+    );
+    expect(written.map((material) => material.id), 'cancelling wrote a material anyway').toEqual([]);
   });
 });

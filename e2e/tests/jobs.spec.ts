@@ -117,10 +117,17 @@ test.describe('job lifecycle', () => {
   });
 
   test('cancelling the add form creates nothing', async ({ page }) => {
-    const before = (await listDocuments('jobs')).length;
+    // Scoped to this test's own name rather than the size of the collection:
+    // the suite is fullyParallel, so other workers add and delete jobs the
+    // whole time this test runs and a global count moves underneath it.
+    const name = uniqueName(CREATED_PREFIX);
+    // Nothing should be written; this clears the record if something is, so a
+    // regression here cannot leak a job into the rest of the run.
+    cleanup.track('jobs', name);
+
     await openAddJob(page);
     await fillJobForm(page, {
-      name: uniqueName(CREATED_PREFIX),
+      name,
       customer: 'Nobody',
       quantity: '3',
       sections: 'Design',
@@ -128,7 +135,8 @@ test.describe('job lifecycle', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click();
 
     await expect(page.getByRole('dialog')).toBeHidden();
-    expect((await listDocuments('jobs')).length).toBe(before);
+    const written = (await listDocuments('jobs')).filter((job) => job.data.name === name);
+    expect(written.map((job) => job.id), 'cancelling wrote a job anyway').toEqual([]);
   });
 });
 
