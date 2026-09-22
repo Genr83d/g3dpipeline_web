@@ -7,6 +7,10 @@ export type JobCategory =
   | 'design'
   | 'softwareDevelopment'
   | 'miscellaneous';
+/** Explicit, selectable job classifications. Unlike the job name, a tag is
+ *  chosen from a closed list, which is what makes it safe to hang stock
+ *  deduction off. See src/lib/jobTags.ts for the options and their rules. */
+export type JobTag = 'pins';
 export type UserRole = 'staff' | 'awf' | 'manager' | 'admin';
 export type UserStatus = 'pending' | 'active' | 'disabled' | 'removed';
 
@@ -46,6 +50,10 @@ export interface Job {
    *  `repairProcesses` name so repair jobs written before sections existed
    *  keep working untouched. */
   repairProcesses: JobSection[];
+  /** Tags this job acts under. Documents written before tags existed report
+   *  the tag their name used to imply, so a legacy pin job keeps deducting
+   *  stock and shows why on its card. */
+  tags: JobTag[];
   isAwf: boolean;
   createdByUid: string;
   createdByName: string;

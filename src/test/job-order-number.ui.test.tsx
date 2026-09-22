@@ -76,6 +76,7 @@ function setRole(role: UserRole) {
 
 function job(overrides: Partial<Job> = {}): Job {
   return {
+    tags: [],
     id: 'abc123xyz789',
     orderNumber: 'G3D-ABC123XY',
     name: 'Actuator repair',

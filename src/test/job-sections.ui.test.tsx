@@ -46,6 +46,7 @@ const TEAM = [
 
 function job(overrides: Partial<Job> = {}): Job {
   return {
+    tags: [],
     id: 'job-1',
     orderNumber: 'G3D-JOB-1',
     name: 'Actuator repair',

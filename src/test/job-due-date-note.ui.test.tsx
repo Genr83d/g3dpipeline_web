@@ -27,6 +27,7 @@ const REASON_LABEL = 'Reason for deadline change';
 
 function job(overrides: Partial<Job> = {}): Job {
   return {
+    tags: [],
     id: 'job-1',
     orderNumber: 'G3D-JOB-1',
     name: 'Event badges',
