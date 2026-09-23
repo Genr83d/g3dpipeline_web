@@ -14,6 +14,7 @@ import {
 } from '../lib/jobPermissions';
 import { isManagerOrAdminRole, roleLabel } from '../lib/roles';
 import { jobCategoryLabel, jobQuantityConfig } from '../lib/jobCategories';
+import { jobTagLabel } from '../lib/jobTags';
 import { jobCompletionRatio } from '../lib/jobProgress';
 import {
   overallSectionProgress,
@@ -259,6 +260,18 @@ export function JobCard({
             <JobCategoryIcon category={job.category} />
             {jobCategoryLabel(job.category)}
           </span>
+          {/* Tags are what actually drive stock deduction, so they are on the
+              card rather than hidden in the edit form. */}
+          {job.tags.map((tag) => (
+            <span
+              key={tag}
+              data-job-tag={tag}
+              aria-label={`Tag: ${jobTagLabel(tag)}`}
+              className="inline-flex rounded-md border border-primary/35 bg-primary-soft px-2 py-0.5 text-[0.68rem] font-bold tracking-wide text-primary dark:border-indigo-400/30 dark:bg-indigo-950/70 dark:text-indigo-300"
+            >
+              {jobTagLabel(tag)}
+            </span>
+          ))}
           {isManagerOrAdmin && job.isAwf && (
             <span className="inline-flex rounded-md border border-secondary/35 bg-secondary-soft px-2 py-0.5 text-[0.68rem] font-bold tracking-wide text-secondary dark:border-emerald-400/30 dark:bg-emerald-950/70 dark:text-emerald-300">
               AWF

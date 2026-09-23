@@ -32,11 +32,21 @@ async function openAddJob(page: import('@playwright/test').Page) {
 
 async function fillJobForm(
   page: import('@playwright/test').Page,
-  values: { name: string; customer: string; quantity?: string; sections: string; deadline?: string },
+  values: {
+    name: string;
+    customer: string;
+    quantity?: string;
+    sections: string;
+    deadline?: string;
+    tags?: string[];
+  },
 ) {
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Job Name').fill(values.name);
   await dialog.getByLabel('Name of Receiver').fill(values.customer);
+  for (const tag of values.tags ?? []) {
+    await dialog.getByRole('checkbox', { name: tag }).check();
+  }
   if (values.quantity) {
     await dialog.getByRole('spinbutton', { name: 'Quantity' }).fill(values.quantity);
   }
@@ -97,6 +107,50 @@ test.describe('job lifecycle', () => {
 
     await expect(page.getByRole('status').filter({ hasText: 'deleted' })).toBeVisible();
     await expect(jobCard(page, renamed)).toHaveCount(0);
+  });
+
+  test('a tag is chosen on the form, shown on the card, and survives a reload', async ({
+    page,
+  }) => {
+    // Tags drive stock deduction at completion, and they used to be inferred
+    // from the job name — so this deliberately uses a name the old regex would
+    // never have matched. The deduction itself is covered by unit tests: it
+    // targets one shared "Pin Backs" document, which two parallel workers
+    // cannot safely move at the same time.
+    const name = `${uniqueName(CREATED_PREFIX)} pinbacks`;
+    cleanup.track('jobs', name);
+
+    await openAddJob(page);
+    await fillJobForm(page, {
+      name,
+      customer: 'E2E Customer',
+      quantity: '4',
+      sections: 'Design',
+      tags: ['Pins'],
+    });
+    await page.getByRole('button', { name: 'Add job', exact: true }).last().click();
+
+    // Wait for the toast, not just the card: the card appears from Firestore's
+    // local echo of the write, and reloading before the server acknowledges it
+    // throws the write away.
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Job added to the pipeline.' }),
+    ).toBeVisible();
+    await expect(jobCard(page, name).locator('[data-job-tag="pins"]')).toBeVisible();
+
+    await page.reload();
+    await waitForWorkspace(page);
+    await expect(jobCard(page, name).locator('[data-job-tag="pins"]')).toBeVisible();
+
+    // Unticking it has to work too: an empty tag list is how someone turns a
+    // deduction off, and it must beat whatever the job is called.
+    await jobCard(page, name).getByRole('button', { name: 'Edit job' }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('checkbox', { name: 'Pins' }).uncheck();
+    await dialog.getByRole('button', { name: 'Save changes' }).click();
+
+    await expect(page.getByRole('status').filter({ hasText: 'Job updated.' })).toBeVisible();
+    await expect(jobCard(page, name).locator('[data-job-tag="pins"]')).toHaveCount(0);
   });
 
   test('cancelling a delete leaves the job alone', async ({ page }) => {

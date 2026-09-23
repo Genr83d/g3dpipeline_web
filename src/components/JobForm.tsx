@@ -8,6 +8,7 @@ import {
   NORMALIZED_QUANTITY,
   validateJobQuantity,
 } from '../lib/jobCategories';
+import { JOB_TAG_OPTIONS } from '../lib/jobTags';
 import { isManagerOrAdminRole } from '../lib/roles';
 import {
   parseSectionNames,
@@ -17,7 +18,7 @@ import {
   sectionsToText,
   usesRepairVocabulary,
 } from '../lib/jobSections';
-import type { Job, JobCategory } from '../types';
+import type { Job, JobCategory, JobTag } from '../types';
 import { useAuth } from '../context/AuthProvider';
 import { IconMinus, IconPlus } from './icons';
 
@@ -27,6 +28,10 @@ export interface JobFormValues {
   quantity: number;
   dueDate: Date;
   category: JobCategory;
+  /** Always sent, empty included: an explicit empty list is what lets someone
+   *  turn a stock deduction off, and what stops the saved job falling back to
+   *  the legacy job-name match. */
+  tags: JobTag[];
   isAwf: boolean;
   /** Set only when editing shifts the deadline to a different calendar day. */
   dueDateChangeNote?: string;
@@ -56,6 +61,7 @@ export function JobForm({
   const [category, setCategory] = useState<JobCategory>(
     initial?.category ?? DEFAULT_JOB_CATEGORY,
   );
+  const [tags, setTags] = useState<JobTag[]>(initial?.tags ?? []);
   const [isAwf, setIsAwf] = useState(initial?.isAwf ?? profile?.role === 'awf');
   const [sectionText, setSectionText] = useState(
     sectionsToText(initial?.repairProcesses ?? []),
@@ -78,6 +84,12 @@ export function JobForm({
     Number.isFinite(parsedQuantity) && parsedQuantity <= quantityConfig.minimumQuantity;
   const atMaximum =
     Number.isFinite(parsedQuantity) && parsedQuantity >= quantityConfig.maximumQuantity;
+
+  function toggleTag(tag: JobTag, checked: boolean) {
+    setTags((current) =>
+      checked ? [...new Set([...current, tag])] : current.filter((entry) => entry !== tag),
+    );
+  }
 
   function stepQuantity(delta: number) {
     setQuantity((current) => {
@@ -127,6 +139,7 @@ export function JobForm({
         quantity: quantityConfig.usesQuantity ? Number(quantity.trim()) : NORMALIZED_QUANTITY,
         dueDate: parsedDueDate,
         category,
+        tags,
         isAwf: profile?.role === 'awf' ? true : isAwf,
         dueDateChangeNote: dueDateChanged ? dueDateChangeNote.trim() : undefined,
         sectionNames,
@@ -181,6 +194,36 @@ export function JobForm({
           ))}
         </select>
       </div>
+      <fieldset>
+        <legend className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+          Tags
+        </legend>
+        <div className="space-y-2">
+          {JOB_TAG_OPTIONS.map((option) => (
+            <label
+              key={option.value}
+              htmlFor={`job-tag-${option.value}`}
+              className="flex cursor-pointer items-start gap-3 rounded-md border border-slate-200/70 bg-white/45 px-3 py-3 dark:border-slate-800/80 dark:bg-slate-950/25"
+            >
+              <input
+                id={`job-tag-${option.value}`}
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary dark:border-slate-700"
+                checked={tags.includes(option.value)}
+                onChange={(e) => toggleTag(option.value, e.target.checked)}
+              />
+              <span>
+                <span className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                  {option.label}
+                </span>
+                <span className="mt-0.5 block text-xs leading-5 text-slate-500 dark:text-slate-400">
+                  {option.description}
+                </span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
       <div>
         <label
           htmlFor="job-sections"

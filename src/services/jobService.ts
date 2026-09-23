@@ -13,6 +13,7 @@ import {
   serverTimestamp,
   deleteField,
   Timestamp,
+  type DocumentReference,
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -30,6 +31,11 @@ import {
   parseJobCategory,
   validateJobQuantity,
 } from '../lib/jobCategories';
+import {
+  materialsConsumed,
+  parseJobTags,
+  resolveJobTags,
+} from '../lib/jobTags';
 import { inventoryCol } from './inventoryService';
 import { isSameCalendarDate } from '../lib/format';
 import { resolvedCompletedQuantity, validateCompletedQuantity } from '../lib/jobProgress';
@@ -56,6 +62,7 @@ import {
   type JobCategory,
   type JobCollaborator,
   type JobSection,
+  type JobTag,
   type UserRole,
 } from '../types';
 
@@ -163,6 +170,7 @@ export function parseJob(id: string, data: Record<string, unknown>): Job {
     status,
     category: parseJobCategory(data.category),
     repairProcesses: parseJobSections(data.repairProcesses),
+    tags: resolveJobTags(data),
     isAwf: data.isAwf === true,
     createdByUid: (data.createdByUid as string) ?? '',
     createdByName: (data.createdByName as string) ?? '',
@@ -215,6 +223,9 @@ export interface JobInput {
   quantity: number;
   dueDate: Date;
   category: JobCategory;
+  /** Tags the job is saved with. Always written, even empty, so the stored
+   *  document stops depending on the legacy name match. */
+  tags?: JobTag[];
   isAwf?: boolean;
   /** Section names, one per line in the form. Percentages are never entered
    *  here — every new section starts at 0%, unassigned, and moves through the
@@ -269,6 +280,7 @@ export async function addJob(
     dueDate: Timestamp.fromDate(input.dueDate),
     status: 'pending',
     category: input.category,
+    tags: parseJobTags(input.tags ?? []),
     repairProcesses: sectionsToFirestore(sections),
     isAwf: resolveNewJobIsAwf(self.role, input.isAwf),
     createdByUid: actor.uid,
@@ -403,31 +415,21 @@ export async function unassignJob(
   });
 }
 
-/** Standalone `pin`/`pins` only — never `pineapple`, `pinstripe`, `spins`, or `flippin`. */
-export function isPinJob(name: string): boolean {
-  return /\bpins?\b/i.test(name);
-}
-
-/** Whole Lamina sheets consumed when a completed pin batch pushes the running
- *  total across 50-pin boundaries: 58 pins → 1 Lamina, a later 42 → 1 more. */
-export function laminaConsumed(previousCompletedPins: number, quantity: number): number {
-  return Math.floor((previousCompletedPins + quantity) / 50) - Math.floor(previousCompletedPins / 50);
-}
-
-const PIN_BACKS = 'pin backs';
-const LAMINA = 'lamina';
-
 function normalizedName(data: Record<string, unknown>): string {
   return typeof data.name === 'string' ? data.name.trim().toLowerCase() : '';
 }
 
-/** Marks the job completed; for pin jobs this runs a Firestore transaction that
- *  also deducts Pin Backs per pin and Lamina per 50-pin boundary crossed.
+function storedQuantity(data: Record<string, unknown>): number {
+  return typeof data.quantity === 'number' ? data.quantity : 0;
+}
+
+/** Marks the job completed, deducting whatever the job's tags consume in the
+ *  same transaction — see src/lib/jobTags.ts for the rules.
  *
- *  Queries (completed pin totals, inventory doc lookup by name) run before the
+ *  Queries (per-tag completed totals, inventory lookup by name) run before the
  *  transaction because the web SDK can't query inside one; the transaction
- *  re-reads the job and inventory docs, so a lost race surfaces as a retry or
- *  a clean error rather than a double deduction on this job. */
+ *  re-reads the job and each material, so a lost race surfaces as a retry or a
+ *  clean error rather than a double deduction on this job. */
 export async function completeJob(actor: Actor, self: Assigner, jobId: string): Promise<void> {
   const jobRef = doc(db, 'jobs', jobId);
   const byName = actorDisplayName(actor);
@@ -437,12 +439,18 @@ export async function completeJob(actor: Actor, self: Assigner, jobId: string): 
     getDocs(inventoryCol),
   ]);
 
-  const previousCompletedPins = completedSnap.docs
-    .filter((d) => d.id !== jobId && isPinJob((d.data().name as string) ?? ''))
-    .reduce((sum, d) => sum + (typeof d.data().quantity === 'number' ? (d.data().quantity as number) : 0), 0);
+  // The shop's running completed total for a tag, which per-batch rules count
+  // boundaries against. Documents written before tags existed contribute
+  // through resolveJobTags, so history is not lost and the next Lamina sheet
+  // still falls where it always would have.
+  const previousCompleted = (tag: JobTag): number =>
+    completedSnap.docs
+      .filter((d) => d.id !== jobId && resolveJobTags(d.data()).includes(tag))
+      .reduce((sum, d) => sum + storedQuantity(d.data()), 0);
 
-  const pinBacksRef = inventorySnap.docs.find((d) => normalizedName(d.data()) === PIN_BACKS)?.ref;
-  const laminaRef = inventorySnap.docs.find((d) => normalizedName(d.data()) === LAMINA)?.ref;
+  const materialRefs = new Map<string, DocumentReference>(
+    inventorySnap.docs.map((d) => [normalizedName(d.data()), d.ref] as const),
+  );
 
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(jobRef);
@@ -459,48 +467,35 @@ export async function completeJob(actor: Actor, self: Assigner, jobId: string): 
       throw new Error('Only a collaborator, manager, or admin can complete this job.');
     }
 
-    const name = (data.name as string) ?? '';
-    const quantity = typeof data.quantity === 'number' ? data.quantity : 0;
+    const quantity = storedQuantity(data);
     const sections = parseJobSections(data.repairProcesses);
 
-    if (isPinJob(name) && quantity > 0) {
-      if (!pinBacksRef) throw new Error('No “Pin Backs” material found in inventory.');
-      const laminaNeeded = laminaConsumed(previousCompletedPins, quantity);
-      if (laminaNeeded > 0 && !laminaRef) {
-        throw new Error('No “Lamina” material found in inventory.');
+    // Every material is read and checked before anything is written: a
+    // transaction cannot read after a write, and a job that cannot pay for all
+    // of its materials must not be left having spent some of them.
+    const deductions: Array<{ ref: DocumentReference; remaining: number }> = [];
+    for (const demand of materialsConsumed(resolveJobTags(data), quantity, previousCompleted)) {
+      const ref = materialRefs.get(demand.material.trim().toLowerCase());
+      if (!ref) {
+        throw new Error(`No “${demand.material}” material found in inventory.`);
       }
-
-      const pinBacksSnap = await tx.get(pinBacksRef);
-      const pinBacksQty =
-        typeof pinBacksSnap.data()?.quantity === 'number' ? (pinBacksSnap.data()!.quantity as number) : 0;
-      if (pinBacksQty < quantity) {
-        throw new Error(`Not enough Pin Backs in stock (need ${quantity}, have ${pinBacksQty}).`);
+      const materialSnap = await tx.get(ref);
+      const inStock = storedQuantity(materialSnap.data() ?? {});
+      if (inStock < demand.units) {
+        throw new Error(
+          `Not enough ${demand.material} in stock (need ${demand.units}, have ${inStock}).`,
+        );
       }
+      deductions.push({ ref, remaining: inStock - demand.units });
+    }
 
-      let laminaQty = 0;
-      if (laminaNeeded > 0 && laminaRef) {
-        const laminaSnap = await tx.get(laminaRef);
-        laminaQty =
-          typeof laminaSnap.data()?.quantity === 'number' ? (laminaSnap.data()!.quantity as number) : 0;
-        if (laminaQty < laminaNeeded) {
-          throw new Error(`Not enough Lamina in stock (need ${laminaNeeded}, have ${laminaQty}).`);
-        }
-      }
-
-      tx.update(pinBacksRef, {
-        quantity: pinBacksQty - quantity,
+    for (const deduction of deductions) {
+      tx.update(deduction.ref, {
+        quantity: deduction.remaining,
         updatedAt: serverTimestamp(),
         updatedByUid: actor.uid,
         updatedByName: byName,
       });
-      if (laminaNeeded > 0 && laminaRef) {
-        tx.update(laminaRef, {
-          quantity: laminaQty - laminaNeeded,
-          updatedAt: serverTimestamp(),
-          updatedByUid: actor.uid,
-          updatedByName: byName,
-        });
-      }
     }
 
     tx.update(jobRef, {
@@ -570,6 +565,8 @@ export interface JobEdit {
   quantity?: number;
   dueDate?: Date;
   category?: JobCategory;
+  /** Tags as they should stand after the edit; omit to leave them alone. */
+  tags?: JobTag[];
   isAwf?: boolean;
   /** Required explanation captured when the due date's calendar day changes. */
   dueDateChangeNote?: string;
@@ -606,6 +603,7 @@ export async function editJob(
   if (edit.name !== undefined) patch.name = edit.name;
   if (edit.customer !== undefined) patch.customer = edit.customer;
   if (edit.category !== undefined) patch.category = edit.category;
+  if (edit.tags !== undefined) patch.tags = parseJobTags(edit.tags);
   if (edit.isAwf !== undefined) patch.isAwf = edit.isAwf;
 
   const editsDueDate = edit.dueDate !== undefined;

@@ -122,6 +122,29 @@ the same source so the identity stays consistent.
   Completing a job sets every section to 100%; restoring one resets them to 0%
   and unassigns them along with the team. Sections written before ownership
   existed read `collaboratorUid` as `''`.
+- **Job tags and stock** — a job carries a `tags` array chosen from a closed
+  list (`src/lib/jobTags.ts`), and tags are what drive inventory deduction.
+  Completing a job tagged `pins` takes one **Pin Backs** per unit, plus one
+  **Lamina** each time the shop's running completed pin total crosses a
+  multiple of 50 — 58 pins take one sheet, a later 42 take the next. Every
+  material is read and checked before any is written, inside the same
+  transaction that completes the job, so a job short of one material spends
+  none of the others and stays In Progress with the reason on screen. If a
+  material named in a rule is missing from `inventory`, completion refuses and
+  names it. Materials are matched on their name, trimmed and case-insensitive.
+  Adding a tag, or changing what one consumes, is an edit to `jobTags.ts`
+  alone.
+
+  This used to key off a regex over the job *name*, which is why a job called
+  "Pinbacks" or "100pins" completed cleanly and moved no stock at all, with no
+  error anywhere. Documents that have no `tags` field — written before this
+  existed, or by a client that has not adopted it yet — still fall back to that
+  name match, so their completions behave as they always did and their history
+  still counts toward the next Lamina sheet. A document that *has* a `tags`
+  array is taken at its word, empty included: unticking every tag is how
+  someone turns a deduction off, and it beats whatever the job is called.
+  Saving a job through this app always writes the array, so each save retires
+  one more document from the fallback.
 - **Tabs** — Jobs (live board with sorting and overdue flags), Summary
   (live stats plus the most urgent jobs), Archive (completed, newest first,
   filtered by completion month, with restore).
@@ -233,7 +256,10 @@ Requirements beyond `npm install`:
   controls staff never see.
 - **Jobs** — the create → read → update → delete lifecycle, confirmation
   dialogs and their cancel paths, form validation and quantity boundaries,
-  filters, sorting, and per-type empty states.
+  filters, sorting, per-type empty states, and choosing a tag on the form and
+  seeing it on the card. The stock *deduction* a tag triggers is covered by
+  unit tests instead: it moves one shared "Pin Backs" document, which two
+  parallel workers cannot safely touch at once.
 - **Archive** — the completion-month filter: which months it offers and in
   what order, a job filed by its completion rather than its deadline, two
   Septembers a year apart kept separate, undated completions under "Unknown
