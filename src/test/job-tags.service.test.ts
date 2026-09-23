@@ -97,7 +97,14 @@ vi.mock('../services/inventoryService', () => ({
   inventoryCol: { kind: 'collection', name: 'inventory' },
 }));
 
-import { addJob, completeJob, editJob, type Actor, type Assigner } from '../services/jobService';
+import {
+  addJob,
+  completeJob,
+  editJob,
+  restoreJob,
+  type Actor,
+  type Assigner,
+} from '../services/jobService';
 
 const actor: Actor = {
   uid: 'current-user',
@@ -185,6 +192,11 @@ function startedJob(overrides: Record<string, unknown> = {}): Record<string, unk
     collaboratorUids: [],
     ...overrides,
   };
+}
+
+/** A completed job, as restoreJob finds it. */
+function completedJob(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return startedJob({ status: 'completed', ...overrides });
 }
 
 /** Material writes only, keyed by material name. */
@@ -415,5 +427,151 @@ describe('tags are stored explicitly', () => {
   it('leaves tags alone when an edit does not mention them', async () => {
     await editJob(actor, admin, JOB_ID, { customer: 'Someone else' });
     expect(firestore.updateDoc.mock.calls.at(-1)?.[1]).not.toHaveProperty('tags');
+  });
+});
+
+describe('restoring a completed job puts its stock back', () => {
+  it('returns one Pin Back per pin', async () => {
+    shop({
+      job: completedJob({ name: 'Enamel widgets', tags: ['pins'], quantity: 12 }),
+      materials: [
+        { name: 'Pin Backs', quantity: 88 },
+        { name: 'Lamina', quantity: 10 },
+      ],
+    });
+
+    await restoreJob(actor, JOB_ID);
+
+    expect(stockWrites()).toEqual({ 'Pin Backs': 100 });
+    expect(jobPatch()).toMatchObject({ status: 'pending', completedQuantity: 0 });
+  });
+
+  it('returns the Lamina sheet the completion crossed a boundary to take', async () => {
+    shop({
+      job: completedJob({ name: 'Lapel run', tags: ['pins'], quantity: 58 }),
+      materials: [
+        { name: 'Pin Backs', quantity: 42 },
+        { name: 'Lamina', quantity: 9 },
+      ],
+    });
+
+    await restoreJob(actor, JOB_ID);
+
+    expect(stockWrites()).toEqual({ 'Pin Backs': 100, Lamina: 10 });
+  });
+
+  it('closes the double-deduction: complete, restore, complete again spends once', async () => {
+    // The whole point of the fix. Before it, the second completion took the
+    // shop from 88 to 76 for pins that were only ever made once.
+    const full = [
+      { name: 'Pin Backs', quantity: 100 },
+      { name: 'Lamina', quantity: 10 },
+    ];
+    const job = { name: 'Enamel widgets', tags: ['pins'], quantity: 12 };
+
+    shop({ job: startedJob(job), materials: full });
+    await completeJob(actor, admin, JOB_ID);
+    expect(stockWrites()).toEqual({ 'Pin Backs': 88 });
+
+    vi.clearAllMocks();
+    shop({
+      job: completedJob(job),
+      materials: [
+        { name: 'Pin Backs', quantity: 88 },
+        { name: 'Lamina', quantity: 10 },
+      ],
+    });
+    await restoreJob(actor, JOB_ID);
+    expect(stockWrites()).toEqual({ 'Pin Backs': 100 });
+
+    vi.clearAllMocks();
+    shop({ job: startedJob(job), materials: full });
+    await completeJob(actor, admin, JOB_ID);
+    expect(stockWrites()).toEqual({ 'Pin Backs': 88 });
+  });
+
+  it('ignores the restoring job itself when totalling the shop against it', async () => {
+    // The job is still marked completed while it is being restored, so it has
+    // to be excluded here exactly as it was on the way in — otherwise its own
+    // pins push the total over a boundary and it refunds a sheet too many.
+    shop({
+      job: completedJob({ name: 'Pin run', tags: ['pins'], quantity: 58 }),
+      materials: [
+        { name: 'Pin Backs', quantity: 42 },
+        { name: 'Lamina', quantity: 9 },
+      ],
+      alreadyCompleted: [{ id: JOB_ID, name: 'Pin run', quantity: 58, tags: ['pins'] }],
+    });
+
+    await restoreJob(actor, JOB_ID);
+
+    expect(stockWrites()).toEqual({ 'Pin Backs': 100, Lamina: 10 });
+  });
+
+  it('returns stock for a legacy job that has no tags field at all', async () => {
+    shop({
+      job: completedJob({ name: 'Pin order', quantity: 12 }),
+      materials: [
+        { name: 'Pin Backs', quantity: 88 },
+        { name: 'Lamina', quantity: 10 },
+      ],
+    });
+
+    await restoreJob(actor, JOB_ID);
+
+    expect(stockWrites()).toEqual({ 'Pin Backs': 100 });
+  });
+
+  it('returns nothing for an untagged job whose name happens to say pins', async () => {
+    shop({
+      job: completedJob({ name: '100 pins (customer supplies backs)', tags: [], quantity: 100 }),
+      materials: [
+        { name: 'Pin Backs', quantity: 100 },
+        { name: 'Lamina', quantity: 10 },
+      ],
+    });
+
+    await restoreJob(actor, JOB_ID);
+
+    expect(stockWrites()).toEqual({});
+    expect(jobPatch()).toMatchObject({ status: 'pending' });
+  });
+});
+
+describe('a restore that cannot return its stock changes nothing', () => {
+  it('refuses when the material is gone, naming it', async () => {
+    shop({
+      job: completedJob({ name: 'Pin run', tags: ['pins'], quantity: 12 }),
+      materials: [{ name: 'Lamina', quantity: 10 }],
+    });
+
+    await expect(restoreJob(actor, JOB_ID)).rejects.toThrow(
+      'No “Pin Backs” material found in inventory to return its stock to.',
+    );
+    expect(firestore.transactionUpdate).not.toHaveBeenCalled();
+  });
+
+  it('returns no Pin Backs when the Lamina the same job owes is missing', async () => {
+    shop({
+      job: completedJob({ name: 'Pin run', tags: ['pins'], quantity: 58 }),
+      materials: [{ name: 'Pin Backs', quantity: 42 }],
+    });
+
+    await expect(restoreJob(actor, JOB_ID)).rejects.toThrow(
+      'No “Lamina” material found in inventory to return its stock to.',
+    );
+    expect(firestore.transactionUpdate).not.toHaveBeenCalled();
+  });
+
+  it('refuses to restore a job that is not completed', async () => {
+    shop({
+      job: startedJob({ name: 'Pin run', tags: ['pins'], quantity: 12 }),
+      materials: [{ name: 'Pin Backs', quantity: 88 }],
+    });
+
+    await expect(restoreJob(actor, JOB_ID)).rejects.toThrow(
+      'Only completed jobs can be restored.',
+    );
+    expect(firestore.transactionUpdate).not.toHaveBeenCalled();
   });
 });

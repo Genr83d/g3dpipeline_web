@@ -135,6 +135,15 @@ the same source so the identity stays consistent.
   Adding a tag, or changing what one consumes, is an edit to `jobTags.ts`
   alone.
 
+  Restoring a completed job returns what its completion consumed, so a job that
+  is restored and completed again is paid for once rather than twice. The
+  refund is recomputed from the same rule table rather than recorded on the
+  job, which keeps the books true to "one Lamina per 50 pins completed" however
+  many other jobs were completed in between, and keeps the stored document free
+  of a field the security rules would have to learn. A restore that cannot
+  return everything — because a material was deleted from `inventory` — refuses
+  and names it, leaving the job completed rather than half-corrected.
+
   This used to key off a regex over the job *name*, which is why a job called
   "Pinbacks" or "100pins" completed cleanly and moved no stock at all, with no
   error anywhere. Documents that have no `tags` field — written before this
