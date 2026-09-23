@@ -520,10 +520,35 @@ export async function completeJob(actor: Actor, self: Assigner, jobId: string): 
  *
  *  A restored job keeps its section names and starts them over at 0%, matching
  *  the reset completed quantity. Because restoring also clears the team, every
- *  section returns to unassigned. */
+ *  section returns to unassigned.
+ *
+ *  Restoring also puts back whatever the completion consumed, so a job that is
+ *  restored and completed again is paid for once rather than twice. The refund
+ *  is recomputed from the rule table rather than recorded on the job: nothing
+ *  new has to be stored (and no security rule has to learn a new field), and
+ *  the shop's books stay true to "one Lamina per 50 pins completed" however
+ *  many other jobs have been completed in the meantime. `previousCompleted`
+ *  excludes this job, exactly as it did on the way in, so the expression below
+ *  is the one that produced the deduction and a complete → restore round trip
+ *  with nothing else moving returns precisely what it took. */
 export async function restoreJob(actor: Actor, jobId: string): Promise<void> {
   const byName = actorDisplayName(actor);
   const ref = doc(db, 'jobs', jobId);
+
+  const [completedSnap, inventorySnap] = await Promise.all([
+    getDocs(query(jobsCol, where('status', '==', 'completed'))),
+    getDocs(inventoryCol),
+  ]);
+
+  const previousCompleted = (tag: JobTag): number =>
+    completedSnap.docs
+      .filter((d) => d.id !== jobId && resolveJobTags(d.data()).includes(tag))
+      .reduce((sum, d) => sum + storedQuantity(d.data()), 0);
+
+  const materialRefs = new Map<string, DocumentReference>(
+    inventorySnap.docs.map((d) => [normalizedName(d.data()), d.ref] as const),
+  );
+
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists()) throw new Error('This job no longer exists.');
@@ -531,6 +556,39 @@ export async function restoreJob(actor: Actor, jobId: string): Promise<void> {
     if (parseJobStatus(data.status) !== 'completed') {
       throw new Error('Only completed jobs can be restored.');
     }
+
+    // Every material is read before anything is written, for the same reason
+    // completing one is: a transaction cannot read after a write, and a
+    // restore that cannot return all of its stock must not return part of it
+    // and leave the job pending with the books half-corrected.
+    const refunds: Array<{ ref: DocumentReference; restored: number }> = [];
+    for (const demand of materialsConsumed(
+      resolveJobTags(data),
+      storedQuantity(data),
+      previousCompleted,
+    )) {
+      const materialRef = materialRefs.get(demand.material.trim().toLowerCase());
+      if (!materialRef) {
+        throw new Error(
+          `No “${demand.material}” material found in inventory to return its stock to.`,
+        );
+      }
+      const materialSnap = await tx.get(materialRef);
+      refunds.push({
+        ref: materialRef,
+        restored: storedQuantity(materialSnap.data() ?? {}) + demand.units,
+      });
+    }
+
+    for (const refund of refunds) {
+      tx.update(refund.ref, {
+        quantity: refund.restored,
+        updatedAt: serverTimestamp(),
+        updatedByUid: actor.uid,
+        updatedByName: byName,
+      });
+    }
+
     // Sections keep their names but lose their owners along with the team,
     // and start over at 0% to match the reset completed quantity.
     const sections = clearRemovedCollaborators(parseJobSections(data.repairProcesses), []);
