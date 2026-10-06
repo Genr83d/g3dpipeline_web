@@ -1,0 +1,416 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-06T14:56:01.939018+00:00",
+  "title": "Design System: GENR8 Pipeline",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Drafting Blue",
+        "tonalRamp": [
+          "oklch(15% 0.19 264)",
+          "oklch(25% 0.19 264)",
+          "oklch(37% 0.19 264)",
+          "oklch(50% 0.19 264)",
+          "oklch(62% 0.19 264)",
+          "oklch(75% 0.19 264)",
+          "oklch(87% 0.19 264)",
+          "oklch(95% 0.19 264)"
+        ]
+      },
+      "primary-pressed": {
+        "role": "primary",
+        "displayName": "Deep Drafting Blue",
+        "tonalRamp": [
+          "oklch(15% 0.17 264)",
+          "oklch(25% 0.17 264)",
+          "oklch(37% 0.17 264)",
+          "oklch(50% 0.17 264)",
+          "oklch(62% 0.17 264)",
+          "oklch(75% 0.17 264)",
+          "oklch(87% 0.17 264)",
+          "oklch(95% 0.17 264)"
+        ]
+      },
+      "primary-soft": {
+        "role": "primary",
+        "displayName": "Blueprint Wash",
+        "tonalRamp": [
+          "oklch(15% 0.05 264)",
+          "oklch(25% 0.05 264)",
+          "oklch(37% 0.05 264)",
+          "oklch(50% 0.05 264)",
+          "oklch(62% 0.05 264)",
+          "oklch(75% 0.05 264)",
+          "oklch(87% 0.05 264)",
+          "oklch(95% 0.05 264)"
+        ]
+      },
+      "primary-night": {
+        "role": "primary",
+        "displayName": "Night Periwinkle",
+        "tonalRamp": [
+          "oklch(15% 0.1 277)",
+          "oklch(25% 0.1 277)",
+          "oklch(37% 0.1 277)",
+          "oklch(50% 0.1 277)",
+          "oklch(62% 0.1 277)",
+          "oklch(75% 0.1 277)",
+          "oklch(87% 0.1 277)",
+          "oklch(95% 0.1 277)"
+        ]
+      },
+      "secondary": {
+        "role": "secondary",
+        "displayName": "Machinist Teal",
+        "tonalRamp": [
+          "oklch(15% 0.1 182)",
+          "oklch(25% 0.1 182)",
+          "oklch(37% 0.1 182)",
+          "oklch(50% 0.1 182)",
+          "oklch(62% 0.1 182)",
+          "oklch(75% 0.1 182)",
+          "oklch(87% 0.1 182)",
+          "oklch(95% 0.1 182)"
+        ]
+      },
+      "secondary-soft": {
+        "role": "secondary",
+        "displayName": "Teal Wash",
+        "tonalRamp": [
+          "oklch(15% 0.04 182)",
+          "oklch(25% 0.04 182)",
+          "oklch(37% 0.04 182)",
+          "oklch(50% 0.04 182)",
+          "oklch(62% 0.04 182)",
+          "oklch(75% 0.04 182)",
+          "oklch(87% 0.04 182)",
+          "oklch(95% 0.04 182)"
+        ]
+      },
+      "signal-amber": {
+        "role": "tertiary",
+        "displayName": "Caution Amber",
+        "tonalRamp": [
+          "oklch(15% 0.16 70)",
+          "oklch(25% 0.16 70)",
+          "oklch(37% 0.16 70)",
+          "oklch(50% 0.16 70)",
+          "oklch(62% 0.16 70)",
+          "oklch(75% 0.16 70)",
+          "oklch(87% 0.16 70)",
+          "oklch(95% 0.16 70)"
+        ]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Fault Red",
+        "tonalRamp": [
+          "oklch(15% 0.18 28)",
+          "oklch(25% 0.18 28)",
+          "oklch(37% 0.18 28)",
+          "oklch(50% 0.18 28)",
+          "oklch(62% 0.18 28)",
+          "oklch(75% 0.18 28)",
+          "oklch(87% 0.18 28)",
+          "oklch(95% 0.18 28)"
+        ]
+      },
+      "danger-soft": {
+        "role": "tertiary",
+        "displayName": "Fault Wash",
+        "tonalRamp": [
+          "oklch(15% 0.04 28)",
+          "oklch(25% 0.04 28)",
+          "oklch(37% 0.04 28)",
+          "oklch(50% 0.04 28)",
+          "oklch(62% 0.04 28)",
+          "oklch(75% 0.04 28)",
+          "oklch(87% 0.04 28)",
+          "oklch(95% 0.04 28)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(15% 0.03 258)",
+          "oklch(25% 0.03 258)",
+          "oklch(37% 0.03 258)",
+          "oklch(50% 0.03 258)",
+          "oklch(62% 0.03 258)",
+          "oklch(75% 0.03 258)",
+          "oklch(87% 0.03 258)",
+          "oklch(95% 0.03 258)"
+        ]
+      },
+      "appbg": {
+        "role": "neutral",
+        "displayName": "Cool Paper",
+        "tonalRamp": [
+          "oklch(15% 0.01 240)",
+          "oklch(25% 0.01 240)",
+          "oklch(37% 0.01 240)",
+          "oklch(50% 0.01 240)",
+          "oklch(62% 0.01 240)",
+          "oklch(75% 0.01 240)",
+          "oklch(87% 0.01 240)",
+          "oklch(95% 0.01 240)"
+        ]
+      },
+      "slate-label": {
+        "role": "neutral",
+        "displayName": "Slate Label",
+        "tonalRamp": [
+          "oklch(15% 0.03 257)",
+          "oklch(25% 0.03 257)",
+          "oklch(37% 0.03 257)",
+          "oklch(50% 0.03 257)",
+          "oklch(62% 0.03 257)",
+          "oklch(75% 0.03 257)",
+          "oklch(87% 0.03 257)",
+          "oklch(95% 0.03 257)"
+        ]
+      },
+      "slate-body": {
+        "role": "neutral",
+        "displayName": "Slate Body",
+        "tonalRamp": [
+          "oklch(15% 0.03 257)",
+          "oklch(25% 0.03 257)",
+          "oklch(37% 0.03 257)",
+          "oklch(50% 0.03 257)",
+          "oklch(62% 0.03 257)",
+          "oklch(75% 0.03 257)",
+          "oklch(87% 0.03 257)",
+          "oklch(95% 0.03 257)"
+        ]
+      },
+      "night-bg": {
+        "role": "neutral",
+        "displayName": "Night Sheet",
+        "tonalRamp": [
+          "oklch(15% 0.03 265)",
+          "oklch(25% 0.03 265)",
+          "oklch(37% 0.03 265)",
+          "oklch(50% 0.03 265)",
+          "oklch(62% 0.03 265)",
+          "oklch(75% 0.03 265)",
+          "oklch(87% 0.03 265)",
+          "oklch(95% 0.03 265)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page titles; 1.5rem rising to 1.875rem at sm+."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card, panel, modal and empty-state titles; clamp to two lines."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Spec rows, fields, descriptions."
+      },
+      "label": {
+        "displayName": "Technical Label",
+        "purpose": "Uppercase mono drafting labels on dimension rules and stat captions."
+      },
+      "readout": {
+        "displayName": "Readout",
+        "purpose": "Every measured value: order numbers, counts, dates, percentages."
+      }
+    },
+    "shadows": [
+      {
+        "name": "sheet-rest",
+        "value": "0 1px 0 rgba(13,23,38,0.04), 0 12px 28px -14px rgba(13,23,38,0.22)",
+        "purpose": "Every surface (dark: 0 1px 0 rgba(0,0,0,0.3), 0 14px 32px -14px rgba(0,0,0,0.6))."
+      },
+      {
+        "name": "sheet-hover",
+        "value": "0 1px 0 rgba(13,23,38,0.04), 0 18px 36px -16px rgba(13,23,38,0.3)",
+        "purpose": "Interactive card hover."
+      },
+      {
+        "name": "primary-button",
+        "value": "inset 0 1px 0 rgba(255,255,255,0.18), 0 1px 2px rgba(13,23,38,0.2), 0 6px 14px -6px rgba(36,84,216,0.55)",
+        "purpose": "Main action only."
+      }
+    ],
+    "motion": [
+      {
+        "name": "gauge-fill",
+        "value": "width 700ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Gauge fill travels to its new value."
+      },
+      {
+        "name": "panel-slide",
+        "value": "spring stiffness 420 damping 40",
+        "purpose": "Side panel enter/exit; fade only under reduced motion."
+      },
+      {
+        "name": "tab-pill",
+        "value": "spring stiffness 450 damping 35",
+        "purpose": "Shell tab active pill (shared layout)."
+      },
+      {
+        "name": "tab-marker",
+        "value": "spring stiffness 500 damping 40",
+        "purpose": "Panel tab underline marker."
+      },
+      {
+        "name": "card-enter",
+        "value": "spring stiffness 350 damping 30",
+        "purpose": "Job card fade-up entrance."
+      },
+      {
+        "name": "control",
+        "value": "150ms",
+        "purpose": "Button and field colour/ring transitions."
+      },
+      {
+        "name": "led-live",
+        "value": "ping 2.4s",
+        "purpose": "Halo on running work; removed under reduced motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main action in forms, panels and page headers.",
+      "html": "<button class=\"ds-btn-primary\">Save job</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:4px;border:1px solid #1d47ba;background:#2454d8;color:#fff;font:600 14px/20px \"Inter Variable\",Inter,system-ui,sans-serif;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 1px 2px rgba(13,23,38,.2),0 6px 14px -6px rgba(36,84,216,.55);transition:background-color 150ms,transform 150ms}.ds-btn-primary:hover{background:#1d47ba}.ds-btn-primary:focus-visible{outline:none;box-shadow:0 0 0 2px #fff,0 0 0 4px #2454d8}.ds-btn-primary:active{transform:scale(.98)}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Supporting positive action.",
+      "html": "<button class=\"ds-btn-secondary\">Log maintenance</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;padding:10px 16px;border-radius:4px;border:1px solid rgba(8,127,116,.15);background:#d7f2ed;color:#087f74;font:600 14px/20px \"Inter Variable\",Inter,system-ui,sans-serif;cursor:pointer;transition:background-color 150ms}.ds-btn-secondary:hover{background:#c8ece5;border-color:rgba(8,127,116,.25)}.ds-btn-secondary:focus-visible{outline:none;box-shadow:0 0 0 2px #fff,0 0 0 4px #2454d8}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Toolbar and header actions.",
+      "html": "<button class=\"ds-btn-ghost\">Help</button>",
+      "css": ".ds-btn-ghost{display:inline-flex;align-items:center;padding:10px 16px;border-radius:4px;border:1px solid rgba(226,232,240,.7);background:rgba(255,255,255,.35);color:#475569;font:600 14px/20px \"Inter Variable\",Inter,system-ui,sans-serif;cursor:pointer;transition:background-color 150ms}.ds-btn-ghost:hover{background:rgba(255,255,255,.75);border-color:rgba(203,213,225,.8)}.ds-btn-ghost:focus-visible{outline:none;box-shadow:0 0 0 2px #fff,0 0 0 4px #2454d8}"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Destructive actions.",
+      "html": "<button class=\"ds-btn-danger\">Delete job</button>",
+      "css": ".ds-btn-danger{display:inline-flex;align-items:center;padding:10px 16px;border-radius:4px;border:1px solid rgba(180,35,24,.15);background:#fde2df;color:#b42318;font:600 14px/20px \"Inter Variable\",Inter,system-ui,sans-serif;cursor:pointer}.ds-btn-danger:hover{background:#f8cac5}.ds-btn-danger:focus-visible{outline:none;box-shadow:0 0 0 2px #fff,0 0 0 4px #2454d8}"
+    },
+    {
+      "name": "Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Text input with blue focus ring and aria-invalid error state.",
+      "html": "<input class=\"ds-field\" placeholder=\"Order number\">",
+      "css": ".ds-field{width:100%;padding:10px 14px;border-radius:4px;border:1px solid rgba(203,213,225,.9);background:rgba(255,255,255,.92);color:#0d1726;font:400 14px/20px \"Inter Variable\",Inter,system-ui,sans-serif;box-shadow:inset 0 1px 0 rgba(255,255,255,.55);transition:border-color 150ms,box-shadow 150ms}.ds-field::placeholder{color:#94a3b8}.ds-field:focus{outline:none;border-color:#2454d8;box-shadow:0 0 0 4px rgba(36,84,216,.15)}"
+    },
+    {
+      "name": "Status Pill",
+      "kind": "chip",
+      "refersTo": "status-pill",
+      "description": "LED plus mono status label on a hairline outline.",
+      "html": "<span class=\"ds-pill\"><span class=\"ds-led\"></span>IN PROGRESS</span>",
+      "css": ".ds-pill{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:2px;border:1px solid rgba(180,83,9,.25);background:rgba(255,255,255,.6);color:#b45309;font:600 .68rem/1.4 \"JetBrains Mono Variable\",ui-monospace,monospace;letter-spacing:.08em}.ds-led{width:8px;height:8px;border-radius:9999px;background:#f59e0b;box-shadow:0 0 0 2px rgba(255,255,255,.7)}"
+    },
+    {
+      "name": "Job Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Translucent sheet with corner registration ticks, title block, gauge and dotted-leader spec row.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-tb\"><span>JOB ORDER • <b>J-1042</b></span><span class=\"ds-st\">COMPLETED</span></div><h3 class=\"ds-t\">Bracket housing, batch B</h3><div class=\"ds-g\"><div style=\"width:62%\"></div></div><div class=\"ds-row\"><span>Due</span><i></i><strong>12 Oct</strong></div></article>",
+      "css": ".ds-card{position:relative;display:flex;flex-direction:column;gap:14px;padding:16px;border-radius:4px;border:1px solid rgba(71,85,105,.3);background:rgba(255,255,255,.9);box-shadow:0 1px 0 rgba(13,23,38,.04),0 12px 28px -14px rgba(13,23,38,.22);font-family:\"Inter Variable\",Inter,system-ui,sans-serif;color:#475569;transition:box-shadow 200ms,border-color 200ms}.ds-card:hover{border-color:rgba(36,84,216,.35);box-shadow:0 1px 0 rgba(13,23,38,.04),0 18px 36px -16px rgba(13,23,38,.3)}.ds-card::after{content:\"\";position:absolute;inset:-1px;pointer-events:none;--k:rgba(8,127,116,1);background:linear-gradient(var(--k),var(--k)) top left/11px 1.5px no-repeat,linear-gradient(var(--k),var(--k)) top left/1.5px 11px no-repeat,linear-gradient(var(--k),var(--k)) top right/11px 1.5px no-repeat,linear-gradient(var(--k),var(--k)) top right/1.5px 11px no-repeat,linear-gradient(var(--k),var(--k)) bottom left/11px 1.5px no-repeat,linear-gradient(var(--k),var(--k)) bottom left/1.5px 11px no-repeat,linear-gradient(var(--k),var(--k)) bottom right/11px 1.5px no-repeat,linear-gradient(var(--k),var(--k)) bottom right/1.5px 11px no-repeat}.ds-tb{display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid rgba(71,85,105,.32);font:400 .7rem \"JetBrains Mono Variable\",ui-monospace,monospace;letter-spacing:.06em;color:#64748b}.ds-tb b{color:#2454d8}.ds-st{color:#087f74;font-weight:600}.ds-t{margin:0;font-size:18px;line-height:24px;font-weight:700;letter-spacing:-.025em;color:#0d1726}.ds-g{height:6px;border-radius:1px;background:rgba(8,127,116,.15);overflow:hidden}.ds-g div{height:100%;background:#087f74;transition:width 700ms cubic-bezier(.16,1,.3,1)}.ds-row{display:flex;align-items:baseline;gap:8px;font-size:14px}.ds-row i{flex:1;border-bottom:1px dotted rgba(71,85,105,.32);transform:translateY(-3px)}.ds-row strong{font-family:\"JetBrains Mono Variable\",ui-monospace,monospace;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Panel Tabs",
+      "kind": "nav",
+      "refersTo": "panel-tabs",
+      "description": "Uppercase mono tabs on a hairline rule with a blue underline marker.",
+      "html": "<nav class=\"ds-tabs\"><button class=\"on\">Details</button><button>Checklist <span>3</span></button></nav>",
+      "css": ".ds-tabs{display:flex;gap:4px;border-bottom:1px solid rgba(71,85,105,.32)}.ds-tabs button{position:relative;padding:6px 12px 10px;border:0;background:none;cursor:pointer;color:#64748b;font:600 12px \"JetBrains Mono Variable\",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase}.ds-tabs button:hover{color:#0d1726}.ds-tabs button:focus-visible{outline:2px solid #2454d8}.ds-tabs button.on{color:#2454d8}.ds-tabs button.on::after{content:\"\";position:absolute;left:8px;right:8px;bottom:-1px;height:2px;background:#2454d8}.ds-tabs span{padding:0 4px;border-radius:2px;background:rgba(226,232,240,.7);font-size:.65rem}"
+    },
+    {
+      "name": "Dimension Rule",
+      "kind": "custom",
+      "refersTo": "dim-rule",
+      "description": "Section rule drawn as a dimension line with a measured value.",
+      "html": "<div class=\"ds-dim\"><i></i><span>CHECKLIST</span><b></b><em>1/3</em><i></i></div>",
+      "css": ".ds-dim{display:flex;align-items:center;gap:8px;color:#64748b}.ds-dim i{width:1px;height:10px;background:rgba(71,85,105,.32)}.ds-dim b{flex:1;height:1px;background:rgba(71,85,105,.32)}.ds-dim span{font:500 .68rem \"JetBrains Mono Variable\",ui-monospace,monospace;letter-spacing:.12em}.ds-dim em{font:600 12px \"JetBrains Mono Variable\",ui-monospace,monospace;font-style:normal;color:#475569}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Drafting Sheet",
+    "overview": "**Creative North Star: \"The Drafting Sheet\"**\n\nThe app is a technical drawing laid over an instrument panel. The page is drafting paper: a fine 42px grid with a heavier major line every 210px, under a faint blue wash at the top. Cards are sheets on that paper: near-square corners, hairline borders, and registration ticks at all four corners. Everything that is measured (order numbers, counts, dates, percentages, section labels) is set in a monospace; everything that is read is set in Inter.\n\nColour is scarce on purpose. The interface is ink and slate. Blue marks action and the active signal. Status hue (blue, amber, teal, red) appears only where an instrument would show it: indicator lamps, gauge fills, and corner-tick tints. Density is high but ordered, because this is a working shop tool and people scan it all day.\n\nEvery surface has light, dark, and high-contrast forms, and every motion is gated by the user's reduce-motion setting.",
+    "keyCharacteristics": [
+      "Drafting-paper grid background; translucent sheets with corner registration ticks.",
+      "Inter for prose, JetBrains Mono for data and drafting labels only.",
+      "Ink/slate base, blue for action, status hue on LEDs, gauges, and ticks only.",
+      "Crisp 4px corners; hairline rules and dotted leaders instead of boxes inside boxes.",
+      "Motion is purposeful (panel slide, gauge travel, tab marker) and fully suppressible."
+    ],
+    "rules": [
+      {
+        "name": "The Instrument Hue Rule",
+        "body": "Status colour lives only on LEDs, gauge fills, corner-tick tints, and the mono status label beside its LED. The rest of the interface stays ink and slate, so a lit lamp actually reads.",
+        "section": "colors"
+      },
+      {
+        "name": "The Three Modes Rule",
+        "body": "Every colour ships with a dark variant and a high-contrast behaviour. In `.hc`, ticks and rules become `currentColor`, surfaces become solid white/black with 2px borders, and shadows are removed.",
+        "section": "colors"
+      },
+      {
+        "name": "The Measured-Only Mono Rule",
+        "body": "Mono is for data and measurement, never prose. If a phrase is a sentence, it is Inter.",
+        "section": "typography"
+      },
+      {
+        "name": "The Paper-Over-Grid Rule",
+        "body": "A surface is a translucent sheet on the drafting grid, never an opaque slab. Depth comes from blur and a soft ground shadow, not from stacked borders.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** set every measured value (order numbers, counts, dates, percentages) in the mono readout style with tabular figures.",
+      "**Do** show status with an LED, gauge fill, or corner-tick tint, paired with a mono text label.",
+      "**Do** give every new colour a dark-mode value and a high-contrast behaviour; route hairlines and ticks through `--rule` and `--tick` so `.hc` can turn them into `currentColor`.",
+      "**Do** keep motion to purposeful moves (panel slide, gauge fill on `cubic-bezier(0.16,1,0.3,1)`, tab-marker spring) and gate every framer-motion animation on `motionReduced`.",
+      "**Do** keep corners at 4px for sheets and controls, and 2px for chips."
+    ],
+    "donts": [
+      "**Don't** set prose, headings, or sentences in mono.",
+      "**Don't** put coloured left-border strips on cards; status shows through the LED and the corner ticks.",
+      "**Don't** add uppercase eyebrow kickers above titles on new screens.",
+      "**Don't** spread status hue onto backgrounds, headings, or large fills; colour stays mostly ink and slate, with blue for action and signal.",
+      "**Don't** add motion that ignores the reduce-motion setting or exists only for decoration."
+    ]
+  }
+}

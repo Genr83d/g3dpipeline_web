@@ -26,7 +26,7 @@ export function StatCard({
       )}
       <div className="min-w-0">
         <p className="technical-label truncate">{label}</p>
-        <p className={`text-2xl font-bold tabular-nums ${toneCls}`}>{value}</p>
+        <p className={`readout text-2xl font-bold ${toneCls}`}>{value}</p>
       </div>
     </div>
   );

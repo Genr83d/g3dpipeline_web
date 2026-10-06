@@ -263,7 +263,7 @@ export default function Jobs() {
             ].map(([label, value]) => (
               <div key={label} className="surface px-4 py-3">
                 <p className="technical-label">{label}</p>
-                <p className={`font-display text-2xl font-bold tabular-nums ${
+                <p className={`readout text-2xl font-bold ${
                   label === 'Overdue' && Number(value) > 0 ? 'text-danger dark:text-red-300' : ''
                 }`}>
                   {value}
