@@ -121,13 +121,15 @@ function SpecRow({
   tone?: string;
 }) {
   return (
+    // The label keeps its width and the value gives way: a long value
+    // truncates inside the card instead of pushing past its edge.
     <div className={`flex min-w-0 items-baseline gap-2 py-1.5 ${tone}`}>
-      <span className="inline-flex min-w-0 shrink items-center gap-2 self-center">
+      <span className="inline-flex shrink-0 items-center gap-2 self-center">
         {icon}
-        <span className="truncate">{label}</span>
+        <span className="whitespace-nowrap">{label}</span>
       </span>
       <span aria-hidden className="min-w-3 flex-1 translate-y-[-3px] border-b border-dotted border-[var(--rule)]" />
-      <strong className="min-w-0 shrink-0 truncate text-right font-semibold">{children}</strong>
+      <strong className="min-w-0 truncate text-right font-semibold">{children}</strong>
     </div>
   );
 }
@@ -194,7 +196,7 @@ function JobSectionList({ job }: { job: Job }) {
                   {section.name}
                 </span>
                 <span
-                  className={`truncate ${
+                  className={`max-w-[45%] shrink-0 truncate ${
                     owner
                       ? 'text-slate-500 dark:text-slate-400'
                       : 'text-amber-700 dark:text-amber-300'
@@ -437,10 +439,21 @@ export function JobCard({
             {overdue && ` · ${daysLate(job.dueDate)}d late`}
           </span>
         </SpecRow>
+        {/* The reason is prose, not a measurement, so it wraps under its
+            label rather than sitting at the end of a leader line. */}
         {job.dueDateChangeNote && (
-          <SpecRow icon={<IconHistory className={iconClass} />} label="Deadline changed">
-            <span className="font-medium">{job.dueDateChangeNote}</span>
-          </SpecRow>
+          <div className="py-1.5">
+            <span className="inline-flex items-center gap-2">
+              <IconHistory className={iconClass} />
+              Deadline changed
+            </span>
+            <p
+              className="mt-1 line-clamp-3 pl-6 text-[0.8125rem] leading-5 break-words text-slate-700 dark:text-slate-200"
+              title={job.dueDateChangeNote}
+            >
+              {job.dueDateChangeNote}
+            </p>
+          </div>
         )}
         {job.collaborators.length > 0 ? (
           <CollaboratorList job={job} />

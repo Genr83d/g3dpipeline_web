@@ -78,7 +78,7 @@ export function SidePanel({
             aria-modal="true"
             aria-labelledby="modal-title"
             tabIndex={-1}
-            className="surface-strong drafting-frame fixed inset-x-0 bottom-0 flex max-h-[calc(100dvh-1rem)] flex-col rounded-b-none outline-none sm:inset-y-0 sm:right-0 sm:left-auto sm:h-dvh sm:max-h-dvh sm:w-full sm:max-w-xl sm:rounded-none sm:border-y-0 sm:border-r-0"
+            className="surface-strong drafting-frame fixed inset-x-0 bottom-0 flex h-[calc(100dvh-1rem)] flex-col rounded-b-none outline-none sm:inset-y-0 sm:right-0 sm:left-auto sm:h-dvh sm:w-full sm:max-w-xl sm:rounded-none sm:border-y-0 sm:border-r-0"
             initial={motionReduced ? false : offscreen}
             animate={{ x: 0, y: 0 }}
             exit={motionReduced ? { opacity: 0 } : offscreen}
@@ -171,7 +171,7 @@ export function PanelTabs<T extends string>({
             aria-selected={selected}
             aria-controls={`${idPrefix}-tabpanel`}
             tabIndex={selected ? 0 : -1}
-            className={`relative inline-flex shrink-0 items-center gap-1.5 px-3 pt-1.5 pb-2.5 font-mono text-xs font-semibold tracking-[0.08em] uppercase transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+            className={`relative inline-flex shrink-0 items-center gap-1.5 px-2 pt-1.5 pb-2.5 font-mono sm:px-3 text-xs font-semibold tracking-[0.08em] uppercase transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
               selected
                 ? 'text-ink dark:text-slate-50'
                 : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
@@ -180,7 +180,7 @@ export function PanelTabs<T extends string>({
           >
             {tab.label}
             {tab.badge !== undefined && (
-              <span className="readout rounded-sm bg-slate-200/70 px-1 text-[0.65rem] text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <span className="readout hidden rounded-sm bg-slate-200/70 px-1 text-[0.65rem] sm:inline text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                 {tab.badge}
               </span>
             )}

@@ -10,7 +10,7 @@ import {
   canUpdateSectionProgress,
 } from '../lib/jobPermissions';
 import { jobQuantityConfig } from '../lib/jobCategories';
-import { overallSectionProgress, sectionsHeading } from '../lib/jobSections';
+import { overallSectionProgress, usesRepairVocabulary } from '../lib/jobSections';
 import { formatDate } from '../lib/format';
 import type { AssignTarget } from '../services/jobService';
 import { SidePanel, PanelTabs, type PanelTab } from './SidePanel';
@@ -48,7 +48,7 @@ export function jobPanelTabs(
   ) {
     tabs.push({
       id: 'sections',
-      label: sectionsHeading(job.category).replace(/^Job /, ''),
+      label: usesRepairVocabulary(job.category) ? 'Processes' : 'Sections',
       badge: `${overallSectionProgress(job.repairProcesses)}%`,
     });
   }
@@ -146,7 +146,10 @@ export function JobPanel({
               </span>
             )}
             <StatusPill status={job.status} overdue={overdue} />
-            <span className="readout text-xs text-slate-500 dark:text-slate-400">
+            <span
+              className="readout min-w-0 max-w-full truncate text-xs text-slate-500 dark:text-slate-400"
+              title={job.customer}
+            >
               {job.customer} · due {formatDate(job.dueDate)}
             </span>
           </div>

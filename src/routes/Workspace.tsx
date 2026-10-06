@@ -76,7 +76,7 @@ export function Workspace() {
             </span>
           </Link>
           <nav
-            className="order-last flex w-full items-center gap-1 overflow-x-auto rounded-lg border border-slate-200/70 bg-white/45 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-900/55 sm:order-none sm:w-auto"
+            className="order-last flex w-full items-center gap-0 overflow-x-auto rounded border border-slate-200/70 bg-white/45 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-900/55 sm:order-none sm:w-auto"
             aria-label="Workspace tabs"
           >
             {visibleTabs.map((tab) => (
@@ -85,14 +85,14 @@ export function Workspace() {
                 to={tab.to}
                 end={tab.end}
                 data-tour={tab.tour}
-                className="relative shrink-0 rounded-md px-2.5 py-1.5 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none sm:px-4"
+                className="relative shrink-0 grow rounded-sm px-1 py-1.5 text-center text-[0.8125rem] min-[380px]:px-1.5 font-semibold focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none sm:grow-0 sm:px-4 sm:text-sm"
               >
                 {({ isActive: active }) => (
                   <>
                     {active && (
                       <motion.span
                         layoutId={motionReduced ? undefined : 'tab-pill'}
-                        className="absolute inset-0 rounded-md border border-white/70 bg-white/85 shadow-sm dark:border-white/10 dark:bg-slate-800"
+                        className="absolute inset-0 rounded-sm border border-white/70 bg-white/85 shadow-sm dark:border-white/10 dark:bg-slate-800"
                         transition={{ type: 'spring', stiffness: 450, damping: 35 }}
                       />
                     )}

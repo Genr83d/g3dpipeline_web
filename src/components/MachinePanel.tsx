@@ -212,7 +212,7 @@ export function MachinePanel({
       onClose={onClose}
       meta={
         machine && (
-          <p className="readout text-xs text-slate-500 dark:text-slate-400">
+          <p className="readout truncate text-xs text-slate-500 dark:text-slate-400" title={machine.location}>
             {machine.location || 'No location'} · {machine.maintenanceHistory.length} log
             {machine.maintenanceHistory.length === 1 ? '' : 's'}
           </p>
