@@ -98,9 +98,54 @@ test('removes a procedure', async ({ page }) => {
   await card.getByRole('button', { name: 'Add', exact: true }).click();
   await expect(card.getByText('Temporary check')).toBeVisible();
 
-  await card.getByRole('button', { name: 'Remove Temporary check' }).click();
+  // Removing is a management task, so it lives in the machine panel rather
+  // than on every row of the card's checklist.
+  await card.getByRole('button', { name: 'Manage procedures' }).click();
+  const panel = page.getByRole('dialog');
+  await expect(panel.getByRole('tab', { name: /Procedures/ })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await panel.getByRole('button', { name: 'Remove Temporary check' }).click();
+  await expect(panel.getByText('Temporary check')).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toBeHidden();
+
   await expect(card.getByText('Temporary check')).toHaveCount(0);
   await expect(card.getByText('No procedures yet.')).toBeVisible();
+});
+
+test('keeps only the latest log on the card and the full history in the panel', async ({
+  page,
+}) => {
+  const name = uniqueName(CREATED_PREFIX);
+  cleanup.track('machines', name);
+  await addMachine(page, name);
+  const card = machineCard(page, name);
+
+  await card.getByLabel('Add procedure').fill('Oil the rails');
+  await card.getByRole('button', { name: 'Add', exact: true }).click();
+  await expect(card.getByText('Oil the rails')).toBeVisible();
+
+  for (const note of ['First E2E service', 'Second E2E service']) {
+    const procedure = card.getByRole('checkbox').first();
+    await procedure.click();
+    await expect(procedure).toBeChecked();
+    await card.getByRole('button', { name: /Log Checked Maintenance/ }).click();
+    const confirm = page.getByRole('dialog');
+    await confirm.getByLabel(/notes/i).fill(note);
+    await confirm.getByRole('button', { name: /Log Maintenance|Confirm/ }).click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await expect(card).toContainText(note);
+  }
+
+  // The card carries the newest entry only; the older one is a click away.
+  await expect(card).not.toContainText('First E2E service');
+
+  await card.getByRole('button', { name: /History/ }).click();
+  const panel = page.getByRole('dialog');
+  await expect(panel.getByText('Second E2E service')).toBeVisible();
+  await expect(panel.getByText('First E2E service')).toBeVisible();
 });
 
 test('search filters machines and reports no matches', async ({ page }) => {
