@@ -197,8 +197,8 @@ export function tutorialsForRole(role: UserRole): Tutorial[] {
         description: 'Correct details while keeping the team informed.',
         steps: [
           step('Find the job', 'Open the job that needs a correction or updated deadline.', '/', '[data-tour="job-board"] > *:first-child'),
-          step('Choose Edit', 'Use Edit when requirements change. Add a reason when changing a deadline; the job order number stays the same.', '/', '[data-tour="job-card"]'),
-          step('Keep repair processes current', 'On a repair job, add or remove processes in the same form. Every process you keep holds the percentage it already had.', '/', '[data-tour="job-card"]'),
+          step('Open the job panel', 'Edit opens one panel for the whole job: Details, Units, Sections and Team, each in its own tab. Add a reason when changing a deadline; the job order number stays the same.', '/', '[data-tour="job-card"]'),
+          step('Keep repair processes current', 'On a repair job, add or remove processes on the Details tab. Every process you keep holds the percentage it already had, and the panel warns before a change would clear one.', '/', '[data-tour="job-card"]'),
         ],
       },
       {
@@ -207,7 +207,7 @@ export function tutorialsForRole(role: UserRole): Tutorial[] {
         description: 'Put the right people on a job.',
         steps: [
           step('Choose the work', 'Check the job type and deadline before choosing collaborators.', '/', '[data-tour="job-board"] > *:first-child'),
-          step('Open Team', 'Use Team to add or change collaborators. Assign people before work begins when possible.', '/', '[data-tour="job-card"]'),
+          step('Open Team', 'Team opens the job panel on its Team tab, where you add collaborators and give each section an owner. Assign people before work begins when possible.', '/', '[data-tour="job-card"]'),
         ],
       },
     );
@@ -230,7 +230,7 @@ export function tutorialsForRole(role: UserRole): Tutorial[] {
         description: 'Keep machine checks and service history current.',
         steps: [
           step('Check machine readiness', 'Visit Maintenance before using equipment or planning service.', '/maintenance', '[data-tour="maintenance-page"] h1'),
-          step('Add a machine', 'Add equipment that needs regular procedures or a shared service record.', '/maintenance', '[data-tour="add-machine"]'),
+          step('Add a machine', 'Add equipment that needs regular procedures or a shared service record. Each card shows its checklist and latest log; History opens the full service record.', '/maintenance', '[data-tour="add-machine"]'),
         ],
       },
     );
