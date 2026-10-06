@@ -5,8 +5,7 @@ import { useAuth } from '../context/AuthProvider';
 import { useToast } from '../components/Toast';
 import { JobCard } from '../components/JobCard';
 import { JobForm, type JobFormValues } from '../components/JobForm';
-import { JobProgressModal } from '../components/JobProgressModal';
-import { SectionProgressModal } from '../components/SectionProgressModal';
+import { JobPanel, type JobPanelState, type JobPanelTab } from '../components/JobPanel';
 import { Modal } from '../components/Modal';
 import {
   JOB_DELETE_WARNING,
@@ -14,7 +13,6 @@ import {
   JobConfirmDialog,
   JobConfirmSummary,
 } from '../components/JobConfirmDialog';
-import { AssignJobModal } from '../components/AssignJobModal';
 import { EmptyState } from '../components/EmptyState';
 import { PageHeader } from '../components/PageHeader';
 import { JobCardSkeleton, Skeleton } from '../components/Skeleton';
@@ -48,13 +46,13 @@ export default function Jobs() {
   const [sort, setSort] = useState<SortKey>('due-asc');
   const [categoryFilter, setCategoryFilter] = useState<JobCategoryFilter>('all');
   const [adding, setAdding] = useState(false);
-  const [editing, setEditing] = useState<Job | null>(null);
+  /** The job panel: one job, open on one tab. Replaces the separate edit,
+   *  team, units and section dialogs. */
+  const [panel, setPanel] = useState<JobPanelState | null>(null);
   const [deleting, setDeleting] = useState<Job | null>(null);
-  const [assigning, setAssigning] = useState<Job | null>(null);
   const [starting, setStarting] = useState<Job | null>(null);
   const [completing, setCompleting] = useState<Job | null>(null);
-  const [updatingProgress, setUpdatingProgress] = useState<Job | null>(null);
-  const [updatingSections, setUpdatingSections] = useState<Job | null>(null);
+  const openPanel = (tab: JobPanelTab) => (job: Job) => setPanel({ job, tab });
 
   const activeJobs = useMemo(
     () => jobs.filter((job) => job.status !== 'completed'),
@@ -101,13 +99,16 @@ export default function Jobs() {
     if (saved) setAdding(false);
   }
 
-  async function handleEdit(values: JobFormValues) {
-    if (!editing) return;
-    const saved = await run(
-      () => jobService.editJob(actor!, assigner!, editing.id, values),
-      'Job updated.',
-    );
-    if (saved) setEditing(null);
+  async function handleSaveDetails(job: Job, values: JobFormValues): Promise<void | string> {
+    try {
+      await jobService.editJob(actor!, assigner!, job.id, values);
+    } catch (err) {
+      const message = errorMessage(err);
+      toast(message, 'error');
+      return message;
+    }
+    toast('Job updated.', 'success');
+    setPanel(null);
   }
 
   async function handleSaveCollaborators(
@@ -119,35 +120,33 @@ export default function Jobs() {
     const [primary] = collaborators;
     const suffix = collaborators.length > 1 ? ` + ${collaborators.length - 1}` : '';
     toast(`“${job.name}” collaborators updated: ${primary.name}${suffix}.`, 'success');
-    setAssigning(null);
+    setPanel(null);
   }
 
   async function handleClearCollaborators(job: Job) {
     await jobService.unassignJob(actor!, job.id, job.repairProcesses);
     toast(`“${job.name}” is unassigned.`, 'success');
-    setAssigning(null);
+    setPanel(null);
   }
 
-  async function handleUpdateProgress(completedQuantity: number) {
-    if (!updatingProgress) return;
+  async function handleUpdateProgress(job: Job, completedQuantity: number) {
     await jobService.updateJobProgress({
-      jobId: updatingProgress.id,
+      jobId: job.id,
       completedQuantity,
       currentUser: { ...actor!, role: assigner!.role },
     });
-    toast(`Progress updated to ${completedQuantity}/${updatingProgress.quantity} units.`, 'success');
-    setUpdatingProgress(null);
+    toast(`Progress updated to ${completedQuantity}/${job.quantity} units.`, 'success');
+    setPanel(null);
   }
 
-  async function handleUpdateSectionProgress(sections: JobSection[]) {
-    if (!updatingSections) return;
+  async function handleUpdateSectionProgress(job: Job, sections: JobSection[]) {
     await jobService.updateSectionProgress({
-      jobId: updatingSections.id,
+      jobId: job.id,
       sections,
       currentUser: { ...actor!, role: assigner!.role },
     });
     toast(`Section progress updated to ${overallSectionProgress(sections)}% overall.`, 'success');
-    setUpdatingSections(null);
+    setPanel(null);
   }
 
   return (
@@ -264,7 +263,7 @@ export default function Jobs() {
             ].map(([label, value]) => (
               <div key={label} className="surface px-4 py-3">
                 <p className="technical-label">{label}</p>
-                <p className={`font-display text-2xl font-bold tabular-nums ${
+                <p className={`readout text-2xl font-bold ${
                   label === 'Overdue' && Number(value) > 0 ? 'text-danger dark:text-red-300' : ''
                 }`}>
                   {value}
@@ -281,11 +280,11 @@ export default function Jobs() {
                   job={job}
                   onStart={setStarting}
                   onComplete={setCompleting}
-                  onEdit={setEditing}
+                  onEdit={openPanel('details')}
                   onDelete={isAdmin ? setDeleting : undefined}
-                  onAssign={isManagerOrAdmin ? setAssigning : undefined}
-                  onUpdateProgress={setUpdatingProgress}
-                  onUpdateSectionProgress={setUpdatingSections}
+                  onAssign={isManagerOrAdmin ? openPanel('team') : undefined}
+                  onUpdateProgress={openPanel('units')}
+                  onUpdateSectionProgress={openPanel('sections')}
                 />
               ))}
             </AnimatePresence>
@@ -294,33 +293,19 @@ export default function Jobs() {
       )}
       </div>
 
-      <AssignJobModal
-        job={assigning}
-        onSave={handleSaveCollaborators}
-        onClear={handleClearCollaborators}
-        onClose={() => setAssigning(null)}
+      <JobPanel
+        state={panel}
+        onTabChange={(tab) => setPanel((current) => (current ? { ...current, tab } : current))}
+        onClose={() => setPanel(null)}
+        onSaveDetails={handleSaveDetails}
+        onSaveUnits={handleUpdateProgress}
+        onSaveSections={handleUpdateSectionProgress}
+        onSaveTeam={handleSaveCollaborators}
+        onClearTeam={handleClearCollaborators}
       />
 
-      <JobProgressModal
-        job={updatingProgress}
-        onSave={handleUpdateProgress}
-        onClose={() => setUpdatingProgress(null)}
-      />
-
-      <SectionProgressModal
-        job={updatingSections}
-        onSave={handleUpdateSectionProgress}
-        onClose={() => setUpdatingSections(null)}
-      />
-
-      <Modal open={adding} title="Add job" onClose={() => setAdding(false)}>
+      <Modal open={adding} title="Add job" size="lg" onClose={() => setAdding(false)}>
         <JobForm submitLabel="Add job" onSubmit={handleAdd} onCancel={() => setAdding(false)} />
-      </Modal>
-
-      <Modal open={editing !== null} title="Edit job" onClose={() => setEditing(null)}>
-        {editing && (
-          <JobForm initial={editing} submitLabel="Save changes" onSubmit={handleEdit} onCancel={() => setEditing(null)} />
-        )}
       </Modal>
 
       <JobConfirmDialog

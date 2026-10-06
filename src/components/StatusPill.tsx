@@ -1,36 +1,25 @@
 import type { JobStatus } from '../types';
+import { Led, signalText, type SignalTone } from './Drafting';
 
 /** Pending → primary, In Progress → amber/caution, Completed → success,
- *  per the Flutter status chip colors. Tinted background + matching border. */
-const styles: Record<JobStatus, { label: string; cls: string }> = {
-  pending: {
-    label: 'PENDING',
-    cls: 'border-primary/30 bg-primary-soft text-primary dark:border-indigo-400/30 dark:bg-indigo-950 dark:text-indigo-300',
-  },
-  started: {
-    label: 'IN PROGRESS',
-    cls: 'border-amber-500/40 bg-amber-100 text-amber-800 dark:border-amber-400/40 dark:bg-amber-950 dark:text-amber-300',
-  },
-  completed: {
-    label: 'COMPLETED',
-    cls: 'border-secondary/40 bg-secondary-soft text-secondary dark:border-emerald-400/40 dark:bg-emerald-950 dark:text-emerald-300',
-  },
+ *  per the Flutter status chip colors. Drawn as an indicator lamp with a mono
+ *  label on a hairline outline, so status reads like an instrument panel. */
+const styles: Record<JobStatus, { label: string; tone: SignalTone }> = {
+  pending: { label: 'PENDING', tone: 'primary' },
+  started: { label: 'IN PROGRESS', tone: 'amber' },
+  completed: { label: 'COMPLETED', tone: 'secondary' },
 };
 
 export function StatusPill({ status, overdue = false }: { status: JobStatus; overdue?: boolean }) {
-  if (overdue) {
-    return (
-      <span className="inline-flex items-center rounded-md border border-danger/40 bg-danger-soft px-2.5 py-1 text-xs font-bold text-danger hc:border-current dark:border-red-400/40 dark:bg-red-950/80 dark:text-red-300">
-        OVERDUE
-      </span>
-    );
-  }
-  const s = styles[status];
+  const { label, tone } = overdue
+    ? { label: 'OVERDUE', tone: 'danger' as const }
+    : styles[status];
   return (
     <span
-      className={`inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-bold hc:border-current ${s.cls}`}
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-sm border border-current/25 bg-white/60 px-2 py-0.5 font-mono text-[0.68rem] font-semibold tracking-[0.08em] hc:border-current dark:bg-slate-950/40 ${signalText[tone]}`}
     >
-      {s.label}
+      <Led tone={tone} live={!overdue && status === 'started'} />
+      {label}
     </span>
   );
 }

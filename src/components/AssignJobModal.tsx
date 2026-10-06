@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Modal } from './Modal';
+import { FormError } from './FormError';
+import type { FormActivity } from './JobProgressModal';
 import { useAuth } from '../context/AuthProvider';
 import { watchAssignableUsers } from '../services/userService';
 import { Skeleton } from './Skeleton';
@@ -33,20 +35,29 @@ function saveErrorMessage(err: unknown): string {
   return 'Unable to update this assignment. It may have changed.';
 }
 
-export function AssignJobModal({
+type SaveTeam = (
+  job: Job,
+  collaborators: AssignTarget[],
+  sections: JobSection[],
+) => Promise<void>;
+
+/** Who is on the job and who owns which section. Hosted by the Team dialog
+ *  and by the job panel's Team tab; `showHeading` draws the ADD / EDIT
+ *  COLLABORATORS heading when the host's own title is something else. */
+export function JobTeamForm({
   job,
   onSave,
   onClear,
   onClose,
+  onActivity,
+  showHeading = false,
 }: {
   job: Job | null;
-  onSave: (
-    job: Job,
-    collaborators: AssignTarget[],
-    sections: JobSection[],
-  ) => Promise<void>;
+  onSave: SaveTeam;
   onClear: (job: Job) => Promise<void>;
   onClose: () => void;
+  onActivity?: (activity: FormActivity) => void;
+  showHeading?: boolean;
 }) {
   const { profile } = useAuth();
   const [role, setRole] = useState<UserRole>('staff');
@@ -119,6 +130,16 @@ export function AssignJobModal({
   }, [allowedRoles, canManage, job, role]);
 
   const availableUsers = users.filter((user) => !selected.some((c) => c.uid === user.uid));
+
+  const dirty =
+    job !== null &&
+    (selected.map((c) => c.uid).join('|') !== job.collaborators.map((c) => c.uid).join('|') ||
+      sections.some(
+        (section, index) => section.collaboratorUid !== job.repairProcesses[index]?.collaboratorUid,
+      ));
+  useEffect(() => {
+    onActivity?.({ dirty, busy: saving || clearing });
+  }, [dirty, saving, clearing, onActivity]);
 
   function addSelected() {
     const user = users.find((u) => u.uid === selectedUid);
@@ -198,190 +219,211 @@ export function AssignJobModal({
     }
   }
 
+  if (!job) return null;
+  return (
+    <div className="space-y-4">
+      {showHeading && (
+        <h3 className="technical-label">
+          {hasExistingCollaborators ? 'EDIT COLLABORATORS' : 'ADD COLLABORATORS'}
+        </h3>
+      )}
+      {/* The panel already names the job in its header. */}
+      {!showHeading && (
+        <p className="rounded border border-slate-200/70 bg-white/45 px-3 py-2 text-sm text-slate-600 dark:border-slate-800/80 dark:bg-slate-950/25 dark:text-slate-300">
+          <strong className="text-slate-700 dark:text-slate-200">{job.name}</strong> for{' '}
+          {job.customer}
+        </p>
+      )}
+
+      <div>
+        <label htmlFor="assign-role" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+          Role
+        </label>
+        <select
+          id="assign-role"
+          className="field"
+          value={role}
+          disabled={allowedRoles.length <= 1 || saving || clearing}
+          onChange={(e) => setRole(e.target.value as UserRole)}
+        >
+          {allowedRoles.map((r) => (
+            <option key={r} value={r}>
+              {roleLabel(r)}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-2">
+        <label htmlFor="assign-user" className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+          Active User
+        </label>
+        {loadError ? (
+          <p className="rounded-md border border-danger/20 bg-danger-soft/70 px-3 py-2 text-sm font-medium text-danger dark:bg-red-950/40 dark:text-red-300" role="alert">
+            {loadError}
+          </p>
+        ) : loading ? (
+          <div className="flex gap-2" aria-label="Loading assignable users">
+            <Skeleton className="h-10 flex-1" />
+            <Skeleton className="h-10 w-20" />
+          </div>
+        ) : users.length === 0 ? (
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            No active {roleLabel(role).toLowerCase()} users to assign.
+          </p>
+        ) : (
+          <div className="flex gap-2">
+            <select
+              id="assign-user"
+              className="field"
+              value={selectedUid}
+              disabled={saving || clearing || availableUsers.length === 0}
+              onChange={(e) => setSelectedUid(e.target.value)}
+            >
+              <option value="">
+                {availableUsers.length === 0 ? 'All users added' : 'Select user'}
+              </option>
+              {availableUsers.map((u) => (
+                <option key={u.uid} value={u.uid}>
+                  {collaboratorName(u)}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="btn-secondary shrink-0 px-3"
+              disabled={!selectedUid || saving || clearing}
+              onClick={addSelected}
+            >
+              <IconPlus className="h-4 w-4" /> Add Collaborator
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Selected Collaborators</p>
+        {selected.length === 0 ? (
+          <p className="text-sm text-slate-500 dark:text-slate-400">No collaborators selected.</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {selected.map((collaborator) => (
+              <span
+                key={collaborator.uid}
+                className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-primary/20 bg-primary-soft/80 px-3 py-1.5 text-sm font-semibold text-primary dark:border-indigo-300/20 dark:bg-indigo-950/80 dark:text-indigo-200"
+              >
+                <span className="truncate">
+                  {collaboratorName(collaborator)} ({roleLabel(collaborator.role)})
+                </span>
+                <button
+                  type="button"
+                  aria-label={`Remove ${collaboratorName(collaborator)}`}
+                  title="Remove collaborator"
+                  disabled={saving || clearing}
+                  className="rounded-full p-0.5 hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={() => removeCollaborator(collaborator.uid)}
+                >
+                  <IconClose className="h-3.5 w-3.5" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {sections.length > 0 && (
+        <div className="space-y-2" data-testid={`section-assignments-${job.id}`}>
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+            {sectionsHeading(job.category)}
+          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Every section needs an owner. One collaborator can hold several.
+          </p>
+          {sections.map((section) => {
+            const fieldId = `section-owner-${section.name.toLowerCase().replace(/\s+/g, '-')}`;
+            return (
+              <div key={section.name}>
+                <label
+                  htmlFor={fieldId}
+                  className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300"
+                >
+                  {section.name}
+                </label>
+                <select
+                  id={fieldId}
+                  className="field"
+                  value={
+                    selected.some((c) => c.uid === section.collaboratorUid)
+                      ? section.collaboratorUid
+                      : ''
+                  }
+                  disabled={saving || clearing || selected.length === 0}
+                  onChange={(e) => assignSection(section.name, e.target.value)}
+                >
+                  <option value="">
+                    {selected.length === 0 ? 'Add collaborators first' : 'Unassigned'}
+                  </option>
+                  {selected.map((collaborator) => (
+                    <option key={collaborator.uid} value={collaborator.uid}>
+                      {collaboratorName(collaborator)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <FormError message={saveError} />
+
+      <div className="flex flex-wrap justify-end gap-2">
+        {canClear && (
+          <button
+            type="button"
+            className="btn-secondary"
+            disabled={saving || clearing}
+            onClick={() => void handleClear()}
+          >
+            {clearing ? 'Clearing...' : 'Clear Collaborators'}
+          </button>
+        )}
+        <button type="button" className="btn-ghost" disabled={saving || clearing} onClick={onClose}>
+          Cancel
+        </button>
+        <button
+          type="button"
+          className="btn-primary"
+          disabled={saving || clearing || selected.length === 0}
+          onClick={() => void handleSave()}
+        >
+          {saving ? 'Saving...' : 'Save Collaborators'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function AssignJobModal({
+  job,
+  onSave,
+  onClear,
+  onClose,
+}: {
+  job: Job | null;
+  onSave: SaveTeam;
+  onClear: (job: Job) => Promise<void>;
+  onClose: () => void;
+}) {
+  const hasExistingCollaborators =
+    job !== null && (job.collaborators.length > 0 || job.assignedToUid.trim().length > 0);
   return (
     <Modal
       open={job !== null}
       title={hasExistingCollaborators ? 'EDIT COLLABORATORS' : 'ADD COLLABORATORS'}
       onClose={onClose}
     >
-      {job && (
-        <div className="space-y-4">
-          <p className="rounded-md border border-slate-200/70 bg-white/45 px-3 py-2 text-sm text-slate-600 dark:border-slate-800/80 dark:bg-slate-950/25 dark:text-slate-300">
-            <strong className="text-slate-700 dark:text-slate-200">{job.name}</strong> for{' '}
-            {job.customer}
-          </p>
-
-          <div>
-            <label htmlFor="assign-role" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Role
-            </label>
-            <select
-              id="assign-role"
-              className="field"
-              value={role}
-              disabled={allowedRoles.length <= 1 || saving || clearing}
-              onChange={(e) => setRole(e.target.value as UserRole)}
-            >
-              {allowedRoles.map((r) => (
-                <option key={r} value={r}>
-                  {roleLabel(r)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="assign-user" className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Active User
-            </label>
-            {loadError ? (
-              <p className="rounded-md border border-danger/20 bg-danger-soft/70 px-3 py-2 text-sm font-medium text-danger dark:bg-red-950/40 dark:text-red-300" role="alert">
-                {loadError}
-              </p>
-            ) : loading ? (
-              <div className="flex gap-2" aria-label="Loading assignable users">
-                <Skeleton className="h-10 flex-1" />
-                <Skeleton className="h-10 w-20" />
-              </div>
-            ) : users.length === 0 ? (
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                No active {roleLabel(role).toLowerCase()} users to assign.
-              </p>
-            ) : (
-              <div className="flex gap-2">
-                <select
-                  id="assign-user"
-                  className="field"
-                  value={selectedUid}
-                  disabled={saving || clearing || availableUsers.length === 0}
-                  onChange={(e) => setSelectedUid(e.target.value)}
-                >
-                  <option value="">
-                    {availableUsers.length === 0 ? 'All users added' : 'Select user'}
-                  </option>
-                  {availableUsers.map((u) => (
-                    <option key={u.uid} value={u.uid}>
-                      {collaboratorName(u)}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  className="btn-secondary shrink-0 px-3"
-                  disabled={!selectedUid || saving || clearing}
-                  onClick={addSelected}
-                >
-                  <IconPlus className="h-4 w-4" /> Add Collaborator
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Selected Collaborators</p>
-            {selected.length === 0 ? (
-              <p className="text-sm text-slate-500 dark:text-slate-400">No collaborators selected.</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {selected.map((collaborator) => (
-                  <span
-                    key={collaborator.uid}
-                    className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-primary/20 bg-primary-soft/80 px-3 py-1.5 text-sm font-semibold text-primary dark:border-indigo-300/20 dark:bg-indigo-950/80 dark:text-indigo-200"
-                  >
-                    <span className="truncate">
-                      {collaboratorName(collaborator)} ({roleLabel(collaborator.role)})
-                    </span>
-                    <button
-                      type="button"
-                      aria-label={`Remove ${collaboratorName(collaborator)}`}
-                      title="Remove collaborator"
-                      disabled={saving || clearing}
-                      className="rounded-full p-0.5 hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                      onClick={() => removeCollaborator(collaborator.uid)}
-                    >
-                      <IconClose className="h-3.5 w-3.5" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {sections.length > 0 && (
-            <div className="space-y-2" data-testid={`section-assignments-${job.id}`}>
-              <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                {sectionsHeading(job.category)}
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Every section needs an owner. One collaborator can hold several.
-              </p>
-              {sections.map((section) => {
-                const fieldId = `section-owner-${section.name.toLowerCase().replace(/\s+/g, '-')}`;
-                return (
-                  <div key={section.name}>
-                    <label
-                      htmlFor={fieldId}
-                      className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300"
-                    >
-                      {section.name}
-                    </label>
-                    <select
-                      id={fieldId}
-                      className="field"
-                      value={
-                        selected.some((c) => c.uid === section.collaboratorUid)
-                          ? section.collaboratorUid
-                          : ''
-                      }
-                      disabled={saving || clearing || selected.length === 0}
-                      onChange={(e) => assignSection(section.name, e.target.value)}
-                    >
-                      <option value="">
-                        {selected.length === 0 ? 'Add collaborators first' : 'Unassigned'}
-                      </option>
-                      {selected.map((collaborator) => (
-                        <option key={collaborator.uid} value={collaborator.uid}>
-                          {collaboratorName(collaborator)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {saveError && (
-            <p className="rounded-md border border-danger/20 bg-danger-soft/70 px-3 py-2 text-sm font-medium text-danger dark:bg-red-950/40 dark:text-red-300" role="alert">
-              {saveError}
-            </p>
-          )}
-
-          <div className="flex flex-wrap justify-end gap-2">
-            {canClear && (
-              <button
-                type="button"
-                className="btn-secondary"
-                disabled={saving || clearing}
-                onClick={() => void handleClear()}
-              >
-                {clearing ? 'Clearing...' : 'Clear Collaborators'}
-              </button>
-            )}
-            <button type="button" className="btn-ghost" disabled={saving || clearing} onClick={onClose}>
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="btn-primary"
-              disabled={saving || clearing || selected.length === 0}
-              onClick={() => void handleSave()}
-            >
-              {saving ? 'Saving...' : 'Save Collaborators'}
-            </button>
-          </div>
-        </div>
-      )}
+      <JobTeamForm job={job} onSave={onSave} onClear={onClear} onClose={onClose} />
     </Modal>
   );
 }

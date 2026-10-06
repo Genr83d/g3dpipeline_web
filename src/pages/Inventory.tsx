@@ -155,14 +155,14 @@ export default function Inventory() {
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="surface px-4 py-3">
               <p className="technical-label">Materials tracked</p>
-              <p className="font-display text-2xl font-bold tabular-nums">
+              <p className="readout text-2xl font-bold">
                 {materials.length}
               </p>
             </div>
             <div className="surface px-4 py-3">
               <p className="technical-label">Stock alerts</p>
               <p
-                className={`flex items-center gap-2 font-display text-2xl font-bold tabular-nums ${
+                className={`flex items-center gap-2 readout text-2xl font-bold ${
                   lowCount > 0
                     ? 'text-danger dark:text-red-400'
                     : 'text-secondary dark:text-emerald-300'

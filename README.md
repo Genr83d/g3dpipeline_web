@@ -86,6 +86,21 @@ for real and still fails. **Bumping the version means three edits**:
 re-download of the committed `.woff2` (the file name carries the version),
 followed by `npm run test:e2e:update-snapshots`.
 
+### JetBrains Mono (data face)
+
+Measured values — order numbers, counts, dates, percentages — and the small
+uppercase drafting labels are set in **JetBrains Mono**, through the `readout`
+and `technical-label` utilities in `src/index.css`. It carries data only, never
+running prose.
+
+Unlike Inter it is **bundled with the app**, not fetched from a CDN:
+`src/assets/fonts/jetbrains-mono-vf-5.3.0-latin-wght-normal.woff2` (the
+Fontsource variable file, ~40 KB), which Vite fingerprints and serves with the
+build. That keeps the E2E font stub above scoped to Inter alone — there is no
+second third-party request for the suite to intercept or to fail on. Bumping
+it means replacing that file (the name carries the version) and the `src` in
+the `@font-face`, then `npm run test:e2e:update-snapshots`.
+
 ## Brand assets
 
 The supplied GENR8 artwork is preserved at `public/brand/g3d-logo.png`. Product

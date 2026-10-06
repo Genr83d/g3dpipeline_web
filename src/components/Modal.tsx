@@ -1,6 +1,7 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAppearance } from '../context/AppearanceProvider';
+import { useDialogFocus } from '../hooks/useDialogFocus';
 import { IconClose } from './icons';
 
 export function Modal({
@@ -8,13 +9,18 @@ export function Modal({
   title,
   onClose,
   children,
+  size = 'md',
 }: {
   open: boolean;
   title: string;
   onClose: () => void;
   children: ReactNode;
+  /** `lg` for two-column forms such as Add job. */
+  size?: 'md' | 'lg';
 }) {
   const { motionReduced } = useAppearance();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogFocus(dialogRef, open);
 
   useEffect(() => {
     if (!open) return;
@@ -34,10 +40,11 @@ export function Modal({
           onMouseDown={(e) => e.target === e.currentTarget && onClose()}
         >
           <motion.div
+            ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
-            className="surface-strong flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col"
+            className={`surface-strong drafting-frame relative flex max-h-[calc(100dvh-2rem)] w-full flex-col ${size === 'lg' ? 'max-w-2xl' : 'max-w-md'}`}
             initial={motionReduced ? false : { y: 24, scale: 0.97, opacity: 0 }}
             animate={{ y: 0, scale: 1, opacity: 1 }}
             exit={motionReduced ? { opacity: 0 } : { y: 12, scale: 0.98, opacity: 0 }}
@@ -46,14 +53,14 @@ export function Modal({
             {/* Header stays pinned; only the body scrolls, so a long form can
                 always reach its own buttons. */}
             <div className="flex shrink-0 items-start justify-between gap-3 p-5 pb-4">
-              <h2 id="modal-title" className="font-display text-lg font-bold">
+              <h2 id="modal-title" className="font-display text-lg font-bold tracking-tight">
                 {title}
               </h2>
               <button
                 type="button"
                 aria-label="Close dialog"
                 title="Close"
-                className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                className="rounded p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                 onClick={onClose}
               >
                 <IconClose className="h-4 w-4" />

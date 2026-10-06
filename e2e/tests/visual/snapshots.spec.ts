@@ -68,6 +68,19 @@ test.describe('signed in', () => {
     await expect(dialog).toHaveScreenshot('add-job-form.png', { maxDiffPixelRatio: 0.02 });
   });
 
+  test('a compact machine card', async ({ page }) => {
+    await page.goto('/maintenance');
+    // Search down to the seeded machine: other tests add and remove machines,
+    // and only this one is never mutated. Its history is empty, so the card
+    // carries no relative date that could drift from one run to the next.
+    await page.getByRole('searchbox', { name: 'Search machines' }).fill(SEEDED.machine);
+    const card = page.locator('article').filter({ hasText: SEEDED.machine });
+    await expect(card).toHaveCount(1);
+    await page.addStyleTag({ content: FREEZE_ANIMATIONS });
+
+    await expect(card).toHaveScreenshot('machine-card.png', { maxDiffPixelRatio: 0.02 });
+  });
+
   test('the appearance settings page', async ({ page }) => {
     await page.goto('/settings/appearance');
     await expect(page.getByRole('heading', { name: 'Appearance', level: 1 })).toBeVisible({

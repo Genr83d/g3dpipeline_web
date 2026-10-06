@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useAuth } from '../context/AuthProvider';
 import { useMachinesOutlet } from '../routes/Workspace';
 import { MachineForm } from '../components/MachineForm';
@@ -8,9 +8,17 @@ import { useToast } from '../components/Toast';
 import { PageHeader } from '../components/PageHeader';
 import { FloatingAddButton } from '../components/FloatingAddButton';
 import { MachineCardSkeleton, Skeleton } from '../components/Skeleton';
+import { DimRule, Led } from '../components/Drafting';
+import {
+  InlineSpinner,
+  MachinePanel,
+  ProcedureAddForm,
+  sinceLabel,
+  type MachinePanelState,
+  type MachinePanelTab,
+} from '../components/MachinePanel';
 import {
   IconCheck,
-  IconClock,
   IconClose,
   IconCloudOff,
   IconEdit,
@@ -44,15 +52,6 @@ function lastMaintained(machine: Machine): Date | null {
   return machine.maintenanceHistory[0]?.completedAt ?? null;
 }
 
-function InlineSpinner() {
-  return (
-    <span
-      aria-hidden
-      className="h-4 w-4 animate-spin rounded-full border-2 border-current/30 border-t-current"
-    />
-  );
-}
-
 function IconButton({
   label,
   title,
@@ -74,7 +73,7 @@ function IconButton({
       aria-label={label}
       title={title}
       disabled={disabled}
-      className={`rounded-md border p-2 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${
+      className={`rounded border p-2 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${
         danger
           ? 'border-danger/15 bg-danger-soft/45 text-danger hover:bg-danger-soft dark:border-red-400/15 dark:bg-danger/10 dark:text-red-300 dark:hover:bg-danger/20'
           : 'border-slate-200/70 bg-white/45 text-slate-500 hover:bg-white/80 hover:text-slate-800 dark:border-slate-800/80 dark:bg-slate-950/20 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100'
@@ -93,9 +92,9 @@ function MachineCard({
   onEdit,
   onDelete,
   onAddProcedure,
-  onRemoveProcedure,
   onToggleProcedure,
   onLog,
+  onOpenPanel,
 }: {
   machine: Machine;
   busyKey: string | null;
@@ -103,37 +102,46 @@ function MachineCard({
   onEdit: (machine: Machine) => void;
   onDelete: (machine: Machine) => void;
   onAddProcedure: (machine: Machine, title: string) => Promise<boolean>;
-  onRemoveProcedure: (machine: Machine, procedure: MaintenanceProcedure) => void;
   onToggleProcedure: (machine: Machine, procedure: MaintenanceProcedure, isDone: boolean) => void;
   onLog: (machine: Machine) => void;
+  onOpenPanel: (machine: Machine, tab: MachinePanelTab) => void;
 }) {
-  const [procedureTitle, setProcedureTitle] = useState('');
   const checked = checkedProcedures(machine);
-  const addBusy = busyKey === `procedure-add:${machine.id}`;
   const logBusy = busyKey === `maintenance-log:${machine.id}`;
   const maintainedAt = lastMaintained(machine);
-
-  async function handleAddProcedure(e: FormEvent) {
-    e.preventDefault();
-    const title = procedureTitle.trim();
-    if (!title || addBusy) return;
-    const saved = await onAddProcedure(machine, title);
-    if (saved) setProcedureTitle('');
-  }
+  const [latest] = machine.maintenanceHistory;
+  const historyCount = machine.maintenanceHistory.length;
 
   return (
-    <article className="surface surface-hover flex flex-col gap-4 p-4">
+    <article
+      className={`surface surface-hover drafting-frame relative flex flex-col gap-4 p-4 ${
+        checked.length > 0 ? '[--tick:var(--color-secondary)] dark:[--tick:var(--color-emerald-400)]' : ''
+      }`}
+    >
+      {/* Title block */}
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 space-y-1">
-          <p className="technical-label">Machine</p>
-          <h2 className="line-clamp-2 font-display text-xl font-bold text-ink dark:text-slate-50">{machine.name}</h2>
-          <p className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300">
-            <IconMapPin className="h-4 w-4" />
-            <span className="truncate">{machine.location}</span>
-          </p>
-          <p className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300">
-            <IconClock className="h-4 w-4" />
-            Last maintained: {formatDate(maintainedAt)}
+        <div className="min-w-0 space-y-1.5">
+          <h2 className="line-clamp-2 font-display text-xl leading-7 font-bold tracking-tight text-ink dark:text-slate-50">
+            {machine.name}
+          </h2>
+          <p className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600 dark:text-slate-300">
+            <span className="inline-flex min-w-0 items-center gap-1.5">
+              <IconMapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+              <span className="truncate">{machine.location}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Led tone={maintainedAt ? 'secondary' : 'idle'} />
+              <span className="readout">
+                {maintainedAt ? (
+                  <>
+                    Last maintained: {formatDate(maintainedAt)}
+                    <span className="text-slate-400 dark:text-slate-500"> · {sinceLabel(maintainedAt)}</span>
+                  </>
+                ) : (
+                  'Not maintained yet'
+                )}
+              </span>
+            </span>
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
@@ -154,93 +162,72 @@ function MachineCard({
       </div>
 
       {machine.notes && (
-        <p className="rounded-md border border-slate-200/70 bg-white/45 px-3 py-2 text-sm text-slate-600 dark:border-slate-800/80 dark:bg-slate-950/25 dark:text-slate-300">
+        <button
+          type="button"
+          className="-mt-1 line-clamp-2 rounded text-left text-sm text-slate-600 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none dark:text-slate-300 dark:hover:text-slate-100"
+          title="Show full notes"
+          onClick={() => onOpenPanel(machine, 'details')}
+        >
           {machine.notes}
-        </p>
+        </button>
       )}
 
-      <section className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="technical-label">
-            Procedures
-          </h3>
-          <span
-            className={`rounded-md border px-2.5 py-1 text-xs font-semibold ${
-              checked.length > 0
-                ? 'border-secondary/20 bg-secondary-soft text-secondary dark:border-emerald-400/20 dark:bg-secondary/15 dark:text-emerald-300'
-                : 'border-slate-200/70 bg-white/45 text-slate-500 dark:border-slate-800/80 dark:bg-slate-950/25 dark:text-slate-400'
-            }`}
-          >
-            {checked.length} ready
-          </span>
-        </div>
+      <section className="space-y-2.5">
+        <DimRule
+          label={<h3 className="m-0">Procedures</h3>}
+          value={
+            <span
+              className={checked.length > 0 ? 'text-secondary dark:text-emerald-300' : undefined}
+            >
+              {checked.length} ready
+            </span>
+          }
+        />
 
         {machine.procedures.length === 0 ? (
           <p className="text-sm text-slate-500 dark:text-slate-400">No procedures yet.</p>
         ) : (
-          <div className="space-y-2">
+          <ul className="grid gap-x-4 gap-y-0.5 sm:grid-cols-2">
             {machine.procedures.map((procedure) => {
               const toggleBusy = busyKey === `procedure-toggle:${machine.id}:${procedure.id}`;
               const removeBusy = busyKey === `procedure-remove:${machine.id}:${procedure.id}`;
               return (
-                <div
-                  key={procedure.id}
-                  className="flex items-center gap-2 rounded-md border border-slate-200/70 bg-white/35 px-3 py-2 dark:border-slate-800/80 dark:bg-slate-950/20"
-                >
-                  <input
-                    id={`${machine.id}-${procedure.id}`}
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary dark:border-slate-700"
-                    checked={procedure.isDone}
-                    disabled={toggleBusy || removeBusy}
-                    onChange={(e) => onToggleProcedure(machine, procedure, e.target.checked)}
-                  />
+                <li key={procedure.id} className="min-w-0">
                   <label
                     htmlFor={`${machine.id}-${procedure.id}`}
-                    className={`min-w-0 flex-1 text-sm ${
-                      procedure.isDone
-                        ? 'font-medium text-secondary dark:text-emerald-300'
-                        : 'text-slate-700 dark:text-slate-200'
-                    }`}
+                    className="flex min-h-8 cursor-pointer items-center gap-2.5 rounded px-1 py-1 text-sm transition-colors hover:bg-slate-500/5 has-[:disabled]:cursor-wait"
                   >
-                    {procedure.title}
+                    <input
+                      id={`${machine.id}-${procedure.id}`}
+                      type="checkbox"
+                      className="h-4 w-4 shrink-0 rounded-sm accent-secondary dark:accent-emerald-400"
+                      checked={procedure.isDone}
+                      disabled={toggleBusy || removeBusy}
+                      onChange={(e) => onToggleProcedure(machine, procedure, e.target.checked)}
+                    />
+                    <span
+                      className={`min-w-0 transition-colors ${
+                        procedure.isDone
+                          ? 'font-medium text-secondary dark:text-emerald-300'
+                          : 'text-slate-700 dark:text-slate-200'
+                      }`}
+                    >
+                      {procedure.title}
+                    </span>
+                    {toggleBusy && <InlineSpinner />}
                   </label>
-                  <button
-                    type="button"
-                    aria-label={`Remove ${procedure.title}`}
-                    title="Remove procedure"
-                    disabled={toggleBusy || removeBusy}
-                    className="rounded-md p-1.5 text-slate-400 hover:bg-danger-soft hover:text-danger focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-danger/15 dark:hover:text-red-300"
-                    onClick={() => onRemoveProcedure(machine, procedure)}
-                  >
-                    {removeBusy ? <InlineSpinner /> : <IconTrash className="h-4 w-4" />}
-                  </button>
-                </div>
+                </li>
               );
             })}
-          </div>
+          </ul>
         )}
 
-        <form className="flex gap-2" onSubmit={handleAddProcedure}>
-          <label htmlFor={`add-procedure-${machine.id}`} className="sr-only">
-            Add procedure
-          </label>
-          <input
-            id={`add-procedure-${machine.id}`}
-            className="field py-2"
-            value={procedureTitle}
-            onChange={(e) => setProcedureTitle(e.target.value)}
-            placeholder="New procedure"
-          />
-          <button
-            type="submit"
-            className="btn-secondary shrink-0 px-3"
-            disabled={addBusy || procedureTitle.trim().length === 0}
-          >
-            {addBusy ? <InlineSpinner /> : <IconPlus className="h-4 w-4" />}
-            Add
-          </button>
-        </form>
+        <ProcedureAddForm
+          machine={machine}
+          idPrefix="add-procedure"
+          busy={busyKey === `procedure-add:${machine.id}`}
+          onAdd={onAddProcedure}
+        />
 
         <button
           type="button"
@@ -253,37 +240,52 @@ function MachineCard({
         </button>
       </section>
 
-      <section className="border-t border-slate-200/70 pt-4 dark:border-slate-800/80">
-        <div className="technical-label mb-3 flex items-center gap-2">
-          <IconHistory className="h-4 w-4" />
-          Maintenance History
-        </div>
-        {machine.maintenanceHistory.length === 0 ? (
-          <p className="text-sm text-slate-500 dark:text-slate-400">No history yet.</p>
+      <section className="space-y-2.5">
+        <DimRule
+          label={
+            <span className="inline-flex items-center gap-1.5">
+              <IconHistory className="h-3.5 w-3.5" /> Last log
+            </span>
+          }
+          value={latest ? formatDate(latest.completedAt) : undefined}
+        />
+        {latest ? (
+          <div className="space-y-1 text-sm">
+            {latest.completedByName && (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Completed by {latest.completedByName}
+              </p>
+            )}
+            <p className="text-slate-600 dark:text-slate-300">{latest.procedureTitles.join(', ')}</p>
+            {latest.notes && (
+              <p className="flex items-start gap-1.5 text-slate-600 dark:text-slate-300">
+                <IconNote className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+                <span className="line-clamp-3 min-w-0">{latest.notes}</span>
+              </p>
+            )}
+          </div>
         ) : (
-          <ol className="space-y-3">
-            {machine.maintenanceHistory.map((record, index) => (
-              <li key={`${record.completedAt?.toISOString() ?? 'unknown'}-${index}`} className="border-l-2 border-primary/35 pl-3">
-                <p className="text-sm font-semibold">{formatDate(record.completedAt)}</p>
-                {record.completedByName && (
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Completed by {record.completedByName}
-                  </p>
-                )}
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                  {record.procedureTitles.join(', ')}
-                </p>
-                {record.notes && (
-                  <p className="mt-1.5 flex items-start gap-1.5 rounded-md border border-slate-200/70 bg-white/45 px-2.5 py-1.5 text-sm text-slate-600 dark:border-slate-800/80 dark:bg-slate-950/25 dark:text-slate-300">
-                    <IconNote className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
-                    <span className="min-w-0">{record.notes}</span>
-                  </p>
-                )}
-              </li>
-            ))}
-          </ol>
+          <p className="text-sm text-slate-500 dark:text-slate-400">No history yet.</p>
         )}
       </section>
+
+      <div className="mt-auto flex items-center gap-2 border-t border-[var(--rule)] pt-3">
+        <button
+          type="button"
+          className="btn-ghost shrink-0 py-2 whitespace-nowrap"
+          onClick={() => onOpenPanel(machine, 'history')}
+        >
+          <IconHistory className="h-4 w-4" /> History
+          <span className="readout text-xs text-slate-400">{historyCount}</span>
+        </button>
+        <button
+          type="button"
+          className="btn-ghost min-w-0 flex-1 py-2 whitespace-nowrap"
+          onClick={() => onOpenPanel(machine, 'procedures')}
+        >
+          <IconWrench className="h-4 w-4" /> Manage procedures
+        </button>
+      </div>
     </article>
   );
 }
@@ -299,6 +301,7 @@ export default function Maintenance() {
   const [confirming, setConfirming] = useState<Machine | null>(null);
   const [maintenanceNotes, setMaintenanceNotes] = useState('');
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [panel, setPanel] = useState<MachinePanelState | null>(null);
 
   const visible = useMemo(() => filterMachines(machines, search), [machines, search]);
   const totalProcedures = useMemo(
@@ -424,7 +427,7 @@ export default function Maintenance() {
             <Skeleton className="h-24" />
           </div>
           <Skeleton className="h-11" />
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid items-start gap-4 md:grid-cols-2 2xl:grid-cols-3">
             <MachineCardSkeleton />
             <MachineCardSkeleton />
           </div>
@@ -445,15 +448,15 @@ export default function Maintenance() {
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="surface px-4 py-3">
               <p className="technical-label">Machines</p>
-              <p className="font-display text-2xl font-bold">{machines.length}</p>
+              <p className="readout text-2xl font-bold">{machines.length}</p>
             </div>
             <div className="surface px-4 py-3">
               <p className="technical-label">Procedures</p>
-              <p className="font-display text-2xl font-bold">{totalProcedures}</p>
+              <p className="readout text-2xl font-bold">{totalProcedures}</p>
             </div>
             <div className="surface px-4 py-3">
               <p className="technical-label">Ready to log</p>
-              <p className="font-display text-2xl font-bold text-secondary tabular-nums dark:text-emerald-300">{readyProcedures}</p>
+              <p className="readout text-2xl font-bold text-secondary dark:text-emerald-300">{readyProcedures}</p>
             </div>
           </div>
 
@@ -502,7 +505,9 @@ export default function Maintenance() {
               }
             />
           ) : (
-            <div className="grid gap-4 xl:grid-cols-2">
+            // items-start: a machine with a long checklist no longer stretches
+            // its neighbour to match.
+            <div className="grid items-start gap-4 md:grid-cols-2 2xl:grid-cols-3">
               {visible.map((machine) => (
                 <MachineCard
                   key={machine.id}
@@ -512,9 +517,9 @@ export default function Maintenance() {
                   onEdit={setEditing}
                   onDelete={setDeleting}
                   onAddProcedure={handleAddProcedure}
-                  onRemoveProcedure={handleRemoveProcedure}
                   onToggleProcedure={handleToggleProcedure}
                   onLog={openConfirmLog}
+                  onOpenPanel={(m, tab) => setPanel({ machineId: m.id, tab })}
                 />
               ))}
             </div>
@@ -525,6 +530,20 @@ export default function Maintenance() {
       <FloatingAddButton label="Add machine" onClick={() => setAdding(true)}>
         <IconPlus className="h-4 w-4" /> Add machine
       </FloatingAddButton>
+
+      <MachinePanel
+        state={panel}
+        machines={machines}
+        busyKey={busyKey}
+        onTabChange={(tab) => setPanel((current) => (current ? { ...current, tab } : current))}
+        onClose={() => setPanel(null)}
+        onEdit={(machine) => {
+          setPanel(null);
+          setEditing(machine);
+        }}
+        onAddProcedure={handleAddProcedure}
+        onRemoveProcedure={handleRemoveProcedure}
+      />
 
       <Modal open={adding} title="Add machine" onClose={() => setAdding(false)}>
         <MachineForm onSubmit={handleAddMachine} onCancel={() => setAdding(false)} />
@@ -576,7 +595,7 @@ export default function Maintenance() {
             <p className="text-sm">
               Log the checked maintenance for <strong>{confirming.name}</strong>?
             </p>
-            <div className="rounded-md border border-slate-200/70 bg-white/45 px-3 py-2 text-sm dark:border-slate-800/80 dark:bg-slate-950/25">
+            <div className="rounded border border-slate-200/70 bg-white/45 px-3 py-2 text-sm dark:border-slate-800/80 dark:bg-slate-950/25">
               {checkedProcedures(confirming).map((procedure) => procedure.title).join(', ')}
             </div>
             <div className="space-y-1.5">
