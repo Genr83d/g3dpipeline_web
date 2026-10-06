@@ -81,9 +81,11 @@ describe('job progress permissions', () => {
 });
 
 describe('job progress UI', () => {
-  it('shows per-job counts and an 80% fractional bar when collapsed', async () => {
+  // The card is compact by default now — there is no expand/collapse toggle,
+  // so the units readout and its bar are always on the card.
+  it('shows per-job counts and an 80% fractional bar on the card', () => {
     render(<JobCard job={job()} onUpdateProgress={vi.fn()} />);
-    await userEvent.click(screen.getByRole('button', { name: 'Collapse Badge batch' }));
+    expect(screen.queryByRole('button', { name: /^(Collapse|Expand) / })).not.toBeInTheDocument();
     expect(screen.getByText('12/15 units')).toBeInTheDocument();
     expect(screen.getByText('80%')).toBeInTheDocument();
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '80');
