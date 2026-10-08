@@ -220,6 +220,9 @@ A strong sheet with corner ticks that slides in from the right (spring, stiffnes
 - **Gauge:** 6px track tinted at 12-15% of the signal hue; the fill travels to its value over 700ms on `cubic-bezier(0.16, 1, 0.3, 1)`.
 - **Dimension Rule:** a section rule drawn as `├ LABEL ──────── value ┤`.
 
+### Operations Report (print)
+The downloadable PDF (`src/reports/pdf/`, mirrored by the mobile app) is the drafting sheet on paper. It is A4 and always light. The first page opens with an ink title block on a print-scale 42/210 grid (10.5pt fine, 52.5pt major), with a Drafting Blue rule along its foot. Sections are numbered in mono (`01`–`08`, then `A` for the appendix), each under a hairline ink rule. KPI tiles are sheets with corner ticks: teal for output, blue for flow, red when something is overdue. Tables use mono for every figure and repeat their header on each page. A short table never splits. A heading never sits alone at the foot of a page. Status hue appears only on lamps, bars, and ticks. Inter and JetBrains Mono are embedded as static TTFs, and the text uses fixed English month names so web and mobile print identical pages.
+
 ## Do's and Don'ts
 
 ### Do:
