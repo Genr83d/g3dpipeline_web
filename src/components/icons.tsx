@@ -82,3 +82,7 @@ export const IconHistory = (p: IconProps = {}) =>
   base(<path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5M12 7v5l3 2" />, p);
 export const IconNote = (p: IconProps = {}) =>
   base(<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M9 13h6M9 17h4" />, p);
+export const IconReport = (p: IconProps = {}) =>
+  base(<path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8zM14 3v5h5M9 17v-3M12 17v-6M15 17v-4" />, p);
+export const IconDownload = (p: IconProps = {}) =>
+  base(<path d="M12 4v11M7 10.5l5 5 5-5M5 20h14" />, p);

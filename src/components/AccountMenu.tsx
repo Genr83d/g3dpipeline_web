@@ -6,11 +6,11 @@ import { signOut } from '../services/authService';
 import { useAppearance } from '../context/AppearanceProvider';
 import { roleLabel } from '../lib/roles';
 import {
-  IconUser, IconShield, IconMoon, IconUsers, IconInfo, IconLogout, IconMail,
+  IconUser, IconShield, IconMoon, IconUsers, IconInfo, IconLogout, IconMail, IconReport,
 } from './icons';
 
 export function AccountMenu() {
-  const { profile, firstName, isAdmin } = useAuth();
+  const { profile, firstName, isAdmin, isManagerOrAdmin } = useAuth();
   const { motionReduced } = useAppearance();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -39,6 +39,9 @@ export function AccountMenu() {
     { to: '/settings/personal', icon: <IconMail className="h-4 w-4" />, label: 'Personal information' },
     { to: '/settings/security', icon: <IconShield className="h-4 w-4" />, label: 'Security' },
     { to: '/settings/appearance', icon: <IconMoon className="h-4 w-4" />, label: 'Appearance' },
+    ...(isManagerOrAdmin
+      ? [{ to: '/reports', icon: <IconReport className="h-4 w-4" />, label: 'Reports' }]
+      : []),
     ...(isAdmin
       ? [{ to: '/settings/users', icon: <IconUsers className="h-4 w-4" />, label: 'User management' }]
       : []),
