@@ -7,8 +7,9 @@ import { afterEach } from 'vitest';
 // target: under a loaded run that timer fires mid-test and throws, which
 // surfaces as an unhandled error from whichever suite happened to be running.
 // A no-op keeps the behaviour under test (finding and measuring the target)
-// and drops only the part jsdom cannot do.
-if (!Element.prototype.scrollIntoView) {
+// and drops only the part jsdom cannot do. Suites that opt into the node
+// environment (the PDF renderer) have no Element at all.
+if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = function scrollIntoView() {};
 }
 
