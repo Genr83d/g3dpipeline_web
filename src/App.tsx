@@ -16,6 +16,7 @@ const Inventory = lazy(() => import('./pages/Inventory'));
 const Maintenance = lazy(() => import('./pages/Maintenance'));
 const Summary = lazy(() => import('./pages/Summary'));
 const Archive = lazy(() => import('./pages/Archive'));
+const Reports = lazy(() => import('./pages/Reports'));
 const Profile = lazy(() => import('./pages/settings/Profile'));
 const PersonalInfo = lazy(() => import('./pages/settings/PersonalInfo'));
 const Security = lazy(() => import('./pages/settings/Security'));
@@ -27,6 +28,11 @@ const About = lazy(() => import('./pages/settings/About'));
 function AdminOnly({ children }: { children: ReactNode }) {
   const { isAdmin } = useAuth();
   return isAdmin ? <>{children}</> : <Navigate to="/" replace />;
+}
+
+function ManagerOrAdminOnly({ children }: { children: ReactNode }) {
+  const { isManagerOrAdmin } = useAuth();
+  return isManagerOrAdmin ? <>{children}</> : <Navigate to="/" replace />;
 }
 
 function NonAwfOnly({ children }: { children: ReactNode }) {
@@ -133,6 +139,14 @@ export default function App() {
                   />
                   <Route path="summary" element={<RouteSuspense><Summary /></RouteSuspense>} />
                   <Route path="archive" element={<RouteSuspense><Archive /></RouteSuspense>} />
+                  <Route
+                    path="reports"
+                    element={
+                      <ManagerOrAdminOnly>
+                        <RouteSuspense><Reports /></RouteSuspense>
+                      </ManagerOrAdminOnly>
+                    }
+                  />
                   <Route
                     path="settings/*"
                     element={

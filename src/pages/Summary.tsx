@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useInventoryOutlet, useJobsOutlet } from '../routes/Workspace';
 import { useAuth } from '../context/AuthProvider';
 import { isLowStock, stockRatio } from '../services/inventoryService';
@@ -10,7 +11,15 @@ import { Skeleton, StatCardSkeleton } from '../components/Skeleton';
 import { StatusPill } from '../components/StatusPill';
 import { formatDate, formatQuantity } from '../lib/format';
 import { isOverdue } from '../types';
-import { IconAlert, IconBox, IconCheck, IconClock, IconCloudOff, IconPlay } from '../components/icons';
+import {
+  IconAlert,
+  IconBox,
+  IconCheck,
+  IconClock,
+  IconCloudOff,
+  IconPlay,
+  IconReport,
+} from '../components/icons';
 
 /** How many of the most pressing jobs the urgent list surfaces. */
 const URGENT_JOB_LIMIT = 5;
@@ -18,7 +27,7 @@ const URGENT_JOB_LIMIT = 5;
 export default function Summary() {
   const { jobs, loading, error, retry } = useJobsOutlet();
   const { materials, loading: inventoryLoading } = useInventoryOutlet();
-  const { profile } = useAuth();
+  const { profile, isManagerOrAdmin } = useAuth();
   const isAwf = profile?.role === 'awf';
 
   const stats = useMemo(() => {
@@ -54,6 +63,14 @@ export default function Summary() {
         title="Summary"
         eyebrow="Operations overview"
         subtitle={isAwf ? 'A live look at AWF production.' : 'A live look at the whole shop.'}
+        actions={
+          isManagerOrAdmin ? (
+            <Link to="/reports" className="btn-ghost w-full sm:w-auto">
+              <IconReport className="h-4 w-4" />
+              Reports
+            </Link>
+          ) : undefined
+        }
       />
 
       {loading ? (
