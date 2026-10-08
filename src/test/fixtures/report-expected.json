@@ -1,0 +1,3102 @@
+{
+ "september": {
+  "title": "Operations Report",
+  "periodLabel": "September 2026",
+  "previousPeriodLabel": "August 2026",
+  "rangeStart": "2026-09-01T00:00:00",
+  "rangeLastDay": "2026-09-30T00:00:00",
+  "generatedAt": "2026-10-08T12:00:00",
+  "generatedBy": "Kimberly Reid",
+  "inProgress": false,
+  "kpis": {
+   "completed": 16,
+   "units": 185,
+   "received": 18,
+   "onTimeRate": 0.75,
+   "medianTurnaroundDays": 2.5208,
+   "openOverdue": 3
+  },
+  "previousKpis": {
+   "completed": 4,
+   "units": 32,
+   "received": 6,
+   "onTimeRate": 0.75,
+   "medianTurnaroundDays": 2.7083,
+   "openOverdue": 0
+  },
+  "throughput": {
+   "granularity": "day",
+   "buckets": [
+    {
+     "label": "1",
+     "longLabel": "1 Sep 2026",
+     "received": 1,
+     "completed": 0
+    },
+    {
+     "label": "2",
+     "longLabel": "2 Sep 2026",
+     "received": 1,
+     "completed": 0
+    },
+    {
+     "label": "3",
+     "longLabel": "3 Sep 2026",
+     "received": 1,
+     "completed": 0
+    },
+    {
+     "label": "4",
+     "longLabel": "4 Sep 2026",
+     "received": 0,
+     "completed": 1
+    },
+    {
+     "label": "5",
+     "longLabel": "5 Sep 2026",
+     "received": 1,
+     "completed": 1
+    },
+    {
+     "label": "6",
+     "longLabel": "6 Sep 2026",
+     "received": 4,
+     "completed": 2
+    },
+    {
+     "label": "7",
+     "longLabel": "7 Sep 2026",
+     "received": 1,
+     "completed": 0
+    },
+    {
+     "label": "8",
+     "longLabel": "8 Sep 2026",
+     "received": 0,
+     "completed": 1
+    },
+    {
+     "label": "9",
+     "longLabel": "9 Sep 2026",
+     "received": 1,
+     "completed": 0
+    },
+    {
+     "label": "10",
+     "longLabel": "10 Sep 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "11",
+     "longLabel": "11 Sep 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "12",
+     "longLabel": "12 Sep 2026",
+     "received": 0,
+     "completed": 1
+    },
+    {
+     "label": "13",
+     "longLabel": "13 Sep 2026",
+     "received": 0,
+     "completed": 1
+    },
+    {
+     "label": "14",
+     "longLabel": "14 Sep 2026",
+     "received": 0,
+     "completed": 1
+    },
+    {
+     "label": "15",
+     "longLabel": "15 Sep 2026",
+     "received": 0,
+     "completed": 1
+    },
+    {
+     "label": "16",
+     "longLabel": "16 Sep 2026",
+     "received": 1,
+     "completed": 0
+    },
+    {
+     "label": "17",
+     "longLabel": "17 Sep 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "18",
+     "longLabel": "18 Sep 2026",
+     "received": 1,
+     "completed": 0
+    },
+    {
+     "label": "19",
+     "longLabel": "19 Sep 2026",
+     "received": 0,
+     "completed": 1
+    },
+    {
+     "label": "20",
+     "longLabel": "20 Sep 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "21",
+     "longLabel": "21 Sep 2026",
+     "received": 1,
+     "completed": 2
+    },
+    {
+     "label": "22",
+     "longLabel": "22 Sep 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "23",
+     "longLabel": "23 Sep 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "24",
+     "longLabel": "24 Sep 2026",
+     "received": 1,
+     "completed": 0
+    },
+    {
+     "label": "25",
+     "longLabel": "25 Sep 2026",
+     "received": 2,
+     "completed": 0
+    },
+    {
+     "label": "26",
+     "longLabel": "26 Sep 2026",
+     "received": 0,
+     "completed": 2
+    },
+    {
+     "label": "27",
+     "longLabel": "27 Sep 2026",
+     "received": 0,
+     "completed": 1
+    },
+    {
+     "label": "28",
+     "longLabel": "28 Sep 2026",
+     "received": 1,
+     "completed": 0
+    },
+    {
+     "label": "29",
+     "longLabel": "29 Sep 2026",
+     "received": 1,
+     "completed": 0
+    },
+    {
+     "label": "30",
+     "longLabel": "30 Sep 2026",
+     "received": 0,
+     "completed": 1
+    }
+   ]
+  },
+  "categories": [
+   {
+    "category": "manufacturing",
+    "label": "Manufacturing",
+    "jobs": 8,
+    "units": 159,
+    "onTimeRate": 0.5,
+    "medianTurnaroundDays": 3.2813
+   },
+   {
+    "category": "design",
+    "label": "Design",
+    "jobs": 3,
+    "units": 12,
+    "onTimeRate": 1,
+    "medianTurnaroundDays": 1.5826
+   },
+   {
+    "category": "repair",
+    "label": "Repair",
+    "jobs": 3,
+    "units": 8,
+    "onTimeRate": 1,
+    "medianTurnaroundDays": 0.3021
+   },
+   {
+    "category": "miscellaneous",
+    "label": "Miscellaneous",
+    "jobs": 1,
+    "units": 5,
+    "onTimeRate": 1,
+    "medianTurnaroundDays": 5.1146
+   },
+   {
+    "category": "softwareDevelopment",
+    "label": "Software development",
+    "jobs": 1,
+    "units": 1,
+    "onTimeRate": 1,
+    "medianTurnaroundDays": 1.9688
+   }
+  ],
+  "customers": {
+   "rows": [
+    {
+     "name": "Kingston Makerspace",
+     "jobs": 4,
+     "units": 78,
+     "onTimeRate": 0.5
+    },
+    {
+     "name": "Ocho Rios Tours",
+     "jobs": 3,
+     "units": 29,
+     "onTimeRate": 0.6667
+    },
+    {
+     "name": "Blue Mountain Coffee Co.",
+     "jobs": 2,
+     "units": 11,
+     "onTimeRate": 1
+    },
+    {
+     "name": "island grill",
+     "jobs": 2,
+     "units": 10,
+     "onTimeRate": 1
+    },
+    {
+     "name": "No customer",
+     "jobs": 2,
+     "units": 6,
+     "onTimeRate": 1
+    },
+    {
+     "name": "Mandeville Academy",
+     "jobs": 1,
+     "units": 40,
+     "onTimeRate": 0
+    },
+    {
+     "name": "Spanish Town Clinic",
+     "jobs": 1,
+     "units": 10,
+     "onTimeRate": 1
+    },
+    {
+     "name": "Negril Surf Shop",
+     "jobs": 1,
+     "units": 1,
+     "onTimeRate": 1
+    }
+   ],
+   "totalCustomers": 8,
+   "otherCustomers": 0,
+   "otherJobs": 0
+  },
+  "team": [
+   {
+    "name": "Ana Brown",
+    "completed": 6,
+    "contributed": 8,
+    "units": 71,
+    "onTimeRate": 0.875
+   },
+   {
+    "name": "Marcus Hall",
+    "completed": 4,
+    "contributed": 8,
+    "units": 51,
+    "onTimeRate": 0.75
+   },
+   {
+    "name": "Devon Clarke",
+    "completed": 3,
+    "contributed": 8,
+    "units": 99,
+    "onTimeRate": 0.75
+   },
+   {
+    "name": "Kimberly Reid",
+    "completed": 2,
+    "contributed": 5,
+    "units": 65,
+    "onTimeRate": 0.8
+   }
+  ],
+  "delivery": {
+   "late": [
+    {
+     "orderNumber": "G3D-FX0024",
+     "name": "Pins batch B crossing 50",
+     "customer": "Kingston Makerspace",
+     "dueDate": "2026-09-12T23:59:00",
+     "completedAt": "2026-09-15T14:00:00",
+     "daysLate": 3
+    },
+    {
+     "orderNumber": "G3D-FX0004",
+     "name": "Fixture job 4",
+     "customer": "Mandeville Academy",
+     "dueDate": "2026-09-26T23:59:00",
+     "completedAt": "2026-09-27T16:00:00",
+     "daysLate": 1
+    },
+    {
+     "orderNumber": "G3D-FX0008",
+     "name": "Fixture job 8",
+     "customer": "Kingston Makerspace",
+     "dueDate": "2026-09-07T23:59:00",
+     "completedAt": "2026-09-08T10:00:00",
+     "daysLate": 1
+    },
+    {
+     "orderNumber": "G3D-FX0022",
+     "name": "Fixture job 22",
+     "customer": "Ocho Rios Tours",
+     "dueDate": "2026-09-20T23:59:00",
+     "completedAt": "2026-09-21T16:00:00",
+     "daysLate": 1
+    }
+   ],
+   "overdue": [
+    {
+     "orderNumber": "G3D-FX0027",
+     "name": "Overdue enclosure",
+     "customer": "Port Royal Marine",
+     "dueDate": "2026-09-20T23:59:00",
+     "daysOverdue": 10,
+     "assignedToName": "Devon Clarke"
+    },
+    {
+     "orderNumber": "G3D-FX0028",
+     "name": "Overdue then finished in October",
+     "customer": "Negril Surf Shop",
+     "dueDate": "2026-09-25T23:59:00",
+     "daysOverdue": 5,
+     "assignedToName": "Ana Brown"
+    },
+    {
+     "orderNumber": "G3D-FX0025",
+     "name": "Restored after QA (stale completedAt)",
+     "customer": "UWI Engineering",
+     "dueDate": "2026-09-30T23:59:00",
+     "daysOverdue": 1,
+     "assignedToName": "Kimberly Reid"
+    }
+   ],
+   "reschedules": [
+    {
+     "orderNumber": "G3D-FX0027",
+     "name": "Overdue enclosure",
+     "changedAt": "2026-09-12T16:00:00",
+     "previousDueDate": "2026-09-14T23:59:00",
+     "dueDate": "2026-09-20T23:59:00",
+     "note": "Waiting on replacement hinge",
+     "changedByName": "Kimberly Reid"
+    },
+    {
+     "orderNumber": "G3D-FX0031",
+     "name": "Last-second September completion",
+     "changedAt": "2026-09-29T12:00:00",
+     "previousDueDate": null,
+     "dueDate": "2026-09-30T23:59:00",
+     "note": "",
+     "changedByName": "Unrecorded"
+    }
+   ]
+  },
+  "materials": {
+   "consumed": [
+    {
+     "material": "Pin Backs",
+     "unit": "pcs",
+     "units": 125
+    },
+    {
+     "material": "Lamina",
+     "unit": "sheets",
+     "units": 2
+    }
+   ],
+   "stock": [
+    {
+     "name": "PLA Black",
+     "unit": "kg",
+     "quantity": 0.75,
+     "totalQuantity": 0,
+     "ratio": 0,
+     "low": false
+    },
+    {
+     "name": "Pin Backs",
+     "unit": "pcs",
+     "quantity": 120,
+     "totalQuantity": 1000,
+     "ratio": 0.12,
+     "low": true
+    },
+    {
+     "name": "Lamina",
+     "unit": "sheets",
+     "quantity": 9,
+     "totalQuantity": 20,
+     "ratio": 0.45,
+     "low": false
+    }
+   ]
+  },
+  "maintenance": {
+   "machines": [
+    {
+     "name": "Bambu X1C",
+     "location": "",
+     "services": []
+    },
+    {
+     "name": "Laser Cutter",
+     "location": "Workshop",
+     "services": []
+    },
+    {
+     "name": "Prusa MK4 #1",
+     "location": "Bay A",
+     "services": [
+      {
+       "completedAt": "2026-09-03T08:00:00",
+       "procedures": [
+        "Clean bed",
+        "Lubricate rods"
+       ],
+       "completedByName": "Ana Brown",
+       "notes": "Bed re-levelled"
+      },
+      {
+       "completedAt": "2026-09-24T17:45:00",
+       "procedures": [
+        "Belt tension"
+       ],
+       "completedByName": "Unrecorded",
+       "notes": ""
+      }
+     ]
+    }
+   ],
+   "totalServices": 2,
+   "idleMachines": [
+    "Bambu X1C",
+    "Laser Cutter"
+   ]
+  },
+  "appendix": [
+   {
+    "orderNumber": "G3D-FX0023",
+    "name": "Pins batch A",
+    "customer": "Kingston Makerspace",
+    "categoryLabel": "Manufacturing",
+    "quantity": 30,
+    "completedAt": "2026-09-04T11:00:00",
+    "dueDate": "2026-09-05T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0007",
+    "name": "Fixture job 7",
+    "customer": "Blue Mountain Coffee Co.",
+    "categoryLabel": "Software development",
+    "quantity": 1,
+    "completedAt": "2026-09-05T08:30:00",
+    "dueDate": "2026-09-09T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0013",
+    "name": "Fixture job 13",
+    "customer": "Ocho Rios Tours",
+    "categoryLabel": "Repair",
+    "quantity": 2,
+    "completedAt": "2026-09-06T11:30:00",
+    "dueDate": "2026-09-09T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0021",
+    "name": "Fixture job 21",
+    "customer": "island grill",
+    "categoryLabel": "Repair",
+    "quantity": 5,
+    "completedAt": "2026-09-06T16:30:00",
+    "dueDate": "2026-09-08T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0008",
+    "name": "Fixture job 8",
+    "customer": "Kingston Makerspace",
+    "categoryLabel": "Manufacturing",
+    "quantity": 2,
+    "completedAt": "2026-09-08T10:00:00",
+    "dueDate": "2026-09-07T23:59:00",
+    "onTime": false
+   },
+   {
+    "orderNumber": "G3D-FX0006",
+    "name": "Fixture job 6",
+    "customer": "No customer",
+    "categoryLabel": "Manufacturing",
+    "quantity": 5,
+    "completedAt": "2026-09-12T15:00:00",
+    "dueDate": "2026-09-13T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0015",
+    "name": "Fixture job 15",
+    "customer": "Blue Mountain Coffee Co.",
+    "categoryLabel": "Manufacturing",
+    "quantity": 10,
+    "completedAt": "2026-09-13T08:00:00",
+    "dueDate": "2026-09-14T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0018",
+    "name": "Fixture job 18",
+    "customer": "island grill",
+    "categoryLabel": "Miscellaneous",
+    "quantity": 5,
+    "completedAt": "2026-09-14T12:00:00",
+    "dueDate": "2026-09-19T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0024",
+    "name": "Pins batch B crossing 50",
+    "customer": "Kingston Makerspace",
+    "categoryLabel": "Manufacturing",
+    "quantity": 45,
+    "completedAt": "2026-09-15T14:00:00",
+    "dueDate": "2026-09-12T23:59:00",
+    "onTime": false
+   },
+   {
+    "orderNumber": "G3D-FX0010",
+    "name": "Fixture job 10",
+    "customer": "Kingston Makerspace",
+    "categoryLabel": "Design",
+    "quantity": 1,
+    "completedAt": "2026-09-19T09:30:00",
+    "dueDate": "2026-09-19T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0002",
+    "name": "Fixture job 2",
+    "customer": "Negril Surf Shop",
+    "categoryLabel": "Repair",
+    "quantity": 1,
+    "completedAt": "2026-09-21T11:00:00",
+    "dueDate": "2026-09-24T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0022",
+    "name": "Fixture job 22",
+    "customer": "Ocho Rios Tours",
+    "categoryLabel": "Manufacturing",
+    "quantity": 2,
+    "completedAt": "2026-09-21T16:00:00",
+    "dueDate": "2026-09-20T23:59:00",
+    "onTime": false
+   },
+   {
+    "orderNumber": "G3D-FX0014",
+    "name": "Fixture job 14",
+    "customer": "Spanish Town Clinic",
+    "categoryLabel": "Design",
+    "quantity": 10,
+    "completedAt": "2026-09-26T09:30:00",
+    "dueDate": "2026-09-26T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0005",
+    "name": "Fixture job 5",
+    "customer": "Ocho Rios Tours",
+    "categoryLabel": "Manufacturing",
+    "quantity": 25,
+    "completedAt": "2026-09-26T15:30:00",
+    "dueDate": "2026-09-28T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0004",
+    "name": "Fixture job 4",
+    "customer": "Mandeville Academy",
+    "categoryLabel": "Manufacturing",
+    "quantity": 40,
+    "completedAt": "2026-09-27T16:00:00",
+    "dueDate": "2026-09-26T23:59:00",
+    "onTime": false
+   },
+   {
+    "orderNumber": "G3D-FX0031",
+    "name": "Last-second September completion",
+    "customer": "No customer",
+    "categoryLabel": "Design",
+    "quantity": 1,
+    "completedAt": "2026-09-30T23:59:00",
+    "dueDate": "2026-09-30T23:59:00",
+    "onTime": true
+   }
+  ],
+  "undatedCompletions": 1
+ },
+ "october-in-progress": {
+  "title": "Operations Report",
+  "periodLabel": "October 2026",
+  "previousPeriodLabel": "September 2026",
+  "rangeStart": "2026-10-01T00:00:00",
+  "rangeLastDay": "2026-10-31T00:00:00",
+  "generatedAt": "2026-10-08T12:00:00",
+  "generatedBy": "Kimberly Reid",
+  "inProgress": true,
+  "kpis": {
+   "completed": 5,
+   "units": 56,
+   "received": 5,
+   "onTimeRate": 0.8,
+   "medianTurnaroundDays": 2.1979,
+   "openOverdue": 3
+  },
+  "previousKpis": {
+   "completed": 16,
+   "units": 185,
+   "received": 18,
+   "onTimeRate": 0.75,
+   "medianTurnaroundDays": 2.5208,
+   "openOverdue": 3
+  },
+  "throughput": {
+   "granularity": "day",
+   "buckets": [
+    {
+     "label": "1",
+     "longLabel": "1 Oct 2026",
+     "received": 3,
+     "completed": 0
+    },
+    {
+     "label": "2",
+     "longLabel": "2 Oct 2026",
+     "received": 1,
+     "completed": 0
+    },
+    {
+     "label": "3",
+     "longLabel": "3 Oct 2026",
+     "received": 0,
+     "completed": 3
+    },
+    {
+     "label": "4",
+     "longLabel": "4 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "5",
+     "longLabel": "5 Oct 2026",
+     "received": 1,
+     "completed": 2
+    },
+    {
+     "label": "6",
+     "longLabel": "6 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "7",
+     "longLabel": "7 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "8",
+     "longLabel": "8 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "9",
+     "longLabel": "9 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "10",
+     "longLabel": "10 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "11",
+     "longLabel": "11 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "12",
+     "longLabel": "12 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "13",
+     "longLabel": "13 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "14",
+     "longLabel": "14 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "15",
+     "longLabel": "15 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "16",
+     "longLabel": "16 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "17",
+     "longLabel": "17 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "18",
+     "longLabel": "18 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "19",
+     "longLabel": "19 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "20",
+     "longLabel": "20 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "21",
+     "longLabel": "21 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "22",
+     "longLabel": "22 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "23",
+     "longLabel": "23 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "24",
+     "longLabel": "24 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "25",
+     "longLabel": "25 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "26",
+     "longLabel": "26 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "27",
+     "longLabel": "27 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "28",
+     "longLabel": "28 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "29",
+     "longLabel": "29 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "30",
+     "longLabel": "30 Oct 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "31",
+     "longLabel": "31 Oct 2026",
+     "received": 0,
+     "completed": 0
+    }
+   ]
+  },
+  "categories": [
+   {
+    "category": "manufacturing",
+    "label": "Manufacturing",
+    "jobs": 2,
+    "units": 44,
+    "onTimeRate": 0.5,
+    "medianTurnaroundDays": 15.5
+   },
+   {
+    "category": "softwareDevelopment",
+    "label": "Software development",
+    "jobs": 2,
+    "units": 2,
+    "onTimeRate": 1,
+    "medianTurnaroundDays": 2.1042
+   },
+   {
+    "category": "design",
+    "label": "Design",
+    "jobs": 1,
+    "units": 10,
+    "onTimeRate": 1,
+    "medianTurnaroundDays": 4.2813
+   }
+  ],
+  "customers": {
+   "rows": [
+    {
+     "name": "No customer",
+     "jobs": 2,
+     "units": 11,
+     "onTimeRate": 1
+    },
+    {
+     "name": "Blue Mountain Coffee Co.",
+     "jobs": 1,
+     "units": 40,
+     "onTimeRate": 1
+    },
+    {
+     "name": "Negril Surf Shop",
+     "jobs": 1,
+     "units": 4,
+     "onTimeRate": 0
+    },
+    {
+     "name": "Spanish Town Clinic",
+     "jobs": 1,
+     "units": 1,
+     "onTimeRate": 1
+    }
+   ],
+   "totalCustomers": 4,
+   "otherCustomers": 0,
+   "otherJobs": 0
+  },
+  "team": [
+   {
+    "name": "Ana Brown",
+    "completed": 2,
+    "contributed": 3,
+    "units": 15,
+    "onTimeRate": 0.6667
+   },
+   {
+    "name": "Kimberly Reid",
+    "completed": 2,
+    "contributed": 3,
+    "units": 51,
+    "onTimeRate": 1
+   },
+   {
+    "name": "Marcus Hall",
+    "completed": 0,
+    "contributed": 2,
+    "units": 11,
+    "onTimeRate": 1
+   },
+   {
+    "name": "Devon Clarke",
+    "completed": 1,
+    "contributed": 1,
+    "units": 1,
+    "onTimeRate": 1
+   }
+  ],
+  "delivery": {
+   "late": [
+    {
+     "orderNumber": "G3D-FX0028",
+     "name": "Overdue then finished in October",
+     "customer": "Negril Surf Shop",
+     "dueDate": "2026-09-25T23:59:00",
+     "completedAt": "2026-10-03T10:00:00",
+     "daysLate": 8
+    }
+   ],
+   "overdue": [
+    {
+     "orderNumber": "G3D-FX0027",
+     "name": "Overdue enclosure",
+     "customer": "Port Royal Marine",
+     "dueDate": "2026-09-20T23:59:00",
+     "daysOverdue": 18,
+     "assignedToName": "Devon Clarke"
+    },
+    {
+     "orderNumber": "G3D-FX0025",
+     "name": "Restored after QA (stale completedAt)",
+     "customer": "UWI Engineering",
+     "dueDate": "2026-09-30T23:59:00",
+     "daysOverdue": 8,
+     "assignedToName": "Kimberly Reid"
+    },
+    {
+     "orderNumber": "G3D-FX0030",
+     "name": "Created after September",
+     "customer": "Ocho Rios Tours",
+     "dueDate": "2026-10-06T23:59:00",
+     "daysOverdue": 2,
+     "assignedToName": ""
+    }
+   ],
+   "reschedules": []
+  },
+  "materials": {
+   "consumed": [],
+   "stock": [
+    {
+     "name": "PLA Black",
+     "unit": "kg",
+     "quantity": 0.75,
+     "totalQuantity": 0,
+     "ratio": 0,
+     "low": false
+    },
+    {
+     "name": "Pin Backs",
+     "unit": "pcs",
+     "quantity": 120,
+     "totalQuantity": 1000,
+     "ratio": 0.12,
+     "low": true
+    },
+    {
+     "name": "Lamina",
+     "unit": "sheets",
+     "quantity": 9,
+     "totalQuantity": 20,
+     "ratio": 0.45,
+     "low": false
+    }
+   ]
+  },
+  "maintenance": {
+   "machines": [
+    {
+     "name": "Bambu X1C",
+     "location": "",
+     "services": []
+    },
+    {
+     "name": "Laser Cutter",
+     "location": "Workshop",
+     "services": []
+    },
+    {
+     "name": "Prusa MK4 #1",
+     "location": "Bay A",
+     "services": []
+    }
+   ],
+   "totalServices": 0,
+   "idleMachines": [
+    "Bambu X1C",
+    "Laser Cutter",
+    "Prusa MK4 #1"
+   ]
+  },
+  "appendix": [
+   {
+    "orderNumber": "G3D-FX0003",
+    "name": "Fixture job 3",
+    "customer": "No customer",
+    "categoryLabel": "Software development",
+    "quantity": 1,
+    "completedAt": "2026-10-03T09:30:00",
+    "dueDate": "2026-10-06T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0028",
+    "name": "Overdue then finished in October",
+    "customer": "Negril Surf Shop",
+    "categoryLabel": "Manufacturing",
+    "quantity": 4,
+    "completedAt": "2026-10-03T10:00:00",
+    "dueDate": "2026-09-25T23:59:00",
+    "onTime": false
+   },
+   {
+    "orderNumber": "G3D-FX0016",
+    "name": "Fixture job 16",
+    "customer": "Spanish Town Clinic",
+    "categoryLabel": "Software development",
+    "quantity": 1,
+    "completedAt": "2026-10-03T14:00:00",
+    "dueDate": "2026-10-03T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0012",
+    "name": "Fixture job 12",
+    "customer": "Blue Mountain Coffee Co.",
+    "categoryLabel": "Manufacturing",
+    "quantity": 40,
+    "completedAt": "2026-10-05T08:00:00",
+    "dueDate": "2026-10-07T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0020",
+    "name": "Fixture job 20",
+    "customer": "No customer",
+    "categoryLabel": "Design",
+    "quantity": 10,
+    "completedAt": "2026-10-05T16:00:00",
+    "dueDate": "2026-10-10T23:59:00",
+    "onTime": true
+   }
+  ],
+  "undatedCompletions": 1
+ },
+ "q3": {
+  "title": "Operations Report",
+  "periodLabel": "Q3 2026",
+  "previousPeriodLabel": "Q2 2026",
+  "rangeStart": "2026-07-01T00:00:00",
+  "rangeLastDay": "2026-09-30T00:00:00",
+  "generatedAt": "2026-10-08T12:00:00",
+  "generatedBy": "Kimberly Reid",
+  "inProgress": false,
+  "kpis": {
+   "completed": 21,
+   "units": 218,
+   "received": 25,
+   "onTimeRate": 0.7619,
+   "medianTurnaroundDays": 3.0104,
+   "openOverdue": 3
+  },
+  "previousKpis": {
+   "completed": 0,
+   "units": 0,
+   "received": 0,
+   "onTimeRate": null,
+   "medianTurnaroundDays": null,
+   "openOverdue": 0
+  },
+  "throughput": {
+   "granularity": "week",
+   "buckets": [
+    {
+     "label": "1 Jul",
+     "longLabel": "Week of 1 Jul 2026",
+     "received": 1,
+     "completed": 0
+    },
+    {
+     "label": "8 Jul",
+     "longLabel": "Week of 8 Jul 2026",
+     "received": 0,
+     "completed": 1
+    },
+    {
+     "label": "15 Jul",
+     "longLabel": "Week of 15 Jul 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "22 Jul",
+     "longLabel": "Week of 22 Jul 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "29 Jul",
+     "longLabel": "Week of 29 Jul 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "5 Aug",
+     "longLabel": "Week of 5 Aug 2026",
+     "received": 1,
+     "completed": 0
+    },
+    {
+     "label": "12 Aug",
+     "longLabel": "Week of 12 Aug 2026",
+     "received": 1,
+     "completed": 2
+    },
+    {
+     "label": "19 Aug",
+     "longLabel": "Week of 19 Aug 2026",
+     "received": 4,
+     "completed": 1
+    },
+    {
+     "label": "26 Aug",
+     "longLabel": "Week of 26 Aug 2026",
+     "received": 1,
+     "completed": 1
+    },
+    {
+     "label": "2 Sep",
+     "longLabel": "Week of 2 Sep 2026",
+     "received": 8,
+     "completed": 5
+    },
+    {
+     "label": "9 Sep",
+     "longLabel": "Week of 9 Sep 2026",
+     "received": 1,
+     "completed": 4
+    },
+    {
+     "label": "16 Sep",
+     "longLabel": "Week of 16 Sep 2026",
+     "received": 3,
+     "completed": 3
+    },
+    {
+     "label": "23 Sep",
+     "longLabel": "Week of 23 Sep 2026",
+     "received": 5,
+     "completed": 3
+    },
+    {
+     "label": "30 Sep",
+     "longLabel": "Week of 30 Sep 2026",
+     "received": 0,
+     "completed": 1
+    }
+   ]
+  },
+  "categories": [
+   {
+    "category": "manufacturing",
+    "label": "Manufacturing",
+    "jobs": 8,
+    "units": 159,
+    "onTimeRate": 0.5,
+    "medianTurnaroundDays": 3.2813
+   },
+   {
+    "category": "design",
+    "label": "Design",
+    "jobs": 4,
+    "units": 13,
+    "onTimeRate": 1,
+    "medianTurnaroundDays": 2.2965
+   },
+   {
+    "category": "miscellaneous",
+    "label": "Miscellaneous",
+    "jobs": 3,
+    "units": 35,
+    "onTimeRate": 1,
+    "medianTurnaroundDays": 2.3438
+   },
+   {
+    "category": "repair",
+    "label": "Repair",
+    "jobs": 3,
+    "units": 8,
+    "onTimeRate": 1,
+    "medianTurnaroundDays": 0.3021
+   },
+   {
+    "category": "softwareDevelopment",
+    "label": "Software development",
+    "jobs": 3,
+    "units": 3,
+    "onTimeRate": 0.6667,
+    "medianTurnaroundDays": 3.0729
+   }
+  ],
+  "customers": {
+   "rows": [
+    {
+     "name": "Kingston Makerspace",
+     "jobs": 4,
+     "units": 78,
+     "onTimeRate": 0.5
+    },
+    {
+     "name": "Ocho Rios Tours",
+     "jobs": 3,
+     "units": 29,
+     "onTimeRate": 0.6667
+    },
+    {
+     "name": "Mandeville Academy",
+     "jobs": 2,
+     "units": 41,
+     "onTimeRate": 0.5
+    },
+    {
+     "name": "Montego Print House",
+     "jobs": 2,
+     "units": 30,
+     "onTimeRate": 1
+    },
+    {
+     "name": "Blue Mountain Coffee Co.",
+     "jobs": 2,
+     "units": 11,
+     "onTimeRate": 1
+    },
+    {
+     "name": "island grill",
+     "jobs": 2,
+     "units": 10,
+     "onTimeRate": 1
+    },
+    {
+     "name": "No customer",
+     "jobs": 2,
+     "units": 6,
+     "onTimeRate": 1
+    },
+    {
+     "name": "UWI Engineering",
+     "jobs": 2,
+     "units": 2,
+     "onTimeRate": 0.5
+    },
+    {
+     "name": "Spanish Town Clinic",
+     "jobs": 1,
+     "units": 10,
+     "onTimeRate": 1
+    },
+    {
+     "name": "Negril Surf Shop",
+     "jobs": 1,
+     "units": 1,
+     "onTimeRate": 1
+    }
+   ],
+   "totalCustomers": 10,
+   "otherCustomers": 0,
+   "otherJobs": 0
+  },
+  "team": [
+   {
+    "name": "Ana Brown",
+    "completed": 8,
+    "contributed": 10,
+    "units": 73,
+    "onTimeRate": 0.8
+   },
+   {
+    "name": "Devon Clarke",
+    "completed": 3,
+    "contributed": 10,
+    "units": 125,
+    "onTimeRate": 0.8
+   },
+   {
+    "name": "Marcus Hall",
+    "completed": 5,
+    "contributed": 9,
+    "units": 76,
+    "onTimeRate": 0.7778
+   },
+   {
+    "name": "Kimberly Reid",
+    "completed": 4,
+    "contributed": 7,
+    "units": 71,
+    "onTimeRate": 0.8571
+   }
+  ],
+  "delivery": {
+   "late": [
+    {
+     "orderNumber": "G3D-FX0024",
+     "name": "Pins batch B crossing 50",
+     "customer": "Kingston Makerspace",
+     "dueDate": "2026-09-12T23:59:00",
+     "completedAt": "2026-09-15T14:00:00",
+     "daysLate": 3
+    },
+    {
+     "orderNumber": "G3D-FX0001",
+     "name": "Fixture job 1",
+     "customer": "UWI Engineering",
+     "dueDate": "2026-08-11T23:59:00",
+     "completedAt": "2026-08-12T11:00:00",
+     "daysLate": 1
+    },
+    {
+     "orderNumber": "G3D-FX0004",
+     "name": "Fixture job 4",
+     "customer": "Mandeville Academy",
+     "dueDate": "2026-09-26T23:59:00",
+     "completedAt": "2026-09-27T16:00:00",
+     "daysLate": 1
+    },
+    {
+     "orderNumber": "G3D-FX0008",
+     "name": "Fixture job 8",
+     "customer": "Kingston Makerspace",
+     "dueDate": "2026-09-07T23:59:00",
+     "completedAt": "2026-09-08T10:00:00",
+     "daysLate": 1
+    },
+    {
+     "orderNumber": "G3D-FX0022",
+     "name": "Fixture job 22",
+     "customer": "Ocho Rios Tours",
+     "dueDate": "2026-09-20T23:59:00",
+     "completedAt": "2026-09-21T16:00:00",
+     "daysLate": 1
+    }
+   ],
+   "overdue": [
+    {
+     "orderNumber": "G3D-FX0027",
+     "name": "Overdue enclosure",
+     "customer": "Port Royal Marine",
+     "dueDate": "2026-09-20T23:59:00",
+     "daysOverdue": 10,
+     "assignedToName": "Devon Clarke"
+    },
+    {
+     "orderNumber": "G3D-FX0028",
+     "name": "Overdue then finished in October",
+     "customer": "Negril Surf Shop",
+     "dueDate": "2026-09-25T23:59:00",
+     "daysOverdue": 5,
+     "assignedToName": "Ana Brown"
+    },
+    {
+     "orderNumber": "G3D-FX0025",
+     "name": "Restored after QA (stale completedAt)",
+     "customer": "UWI Engineering",
+     "dueDate": "2026-09-30T23:59:00",
+     "daysOverdue": 1,
+     "assignedToName": "Kimberly Reid"
+    }
+   ],
+   "reschedules": [
+    {
+     "orderNumber": "G3D-FX0027",
+     "name": "Overdue enclosure",
+     "changedAt": "2026-09-12T16:00:00",
+     "previousDueDate": "2026-09-14T23:59:00",
+     "dueDate": "2026-09-20T23:59:00",
+     "note": "Waiting on replacement hinge",
+     "changedByName": "Kimberly Reid"
+    },
+    {
+     "orderNumber": "G3D-FX0031",
+     "name": "Last-second September completion",
+     "changedAt": "2026-09-29T12:00:00",
+     "previousDueDate": null,
+     "dueDate": "2026-09-30T23:59:00",
+     "note": "",
+     "changedByName": "Unrecorded"
+    }
+   ]
+  },
+  "materials": {
+   "consumed": [
+    {
+     "material": "Pin Backs",
+     "unit": "pcs",
+     "units": 125
+    },
+    {
+     "material": "Lamina",
+     "unit": "sheets",
+     "units": 2
+    }
+   ],
+   "stock": [
+    {
+     "name": "PLA Black",
+     "unit": "kg",
+     "quantity": 0.75,
+     "totalQuantity": 0,
+     "ratio": 0,
+     "low": false
+    },
+    {
+     "name": "Pin Backs",
+     "unit": "pcs",
+     "quantity": 120,
+     "totalQuantity": 1000,
+     "ratio": 0.12,
+     "low": true
+    },
+    {
+     "name": "Lamina",
+     "unit": "sheets",
+     "quantity": 9,
+     "totalQuantity": 20,
+     "ratio": 0.45,
+     "low": false
+    }
+   ]
+  },
+  "maintenance": {
+   "machines": [
+    {
+     "name": "Bambu X1C",
+     "location": "",
+     "services": []
+    },
+    {
+     "name": "Laser Cutter",
+     "location": "Workshop",
+     "services": [
+      {
+       "completedAt": "2026-07-15T09:00:00",
+       "procedures": [
+        "Mirror clean"
+       ],
+       "completedByName": "Marcus Hall",
+       "notes": ""
+      }
+     ]
+    },
+    {
+     "name": "Prusa MK4 #1",
+     "location": "Bay A",
+     "services": [
+      {
+       "completedAt": "2026-08-02T08:00:00",
+       "procedures": [
+        "Nozzle swap"
+       ],
+       "completedByName": "Devon Clarke",
+       "notes": ""
+      },
+      {
+       "completedAt": "2026-09-03T08:00:00",
+       "procedures": [
+        "Clean bed",
+        "Lubricate rods"
+       ],
+       "completedByName": "Ana Brown",
+       "notes": "Bed re-levelled"
+      },
+      {
+       "completedAt": "2026-09-24T17:45:00",
+       "procedures": [
+        "Belt tension"
+       ],
+       "completedByName": "Unrecorded",
+       "notes": ""
+      }
+     ]
+    }
+   ],
+   "totalServices": 4,
+   "idleMachines": [
+    "Bambu X1C"
+   ]
+  },
+  "appendix": [
+   {
+    "orderNumber": "G3D-FX0017",
+    "name": "Fixture job 17",
+    "customer": "Mandeville Academy",
+    "categoryLabel": "Software development",
+    "quantity": 1,
+    "completedAt": "2026-07-10T12:00:00",
+    "dueDate": "2026-07-10T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0001",
+    "name": "Fixture job 1",
+    "customer": "UWI Engineering",
+    "categoryLabel": "Software development",
+    "quantity": 1,
+    "completedAt": "2026-08-12T11:00:00",
+    "dueDate": "2026-08-11T23:59:00",
+    "onTime": false
+   },
+   {
+    "orderNumber": "G3D-FX0019",
+    "name": "Fixture job 19",
+    "customer": "Montego Print House",
+    "categoryLabel": "Miscellaneous",
+    "quantity": 5,
+    "completedAt": "2026-08-16T17:30:00",
+    "dueDate": "2026-08-20T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0009",
+    "name": "Fixture job 9",
+    "customer": "Montego Print House",
+    "categoryLabel": "Miscellaneous",
+    "quantity": 25,
+    "completedAt": "2026-08-25T11:00:00",
+    "dueDate": "2026-08-25T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0011",
+    "name": "Fixture job 11",
+    "customer": "UWI Engineering",
+    "categoryLabel": "Design",
+    "quantity": 1,
+    "completedAt": "2026-08-26T13:30:00",
+    "dueDate": "2026-08-27T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0023",
+    "name": "Pins batch A",
+    "customer": "Kingston Makerspace",
+    "categoryLabel": "Manufacturing",
+    "quantity": 30,
+    "completedAt": "2026-09-04T11:00:00",
+    "dueDate": "2026-09-05T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0007",
+    "name": "Fixture job 7",
+    "customer": "Blue Mountain Coffee Co.",
+    "categoryLabel": "Software development",
+    "quantity": 1,
+    "completedAt": "2026-09-05T08:30:00",
+    "dueDate": "2026-09-09T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0013",
+    "name": "Fixture job 13",
+    "customer": "Ocho Rios Tours",
+    "categoryLabel": "Repair",
+    "quantity": 2,
+    "completedAt": "2026-09-06T11:30:00",
+    "dueDate": "2026-09-09T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0021",
+    "name": "Fixture job 21",
+    "customer": "island grill",
+    "categoryLabel": "Repair",
+    "quantity": 5,
+    "completedAt": "2026-09-06T16:30:00",
+    "dueDate": "2026-09-08T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0008",
+    "name": "Fixture job 8",
+    "customer": "Kingston Makerspace",
+    "categoryLabel": "Manufacturing",
+    "quantity": 2,
+    "completedAt": "2026-09-08T10:00:00",
+    "dueDate": "2026-09-07T23:59:00",
+    "onTime": false
+   },
+   {
+    "orderNumber": "G3D-FX0006",
+    "name": "Fixture job 6",
+    "customer": "No customer",
+    "categoryLabel": "Manufacturing",
+    "quantity": 5,
+    "completedAt": "2026-09-12T15:00:00",
+    "dueDate": "2026-09-13T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0015",
+    "name": "Fixture job 15",
+    "customer": "Blue Mountain Coffee Co.",
+    "categoryLabel": "Manufacturing",
+    "quantity": 10,
+    "completedAt": "2026-09-13T08:00:00",
+    "dueDate": "2026-09-14T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0018",
+    "name": "Fixture job 18",
+    "customer": "island grill",
+    "categoryLabel": "Miscellaneous",
+    "quantity": 5,
+    "completedAt": "2026-09-14T12:00:00",
+    "dueDate": "2026-09-19T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0024",
+    "name": "Pins batch B crossing 50",
+    "customer": "Kingston Makerspace",
+    "categoryLabel": "Manufacturing",
+    "quantity": 45,
+    "completedAt": "2026-09-15T14:00:00",
+    "dueDate": "2026-09-12T23:59:00",
+    "onTime": false
+   },
+   {
+    "orderNumber": "G3D-FX0010",
+    "name": "Fixture job 10",
+    "customer": "Kingston Makerspace",
+    "categoryLabel": "Design",
+    "quantity": 1,
+    "completedAt": "2026-09-19T09:30:00",
+    "dueDate": "2026-09-19T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0002",
+    "name": "Fixture job 2",
+    "customer": "Negril Surf Shop",
+    "categoryLabel": "Repair",
+    "quantity": 1,
+    "completedAt": "2026-09-21T11:00:00",
+    "dueDate": "2026-09-24T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0022",
+    "name": "Fixture job 22",
+    "customer": "Ocho Rios Tours",
+    "categoryLabel": "Manufacturing",
+    "quantity": 2,
+    "completedAt": "2026-09-21T16:00:00",
+    "dueDate": "2026-09-20T23:59:00",
+    "onTime": false
+   },
+   {
+    "orderNumber": "G3D-FX0014",
+    "name": "Fixture job 14",
+    "customer": "Spanish Town Clinic",
+    "categoryLabel": "Design",
+    "quantity": 10,
+    "completedAt": "2026-09-26T09:30:00",
+    "dueDate": "2026-09-26T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0005",
+    "name": "Fixture job 5",
+    "customer": "Ocho Rios Tours",
+    "categoryLabel": "Manufacturing",
+    "quantity": 25,
+    "completedAt": "2026-09-26T15:30:00",
+    "dueDate": "2026-09-28T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0004",
+    "name": "Fixture job 4",
+    "customer": "Mandeville Academy",
+    "categoryLabel": "Manufacturing",
+    "quantity": 40,
+    "completedAt": "2026-09-27T16:00:00",
+    "dueDate": "2026-09-26T23:59:00",
+    "onTime": false
+   },
+   {
+    "orderNumber": "G3D-FX0031",
+    "name": "Last-second September completion",
+    "customer": "No customer",
+    "categoryLabel": "Design",
+    "quantity": 1,
+    "completedAt": "2026-09-30T23:59:00",
+    "dueDate": "2026-09-30T23:59:00",
+    "onTime": true
+   }
+  ],
+  "undatedCompletions": 1
+ },
+ "year": {
+  "title": "Operations Report",
+  "periodLabel": "2026",
+  "previousPeriodLabel": "2025",
+  "rangeStart": "2026-01-01T00:00:00",
+  "rangeLastDay": "2026-12-31T00:00:00",
+  "generatedAt": "2026-10-08T12:00:00",
+  "generatedBy": "Kimberly Reid",
+  "inProgress": true,
+  "kpis": {
+   "completed": 26,
+   "units": 274,
+   "received": 30,
+   "onTimeRate": 0.7692,
+   "medianTurnaroundDays": 2.6771,
+   "openOverdue": 3
+  },
+  "previousKpis": {
+   "completed": 1,
+   "units": 6,
+   "received": 1,
+   "onTimeRate": 1,
+   "medianTurnaroundDays": 7,
+   "openOverdue": 0
+  },
+  "throughput": {
+   "granularity": "month",
+   "buckets": [
+    {
+     "label": "Jan",
+     "longLabel": "Jan 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "Feb",
+     "longLabel": "Feb 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "Mar",
+     "longLabel": "Mar 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "Apr",
+     "longLabel": "Apr 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "May",
+     "longLabel": "May 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "Jun",
+     "longLabel": "Jun 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "Jul",
+     "longLabel": "Jul 2026",
+     "received": 1,
+     "completed": 1
+    },
+    {
+     "label": "Aug",
+     "longLabel": "Aug 2026",
+     "received": 6,
+     "completed": 4
+    },
+    {
+     "label": "Sep",
+     "longLabel": "Sep 2026",
+     "received": 18,
+     "completed": 16
+    },
+    {
+     "label": "Oct",
+     "longLabel": "Oct 2026",
+     "received": 5,
+     "completed": 5
+    },
+    {
+     "label": "Nov",
+     "longLabel": "Nov 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "Dec",
+     "longLabel": "Dec 2026",
+     "received": 0,
+     "completed": 0
+    }
+   ]
+  },
+  "categories": [
+   {
+    "category": "manufacturing",
+    "label": "Manufacturing",
+    "jobs": 10,
+    "units": 203,
+    "onTimeRate": 0.5,
+    "medianTurnaroundDays": 3.2813
+   },
+   {
+    "category": "design",
+    "label": "Design",
+    "jobs": 5,
+    "units": 23,
+    "onTimeRate": 1,
+    "medianTurnaroundDays": 3.0104
+   },
+   {
+    "category": "softwareDevelopment",
+    "label": "Software development",
+    "jobs": 5,
+    "units": 5,
+    "onTimeRate": 0.8,
+    "medianTurnaroundDays": 2.1979
+   },
+   {
+    "category": "miscellaneous",
+    "label": "Miscellaneous",
+    "jobs": 3,
+    "units": 35,
+    "onTimeRate": 1,
+    "medianTurnaroundDays": 2.3438
+   },
+   {
+    "category": "repair",
+    "label": "Repair",
+    "jobs": 3,
+    "units": 8,
+    "onTimeRate": 1,
+    "medianTurnaroundDays": 0.3021
+   }
+  ],
+  "customers": {
+   "rows": [
+    {
+     "name": "Kingston Makerspace",
+     "jobs": 4,
+     "units": 78,
+     "onTimeRate": 0.5
+    },
+    {
+     "name": "No customer",
+     "jobs": 4,
+     "units": 17,
+     "onTimeRate": 1
+    },
+    {
+     "name": "Blue Mountain Coffee Co.",
+     "jobs": 3,
+     "units": 51,
+     "onTimeRate": 1
+    },
+    {
+     "name": "Ocho Rios Tours",
+     "jobs": 3,
+     "units": 29,
+     "onTimeRate": 0.6667
+    },
+    {
+     "name": "Mandeville Academy",
+     "jobs": 2,
+     "units": 41,
+     "onTimeRate": 0.5
+    },
+    {
+     "name": "Montego Print House",
+     "jobs": 2,
+     "units": 30,
+     "onTimeRate": 1
+    },
+    {
+     "name": "Spanish Town Clinic",
+     "jobs": 2,
+     "units": 11,
+     "onTimeRate": 1
+    },
+    {
+     "name": "island grill",
+     "jobs": 2,
+     "units": 10,
+     "onTimeRate": 1
+    },
+    {
+     "name": "Negril Surf Shop",
+     "jobs": 2,
+     "units": 5,
+     "onTimeRate": 0.5
+    },
+    {
+     "name": "UWI Engineering",
+     "jobs": 2,
+     "units": 2,
+     "onTimeRate": 0.5
+    }
+   ],
+   "totalCustomers": 10,
+   "otherCustomers": 0,
+   "otherJobs": 0
+  },
+  "team": [
+   {
+    "name": "Ana Brown",
+    "completed": 10,
+    "contributed": 13,
+    "units": 88,
+    "onTimeRate": 0.7692
+   },
+   {
+    "name": "Marcus Hall",
+    "completed": 5,
+    "contributed": 11,
+    "units": 87,
+    "onTimeRate": 0.8182
+   },
+   {
+    "name": "Devon Clarke",
+    "completed": 4,
+    "contributed": 11,
+    "units": 126,
+    "onTimeRate": 0.8182
+   },
+   {
+    "name": "Kimberly Reid",
+    "completed": 6,
+    "contributed": 10,
+    "units": 122,
+    "onTimeRate": 0.9
+   }
+  ],
+  "delivery": {
+   "late": [
+    {
+     "orderNumber": "G3D-FX0028",
+     "name": "Overdue then finished in October",
+     "customer": "Negril Surf Shop",
+     "dueDate": "2026-09-25T23:59:00",
+     "completedAt": "2026-10-03T10:00:00",
+     "daysLate": 8
+    },
+    {
+     "orderNumber": "G3D-FX0024",
+     "name": "Pins batch B crossing 50",
+     "customer": "Kingston Makerspace",
+     "dueDate": "2026-09-12T23:59:00",
+     "completedAt": "2026-09-15T14:00:00",
+     "daysLate": 3
+    },
+    {
+     "orderNumber": "G3D-FX0001",
+     "name": "Fixture job 1",
+     "customer": "UWI Engineering",
+     "dueDate": "2026-08-11T23:59:00",
+     "completedAt": "2026-08-12T11:00:00",
+     "daysLate": 1
+    },
+    {
+     "orderNumber": "G3D-FX0004",
+     "name": "Fixture job 4",
+     "customer": "Mandeville Academy",
+     "dueDate": "2026-09-26T23:59:00",
+     "completedAt": "2026-09-27T16:00:00",
+     "daysLate": 1
+    },
+    {
+     "orderNumber": "G3D-FX0008",
+     "name": "Fixture job 8",
+     "customer": "Kingston Makerspace",
+     "dueDate": "2026-09-07T23:59:00",
+     "completedAt": "2026-09-08T10:00:00",
+     "daysLate": 1
+    },
+    {
+     "orderNumber": "G3D-FX0022",
+     "name": "Fixture job 22",
+     "customer": "Ocho Rios Tours",
+     "dueDate": "2026-09-20T23:59:00",
+     "completedAt": "2026-09-21T16:00:00",
+     "daysLate": 1
+    }
+   ],
+   "overdue": [
+    {
+     "orderNumber": "G3D-FX0027",
+     "name": "Overdue enclosure",
+     "customer": "Port Royal Marine",
+     "dueDate": "2026-09-20T23:59:00",
+     "daysOverdue": 18,
+     "assignedToName": "Devon Clarke"
+    },
+    {
+     "orderNumber": "G3D-FX0025",
+     "name": "Restored after QA (stale completedAt)",
+     "customer": "UWI Engineering",
+     "dueDate": "2026-09-30T23:59:00",
+     "daysOverdue": 8,
+     "assignedToName": "Kimberly Reid"
+    },
+    {
+     "orderNumber": "G3D-FX0030",
+     "name": "Created after September",
+     "customer": "Ocho Rios Tours",
+     "dueDate": "2026-10-06T23:59:00",
+     "daysOverdue": 2,
+     "assignedToName": ""
+    }
+   ],
+   "reschedules": [
+    {
+     "orderNumber": "G3D-FX0027",
+     "name": "Overdue enclosure",
+     "changedAt": "2026-09-12T16:00:00",
+     "previousDueDate": "2026-09-14T23:59:00",
+     "dueDate": "2026-09-20T23:59:00",
+     "note": "Waiting on replacement hinge",
+     "changedByName": "Kimberly Reid"
+    },
+    {
+     "orderNumber": "G3D-FX0031",
+     "name": "Last-second September completion",
+     "changedAt": "2026-09-29T12:00:00",
+     "previousDueDate": null,
+     "dueDate": "2026-09-30T23:59:00",
+     "note": "",
+     "changedByName": "Unrecorded"
+    }
+   ]
+  },
+  "materials": {
+   "consumed": [
+    {
+     "material": "Pin Backs",
+     "unit": "pcs",
+     "units": 125
+    },
+    {
+     "material": "Lamina",
+     "unit": "sheets",
+     "units": 2
+    }
+   ],
+   "stock": [
+    {
+     "name": "PLA Black",
+     "unit": "kg",
+     "quantity": 0.75,
+     "totalQuantity": 0,
+     "ratio": 0,
+     "low": false
+    },
+    {
+     "name": "Pin Backs",
+     "unit": "pcs",
+     "quantity": 120,
+     "totalQuantity": 1000,
+     "ratio": 0.12,
+     "low": true
+    },
+    {
+     "name": "Lamina",
+     "unit": "sheets",
+     "quantity": 9,
+     "totalQuantity": 20,
+     "ratio": 0.45,
+     "low": false
+    }
+   ]
+  },
+  "maintenance": {
+   "machines": [
+    {
+     "name": "Bambu X1C",
+     "location": "",
+     "services": []
+    },
+    {
+     "name": "Laser Cutter",
+     "location": "Workshop",
+     "services": [
+      {
+       "completedAt": "2026-07-15T09:00:00",
+       "procedures": [
+        "Mirror clean"
+       ],
+       "completedByName": "Marcus Hall",
+       "notes": ""
+      }
+     ]
+    },
+    {
+     "name": "Prusa MK4 #1",
+     "location": "Bay A",
+     "services": [
+      {
+       "completedAt": "2026-08-02T08:00:00",
+       "procedures": [
+        "Nozzle swap"
+       ],
+       "completedByName": "Devon Clarke",
+       "notes": ""
+      },
+      {
+       "completedAt": "2026-09-03T08:00:00",
+       "procedures": [
+        "Clean bed",
+        "Lubricate rods"
+       ],
+       "completedByName": "Ana Brown",
+       "notes": "Bed re-levelled"
+      },
+      {
+       "completedAt": "2026-09-24T17:45:00",
+       "procedures": [
+        "Belt tension"
+       ],
+       "completedByName": "Unrecorded",
+       "notes": ""
+      }
+     ]
+    }
+   ],
+   "totalServices": 4,
+   "idleMachines": [
+    "Bambu X1C"
+   ]
+  },
+  "appendix": [
+   {
+    "orderNumber": "G3D-FX0017",
+    "name": "Fixture job 17",
+    "customer": "Mandeville Academy",
+    "categoryLabel": "Software development",
+    "quantity": 1,
+    "completedAt": "2026-07-10T12:00:00",
+    "dueDate": "2026-07-10T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0001",
+    "name": "Fixture job 1",
+    "customer": "UWI Engineering",
+    "categoryLabel": "Software development",
+    "quantity": 1,
+    "completedAt": "2026-08-12T11:00:00",
+    "dueDate": "2026-08-11T23:59:00",
+    "onTime": false
+   },
+   {
+    "orderNumber": "G3D-FX0019",
+    "name": "Fixture job 19",
+    "customer": "Montego Print House",
+    "categoryLabel": "Miscellaneous",
+    "quantity": 5,
+    "completedAt": "2026-08-16T17:30:00",
+    "dueDate": "2026-08-20T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0009",
+    "name": "Fixture job 9",
+    "customer": "Montego Print House",
+    "categoryLabel": "Miscellaneous",
+    "quantity": 25,
+    "completedAt": "2026-08-25T11:00:00",
+    "dueDate": "2026-08-25T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0011",
+    "name": "Fixture job 11",
+    "customer": "UWI Engineering",
+    "categoryLabel": "Design",
+    "quantity": 1,
+    "completedAt": "2026-08-26T13:30:00",
+    "dueDate": "2026-08-27T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0023",
+    "name": "Pins batch A",
+    "customer": "Kingston Makerspace",
+    "categoryLabel": "Manufacturing",
+    "quantity": 30,
+    "completedAt": "2026-09-04T11:00:00",
+    "dueDate": "2026-09-05T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0007",
+    "name": "Fixture job 7",
+    "customer": "Blue Mountain Coffee Co.",
+    "categoryLabel": "Software development",
+    "quantity": 1,
+    "completedAt": "2026-09-05T08:30:00",
+    "dueDate": "2026-09-09T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0013",
+    "name": "Fixture job 13",
+    "customer": "Ocho Rios Tours",
+    "categoryLabel": "Repair",
+    "quantity": 2,
+    "completedAt": "2026-09-06T11:30:00",
+    "dueDate": "2026-09-09T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0021",
+    "name": "Fixture job 21",
+    "customer": "island grill",
+    "categoryLabel": "Repair",
+    "quantity": 5,
+    "completedAt": "2026-09-06T16:30:00",
+    "dueDate": "2026-09-08T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0008",
+    "name": "Fixture job 8",
+    "customer": "Kingston Makerspace",
+    "categoryLabel": "Manufacturing",
+    "quantity": 2,
+    "completedAt": "2026-09-08T10:00:00",
+    "dueDate": "2026-09-07T23:59:00",
+    "onTime": false
+   },
+   {
+    "orderNumber": "G3D-FX0006",
+    "name": "Fixture job 6",
+    "customer": "No customer",
+    "categoryLabel": "Manufacturing",
+    "quantity": 5,
+    "completedAt": "2026-09-12T15:00:00",
+    "dueDate": "2026-09-13T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0015",
+    "name": "Fixture job 15",
+    "customer": "Blue Mountain Coffee Co.",
+    "categoryLabel": "Manufacturing",
+    "quantity": 10,
+    "completedAt": "2026-09-13T08:00:00",
+    "dueDate": "2026-09-14T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0018",
+    "name": "Fixture job 18",
+    "customer": "island grill",
+    "categoryLabel": "Miscellaneous",
+    "quantity": 5,
+    "completedAt": "2026-09-14T12:00:00",
+    "dueDate": "2026-09-19T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0024",
+    "name": "Pins batch B crossing 50",
+    "customer": "Kingston Makerspace",
+    "categoryLabel": "Manufacturing",
+    "quantity": 45,
+    "completedAt": "2026-09-15T14:00:00",
+    "dueDate": "2026-09-12T23:59:00",
+    "onTime": false
+   },
+   {
+    "orderNumber": "G3D-FX0010",
+    "name": "Fixture job 10",
+    "customer": "Kingston Makerspace",
+    "categoryLabel": "Design",
+    "quantity": 1,
+    "completedAt": "2026-09-19T09:30:00",
+    "dueDate": "2026-09-19T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0002",
+    "name": "Fixture job 2",
+    "customer": "Negril Surf Shop",
+    "categoryLabel": "Repair",
+    "quantity": 1,
+    "completedAt": "2026-09-21T11:00:00",
+    "dueDate": "2026-09-24T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0022",
+    "name": "Fixture job 22",
+    "customer": "Ocho Rios Tours",
+    "categoryLabel": "Manufacturing",
+    "quantity": 2,
+    "completedAt": "2026-09-21T16:00:00",
+    "dueDate": "2026-09-20T23:59:00",
+    "onTime": false
+   },
+   {
+    "orderNumber": "G3D-FX0014",
+    "name": "Fixture job 14",
+    "customer": "Spanish Town Clinic",
+    "categoryLabel": "Design",
+    "quantity": 10,
+    "completedAt": "2026-09-26T09:30:00",
+    "dueDate": "2026-09-26T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0005",
+    "name": "Fixture job 5",
+    "customer": "Ocho Rios Tours",
+    "categoryLabel": "Manufacturing",
+    "quantity": 25,
+    "completedAt": "2026-09-26T15:30:00",
+    "dueDate": "2026-09-28T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0004",
+    "name": "Fixture job 4",
+    "customer": "Mandeville Academy",
+    "categoryLabel": "Manufacturing",
+    "quantity": 40,
+    "completedAt": "2026-09-27T16:00:00",
+    "dueDate": "2026-09-26T23:59:00",
+    "onTime": false
+   },
+   {
+    "orderNumber": "G3D-FX0031",
+    "name": "Last-second September completion",
+    "customer": "No customer",
+    "categoryLabel": "Design",
+    "quantity": 1,
+    "completedAt": "2026-09-30T23:59:00",
+    "dueDate": "2026-09-30T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0003",
+    "name": "Fixture job 3",
+    "customer": "No customer",
+    "categoryLabel": "Software development",
+    "quantity": 1,
+    "completedAt": "2026-10-03T09:30:00",
+    "dueDate": "2026-10-06T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0028",
+    "name": "Overdue then finished in October",
+    "customer": "Negril Surf Shop",
+    "categoryLabel": "Manufacturing",
+    "quantity": 4,
+    "completedAt": "2026-10-03T10:00:00",
+    "dueDate": "2026-09-25T23:59:00",
+    "onTime": false
+   },
+   {
+    "orderNumber": "G3D-FX0016",
+    "name": "Fixture job 16",
+    "customer": "Spanish Town Clinic",
+    "categoryLabel": "Software development",
+    "quantity": 1,
+    "completedAt": "2026-10-03T14:00:00",
+    "dueDate": "2026-10-03T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0012",
+    "name": "Fixture job 12",
+    "customer": "Blue Mountain Coffee Co.",
+    "categoryLabel": "Manufacturing",
+    "quantity": 40,
+    "completedAt": "2026-10-05T08:00:00",
+    "dueDate": "2026-10-07T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0020",
+    "name": "Fixture job 20",
+    "customer": "No customer",
+    "categoryLabel": "Design",
+    "quantity": 10,
+    "completedAt": "2026-10-05T16:00:00",
+    "dueDate": "2026-10-10T23:59:00",
+    "onTime": true
+   }
+  ],
+  "undatedCompletions": 1
+ },
+ "custom": {
+  "title": "Operations Report",
+  "periodLabel": "10 Sep 2026 – 20 Sep 2026",
+  "previousPeriodLabel": "30 Aug 2026 – 9 Sep 2026",
+  "rangeStart": "2026-09-10T00:00:00",
+  "rangeLastDay": "2026-09-20T00:00:00",
+  "generatedAt": "2026-10-08T12:00:00",
+  "generatedBy": "Kimberly Reid",
+  "inProgress": false,
+  "kpis": {
+   "completed": 5,
+   "units": 66,
+   "received": 2,
+   "onTimeRate": 0.8,
+   "medianTurnaroundDays": 5.9479,
+   "openOverdue": 2
+  },
+  "previousKpis": {
+   "completed": 5,
+   "units": 40,
+   "received": 10,
+   "onTimeRate": 0.8,
+   "medianTurnaroundDays": 1.9688,
+   "openOverdue": 0
+  },
+  "throughput": {
+   "granularity": "day",
+   "buckets": [
+    {
+     "label": "10",
+     "longLabel": "10 Sep 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "11",
+     "longLabel": "11 Sep 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "12",
+     "longLabel": "12 Sep 2026",
+     "received": 0,
+     "completed": 1
+    },
+    {
+     "label": "13",
+     "longLabel": "13 Sep 2026",
+     "received": 0,
+     "completed": 1
+    },
+    {
+     "label": "14",
+     "longLabel": "14 Sep 2026",
+     "received": 0,
+     "completed": 1
+    },
+    {
+     "label": "15",
+     "longLabel": "15 Sep 2026",
+     "received": 0,
+     "completed": 1
+    },
+    {
+     "label": "16",
+     "longLabel": "16 Sep 2026",
+     "received": 1,
+     "completed": 0
+    },
+    {
+     "label": "17",
+     "longLabel": "17 Sep 2026",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "18",
+     "longLabel": "18 Sep 2026",
+     "received": 1,
+     "completed": 0
+    },
+    {
+     "label": "19",
+     "longLabel": "19 Sep 2026",
+     "received": 0,
+     "completed": 1
+    },
+    {
+     "label": "20",
+     "longLabel": "20 Sep 2026",
+     "received": 0,
+     "completed": 0
+    }
+   ]
+  },
+  "categories": [
+   {
+    "category": "manufacturing",
+    "label": "Manufacturing",
+    "jobs": 3,
+    "units": 60,
+    "onTimeRate": 0.6667,
+    "medianTurnaroundDays": 6.2396
+   },
+   {
+    "category": "miscellaneous",
+    "label": "Miscellaneous",
+    "jobs": 1,
+    "units": 5,
+    "onTimeRate": 1,
+    "medianTurnaroundDays": 5.1146
+   },
+   {
+    "category": "design",
+    "label": "Design",
+    "jobs": 1,
+    "units": 1,
+    "onTimeRate": 1,
+    "medianTurnaroundDays": 3.0104
+   }
+  ],
+  "customers": {
+   "rows": [
+    {
+     "name": "Kingston Makerspace",
+     "jobs": 2,
+     "units": 46,
+     "onTimeRate": 0.5
+    },
+    {
+     "name": "Blue Mountain Coffee Co.",
+     "jobs": 1,
+     "units": 10,
+     "onTimeRate": 1
+    },
+    {
+     "name": "island grill",
+     "jobs": 1,
+     "units": 5,
+     "onTimeRate": 1
+    },
+    {
+     "name": "No customer",
+     "jobs": 1,
+     "units": 5,
+     "onTimeRate": 1
+    }
+   ],
+   "totalCustomers": 4,
+   "otherCustomers": 0,
+   "otherJobs": 0
+  },
+  "team": [
+   {
+    "name": "Ana Brown",
+    "completed": 2,
+    "contributed": 2,
+    "units": 6,
+    "onTimeRate": 1
+   },
+   {
+    "name": "Devon Clarke",
+    "completed": 2,
+    "contributed": 2,
+    "units": 55,
+    "onTimeRate": 0.5
+   },
+   {
+    "name": "Kimberly Reid",
+    "completed": 1,
+    "contributed": 2,
+    "units": 10,
+    "onTimeRate": 1
+   },
+   {
+    "name": "Marcus Hall",
+    "completed": 0,
+    "contributed": 2,
+    "units": 10,
+    "onTimeRate": 1
+   }
+  ],
+  "delivery": {
+   "late": [
+    {
+     "orderNumber": "G3D-FX0024",
+     "name": "Pins batch B crossing 50",
+     "customer": "Kingston Makerspace",
+     "dueDate": "2026-09-12T23:59:00",
+     "completedAt": "2026-09-15T14:00:00",
+     "daysLate": 3
+    }
+   ],
+   "overdue": [
+    {
+     "orderNumber": "G3D-FX0022",
+     "name": "Fixture job 22",
+     "customer": "Ocho Rios Tours",
+     "dueDate": "2026-09-20T23:59:00",
+     "daysOverdue": 1,
+     "assignedToName": "Devon Clarke"
+    },
+    {
+     "orderNumber": "G3D-FX0027",
+     "name": "Overdue enclosure",
+     "customer": "Port Royal Marine",
+     "dueDate": "2026-09-20T23:59:00",
+     "daysOverdue": 1,
+     "assignedToName": "Devon Clarke"
+    }
+   ],
+   "reschedules": [
+    {
+     "orderNumber": "G3D-FX0027",
+     "name": "Overdue enclosure",
+     "changedAt": "2026-09-12T16:00:00",
+     "previousDueDate": "2026-09-14T23:59:00",
+     "dueDate": "2026-09-20T23:59:00",
+     "note": "Waiting on replacement hinge",
+     "changedByName": "Kimberly Reid"
+    }
+   ]
+  },
+  "materials": {
+   "consumed": [
+    {
+     "material": "Pin Backs",
+     "unit": "pcs",
+     "units": 55
+    },
+    {
+     "material": "Lamina",
+     "unit": "sheets",
+     "units": 1
+    }
+   ],
+   "stock": [
+    {
+     "name": "PLA Black",
+     "unit": "kg",
+     "quantity": 0.75,
+     "totalQuantity": 0,
+     "ratio": 0,
+     "low": false
+    },
+    {
+     "name": "Pin Backs",
+     "unit": "pcs",
+     "quantity": 120,
+     "totalQuantity": 1000,
+     "ratio": 0.12,
+     "low": true
+    },
+    {
+     "name": "Lamina",
+     "unit": "sheets",
+     "quantity": 9,
+     "totalQuantity": 20,
+     "ratio": 0.45,
+     "low": false
+    }
+   ]
+  },
+  "maintenance": {
+   "machines": [
+    {
+     "name": "Bambu X1C",
+     "location": "",
+     "services": []
+    },
+    {
+     "name": "Laser Cutter",
+     "location": "Workshop",
+     "services": []
+    },
+    {
+     "name": "Prusa MK4 #1",
+     "location": "Bay A",
+     "services": []
+    }
+   ],
+   "totalServices": 0,
+   "idleMachines": [
+    "Bambu X1C",
+    "Laser Cutter",
+    "Prusa MK4 #1"
+   ]
+  },
+  "appendix": [
+   {
+    "orderNumber": "G3D-FX0006",
+    "name": "Fixture job 6",
+    "customer": "No customer",
+    "categoryLabel": "Manufacturing",
+    "quantity": 5,
+    "completedAt": "2026-09-12T15:00:00",
+    "dueDate": "2026-09-13T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0015",
+    "name": "Fixture job 15",
+    "customer": "Blue Mountain Coffee Co.",
+    "categoryLabel": "Manufacturing",
+    "quantity": 10,
+    "completedAt": "2026-09-13T08:00:00",
+    "dueDate": "2026-09-14T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0018",
+    "name": "Fixture job 18",
+    "customer": "island grill",
+    "categoryLabel": "Miscellaneous",
+    "quantity": 5,
+    "completedAt": "2026-09-14T12:00:00",
+    "dueDate": "2026-09-19T23:59:00",
+    "onTime": true
+   },
+   {
+    "orderNumber": "G3D-FX0024",
+    "name": "Pins batch B crossing 50",
+    "customer": "Kingston Makerspace",
+    "categoryLabel": "Manufacturing",
+    "quantity": 45,
+    "completedAt": "2026-09-15T14:00:00",
+    "dueDate": "2026-09-12T23:59:00",
+    "onTime": false
+   },
+   {
+    "orderNumber": "G3D-FX0010",
+    "name": "Fixture job 10",
+    "customer": "Kingston Makerspace",
+    "categoryLabel": "Design",
+    "quantity": 1,
+    "completedAt": "2026-09-19T09:30:00",
+    "dueDate": "2026-09-19T23:59:00",
+    "onTime": true
+   }
+  ],
+  "undatedCompletions": 1
+ },
+ "future-empty": {
+  "title": "Operations Report",
+  "periodLabel": "January 2027",
+  "previousPeriodLabel": "December 2026",
+  "rangeStart": "2027-01-01T00:00:00",
+  "rangeLastDay": "2027-01-31T00:00:00",
+  "generatedAt": "2026-10-08T12:00:00",
+  "generatedBy": "Kimberly Reid",
+  "inProgress": false,
+  "kpis": {
+   "completed": 0,
+   "units": 0,
+   "received": 0,
+   "onTimeRate": null,
+   "medianTurnaroundDays": null,
+   "openOverdue": 0
+  },
+  "previousKpis": {
+   "completed": 0,
+   "units": 0,
+   "received": 0,
+   "onTimeRate": null,
+   "medianTurnaroundDays": null,
+   "openOverdue": 0
+  },
+  "throughput": {
+   "granularity": "day",
+   "buckets": [
+    {
+     "label": "1",
+     "longLabel": "1 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "2",
+     "longLabel": "2 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "3",
+     "longLabel": "3 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "4",
+     "longLabel": "4 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "5",
+     "longLabel": "5 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "6",
+     "longLabel": "6 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "7",
+     "longLabel": "7 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "8",
+     "longLabel": "8 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "9",
+     "longLabel": "9 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "10",
+     "longLabel": "10 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "11",
+     "longLabel": "11 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "12",
+     "longLabel": "12 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "13",
+     "longLabel": "13 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "14",
+     "longLabel": "14 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "15",
+     "longLabel": "15 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "16",
+     "longLabel": "16 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "17",
+     "longLabel": "17 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "18",
+     "longLabel": "18 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "19",
+     "longLabel": "19 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "20",
+     "longLabel": "20 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "21",
+     "longLabel": "21 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "22",
+     "longLabel": "22 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "23",
+     "longLabel": "23 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "24",
+     "longLabel": "24 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "25",
+     "longLabel": "25 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "26",
+     "longLabel": "26 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "27",
+     "longLabel": "27 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "28",
+     "longLabel": "28 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "29",
+     "longLabel": "29 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "30",
+     "longLabel": "30 Jan 2027",
+     "received": 0,
+     "completed": 0
+    },
+    {
+     "label": "31",
+     "longLabel": "31 Jan 2027",
+     "received": 0,
+     "completed": 0
+    }
+   ]
+  },
+  "categories": [],
+  "customers": {
+   "rows": [],
+   "totalCustomers": 0,
+   "otherCustomers": 0,
+   "otherJobs": 0
+  },
+  "team": [],
+  "delivery": {
+   "late": [],
+   "overdue": [],
+   "reschedules": []
+  },
+  "materials": {
+   "consumed": [],
+   "stock": [
+    {
+     "name": "PLA Black",
+     "unit": "kg",
+     "quantity": 0.75,
+     "totalQuantity": 0,
+     "ratio": 0,
+     "low": false
+    },
+    {
+     "name": "Pin Backs",
+     "unit": "pcs",
+     "quantity": 120,
+     "totalQuantity": 1000,
+     "ratio": 0.12,
+     "low": true
+    },
+    {
+     "name": "Lamina",
+     "unit": "sheets",
+     "quantity": 9,
+     "totalQuantity": 20,
+     "ratio": 0.45,
+     "low": false
+    }
+   ]
+  },
+  "maintenance": {
+   "machines": [
+    {
+     "name": "Bambu X1C",
+     "location": "",
+     "services": []
+    },
+    {
+     "name": "Laser Cutter",
+     "location": "Workshop",
+     "services": []
+    },
+    {
+     "name": "Prusa MK4 #1",
+     "location": "Bay A",
+     "services": []
+    }
+   ],
+   "totalServices": 0,
+   "idleMachines": [
+    "Bambu X1C",
+    "Laser Cutter",
+    "Prusa MK4 #1"
+   ]
+  },
+  "appendix": [],
+  "undatedCompletions": 1
+ }
+}

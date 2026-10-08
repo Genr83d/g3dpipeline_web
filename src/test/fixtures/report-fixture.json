@@ -1,0 +1,1033 @@
+{
+ "now": "2026-10-08T12:00:00",
+ "generatedBy": "Kimberly Reid",
+ "jobs": [
+  {
+   "id": "job-001",
+   "orderNumber": "G3D-FX0001",
+   "name": "Fixture job 1",
+   "customer": "UWI Engineering",
+   "quantity": 1,
+   "completedQuantity": 1,
+   "status": "completed",
+   "category": "softwareDevelopment",
+   "tags": [],
+   "createdAt": "2026-08-09T09:15:00",
+   "dueDate": "2026-08-11T23:59:00",
+   "completedAt": "2026-08-12T11:00:00",
+   "completedByUid": "u-ana",
+   "completedByName": "Ana Brown",
+   "assignedToUid": "u-ana",
+   "assignedToName": "Ana Brown",
+   "collaborators": [],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-002",
+   "orderNumber": "G3D-FX0002",
+   "name": "Fixture job 2",
+   "customer": "Negril Surf Shop",
+   "quantity": 1,
+   "completedQuantity": 1,
+   "status": "completed",
+   "category": "repair",
+   "tags": [],
+   "createdAt": "2026-09-21T09:15:00",
+   "dueDate": "2026-09-24T23:59:00",
+   "completedAt": "2026-09-21T11:00:00",
+   "completedByUid": "u-mar",
+   "completedByName": "Marcus Hall",
+   "assignedToUid": "u-mar",
+   "assignedToName": "Marcus Hall",
+   "collaborators": [
+    {
+     "uid": "u-dev",
+     "name": "Devon Clarke",
+     "role": "staff"
+    },
+    {
+     "uid": "u-mar",
+     "name": "Marcus Hall",
+     "role": "admin"
+    }
+   ],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-003",
+   "orderNumber": "G3D-FX0003",
+   "name": "Fixture job 3",
+   "customer": "",
+   "quantity": 1,
+   "completedQuantity": 1,
+   "status": "completed",
+   "category": "softwareDevelopment",
+   "tags": [],
+   "createdAt": "2026-10-01T09:15:00",
+   "dueDate": "2026-10-06T23:59:00",
+   "completedAt": "2026-10-03T09:30:00",
+   "completedByUid": "u-ana",
+   "completedByName": "Ana Brown",
+   "assignedToUid": "u-ana",
+   "assignedToName": "Ana Brown",
+   "collaborators": [
+    {
+     "uid": "u-kim",
+     "name": "Kimberly Reid",
+     "role": "manager"
+    },
+    {
+     "uid": "u-ana",
+     "name": "Ana Brown",
+     "role": "staff"
+    }
+   ],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-004",
+   "orderNumber": "G3D-FX0004",
+   "name": "Fixture job 4",
+   "customer": "Mandeville Academy",
+   "quantity": 40,
+   "completedQuantity": 40,
+   "status": "completed",
+   "category": "manufacturing",
+   "tags": [
+    "pins"
+   ],
+   "createdAt": "2026-09-24T09:15:00",
+   "dueDate": "2026-09-26T23:59:00",
+   "completedAt": "2026-09-27T16:00:00",
+   "completedByUid": "u-kim",
+   "completedByName": "Kimberly Reid",
+   "assignedToUid": "u-kim",
+   "assignedToName": "Kimberly Reid",
+   "collaborators": [],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-005",
+   "orderNumber": "G3D-FX0005",
+   "name": "Fixture job 5",
+   "customer": "Ocho Rios Tours",
+   "quantity": 25,
+   "completedQuantity": 25,
+   "status": "completed",
+   "category": "manufacturing",
+   "tags": [],
+   "createdAt": "2026-09-25T09:15:00",
+   "dueDate": "2026-09-28T23:59:00",
+   "completedAt": "2026-09-26T15:30:00",
+   "completedByUid": "u-mar",
+   "completedByName": "Marcus Hall",
+   "assignedToUid": "u-mar",
+   "assignedToName": "Marcus Hall",
+   "collaborators": [
+    {
+     "uid": "u-dev",
+     "name": "Devon Clarke",
+     "role": "staff"
+    },
+    {
+     "uid": "u-ana",
+     "name": "Ana Brown",
+     "role": "staff"
+    }
+   ],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-006",
+   "orderNumber": "G3D-FX0006",
+   "name": "Fixture job 6",
+   "customer": "",
+   "quantity": 5,
+   "completedQuantity": 5,
+   "status": "completed",
+   "category": "manufacturing",
+   "tags": [],
+   "createdAt": "2026-09-06T09:15:00",
+   "dueDate": "2026-09-13T23:59:00",
+   "completedAt": "2026-09-12T15:00:00",
+   "completedByUid": "u-ana",
+   "completedByName": "Ana Brown",
+   "assignedToUid": "u-ana",
+   "assignedToName": "Ana Brown",
+   "collaborators": [
+    {
+     "uid": "u-kim",
+     "name": "Kimberly Reid",
+     "role": "manager"
+    },
+    {
+     "uid": "u-mar",
+     "name": "Marcus Hall",
+     "role": "admin"
+    }
+   ],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-007",
+   "orderNumber": "G3D-FX0007",
+   "name": "Fixture job 7",
+   "customer": "Blue Mountain Coffee Co.",
+   "quantity": 1,
+   "completedQuantity": 1,
+   "status": "completed",
+   "category": "softwareDevelopment",
+   "tags": [],
+   "createdAt": "2026-09-03T09:15:00",
+   "dueDate": "2026-09-09T23:59:00",
+   "completedAt": "2026-09-05T08:30:00",
+   "completedByUid": "u-ana",
+   "completedByName": "Ana Brown",
+   "assignedToUid": "u-ana",
+   "assignedToName": "Ana Brown",
+   "collaborators": [
+    {
+     "uid": "u-dev",
+     "name": "Devon Clarke",
+     "role": "staff"
+    },
+    {
+     "uid": "u-mar",
+     "name": "Marcus Hall",
+     "role": "admin"
+    }
+   ],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-008",
+   "orderNumber": "G3D-FX0008",
+   "name": "Fixture job 8",
+   "customer": "Kingston Makerspace",
+   "quantity": 2,
+   "completedQuantity": 2,
+   "status": "completed",
+   "category": "manufacturing",
+   "tags": [],
+   "createdAt": "2026-09-06T09:15:00",
+   "dueDate": "2026-09-07T23:59:00",
+   "completedAt": "2026-09-08T10:00:00",
+   "completedByUid": "u-mar",
+   "completedByName": "Marcus Hall",
+   "assignedToUid": "u-mar",
+   "assignedToName": "Marcus Hall",
+   "collaborators": [
+    {
+     "uid": "u-mar",
+     "name": "Marcus Hall",
+     "role": "admin"
+    }
+   ],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-009",
+   "orderNumber": "G3D-FX0009",
+   "name": "Fixture job 9",
+   "customer": "Montego Print House",
+   "quantity": 25,
+   "completedQuantity": 25,
+   "status": "completed",
+   "category": "miscellaneous",
+   "tags": [],
+   "createdAt": "2026-08-24T09:15:00",
+   "dueDate": "2026-08-25T23:59:00",
+   "completedAt": "2026-08-25T11:00:00",
+   "completedByUid": "u-mar",
+   "completedByName": "Marcus Hall",
+   "assignedToUid": "u-mar",
+   "assignedToName": "Marcus Hall",
+   "collaborators": [
+    {
+     "uid": "u-dev",
+     "name": "Devon Clarke",
+     "role": "staff"
+    }
+   ],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-010",
+   "orderNumber": "G3D-FX0010",
+   "name": "Fixture job 10",
+   "customer": "Kingston Makerspace",
+   "quantity": 1,
+   "completedQuantity": 1,
+   "status": "completed",
+   "category": "design",
+   "tags": [],
+   "createdAt": "2026-09-16T09:15:00",
+   "dueDate": "2026-09-19T23:59:00",
+   "completedAt": "2026-09-19T09:30:00",
+   "completedByUid": "u-ana",
+   "completedByName": "Ana Brown",
+   "assignedToUid": "u-ana",
+   "assignedToName": "Ana Brown",
+   "collaborators": [
+    {
+     "uid": "u-ana",
+     "name": "Ana Brown",
+     "role": "staff"
+    }
+   ],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-011",
+   "orderNumber": "G3D-FX0011",
+   "name": "Fixture job 11",
+   "customer": "UWI Engineering",
+   "quantity": 1,
+   "completedQuantity": 1,
+   "status": "completed",
+   "category": "design",
+   "tags": [],
+   "createdAt": "2026-08-22T09:15:00",
+   "dueDate": "2026-08-27T23:59:00",
+   "completedAt": "2026-08-26T13:30:00",
+   "completedByUid": "u-ana",
+   "completedByName": "Ana Brown",
+   "assignedToUid": "u-ana",
+   "assignedToName": "Ana Brown",
+   "collaborators": [],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-012",
+   "orderNumber": "G3D-FX0012",
+   "name": "Fixture job 12",
+   "customer": "Blue Mountain Coffee Co.",
+   "quantity": 40,
+   "completedQuantity": 40,
+   "status": "completed",
+   "category": "manufacturing",
+   "tags": [],
+   "createdAt": "2026-10-05T09:15:00",
+   "dueDate": "2026-10-07T23:59:00",
+   "completedAt": "2026-10-05T08:00:00",
+   "completedByUid": "u-kim",
+   "completedByName": "Kimberly Reid",
+   "assignedToUid": "u-kim",
+   "assignedToName": "Kimberly Reid",
+   "collaborators": [],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-013",
+   "orderNumber": "G3D-FX0013",
+   "name": "Fixture job 13",
+   "customer": "Ocho Rios Tours",
+   "quantity": 2,
+   "completedQuantity": 2,
+   "status": "completed",
+   "category": "repair",
+   "tags": [],
+   "createdAt": "2026-09-05T09:15:00",
+   "dueDate": "2026-09-09T23:59:00",
+   "completedAt": "2026-09-06T11:30:00",
+   "completedByUid": "u-ana",
+   "completedByName": "Ana Brown",
+   "assignedToUid": "u-ana",
+   "assignedToName": "Ana Brown",
+   "collaborators": [],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-014",
+   "orderNumber": "G3D-FX0014",
+   "name": "Fixture job 14",
+   "customer": "Spanish Town Clinic",
+   "quantity": 10,
+   "completedQuantity": 10,
+   "status": "completed",
+   "category": "design",
+   "tags": [],
+   "createdAt": "2026-09-25T09:15:00",
+   "dueDate": "2026-09-26T23:59:00",
+   "completedAt": "2026-09-26T09:30:00",
+   "completedByUid": "u-mar",
+   "completedByName": "Marcus Hall",
+   "assignedToUid": "u-mar",
+   "assignedToName": "Marcus Hall",
+   "collaborators": [
+    {
+     "uid": "u-dev",
+     "name": "Devon Clarke",
+     "role": "staff"
+    },
+    {
+     "uid": "u-kim",
+     "name": "Kimberly Reid",
+     "role": "manager"
+    }
+   ],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-015",
+   "orderNumber": "G3D-FX0015",
+   "name": "Fixture job 15",
+   "customer": "Blue Mountain Coffee Co.",
+   "quantity": 10,
+   "completedQuantity": 10,
+   "status": "completed",
+   "category": "manufacturing",
+   "tags": [
+    "pins"
+   ],
+   "createdAt": "2026-09-07T09:15:00",
+   "dueDate": "2026-09-14T23:59:00",
+   "completedAt": "2026-09-13T08:00:00",
+   "completedByUid": "u-dev",
+   "completedByName": "Devon Clarke",
+   "assignedToUid": "u-dev",
+   "assignedToName": "Devon Clarke",
+   "collaborators": [],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-016",
+   "orderNumber": "G3D-FX0016",
+   "name": "Fixture job 16",
+   "customer": "Spanish Town Clinic",
+   "quantity": 1,
+   "completedQuantity": 1,
+   "status": "completed",
+   "category": "softwareDevelopment",
+   "tags": [],
+   "createdAt": "2026-10-01T09:15:00",
+   "dueDate": "2026-10-03T23:59:00",
+   "completedAt": "2026-10-03T14:00:00",
+   "completedByUid": "u-dev",
+   "completedByName": "Devon Clarke",
+   "assignedToUid": "u-dev",
+   "assignedToName": "Devon Clarke",
+   "collaborators": [
+    {
+     "uid": "u-dev",
+     "name": "Devon Clarke",
+     "role": "staff"
+    },
+    {
+     "uid": "u-mar",
+     "name": "Marcus Hall",
+     "role": "admin"
+    }
+   ],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-017",
+   "orderNumber": "G3D-FX0017",
+   "name": "Fixture job 17",
+   "customer": "Mandeville Academy",
+   "quantity": 1,
+   "completedQuantity": 1,
+   "status": "completed",
+   "category": "softwareDevelopment",
+   "tags": [],
+   "createdAt": "2026-07-06T09:15:00",
+   "dueDate": "2026-07-10T23:59:00",
+   "completedAt": "2026-07-10T12:00:00",
+   "completedByUid": "u-kim",
+   "completedByName": "Kimberly Reid",
+   "assignedToUid": "u-kim",
+   "assignedToName": "Kimberly Reid",
+   "collaborators": [
+    {
+     "uid": "u-dev",
+     "name": "Devon Clarke",
+     "role": "staff"
+    }
+   ],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-018",
+   "orderNumber": "G3D-FX0018",
+   "name": "Fixture job 18",
+   "customer": "  island grill  ",
+   "quantity": 5,
+   "completedQuantity": 5,
+   "status": "completed",
+   "category": "miscellaneous",
+   "tags": [],
+   "createdAt": "2026-09-09T09:15:00",
+   "dueDate": "2026-09-19T23:59:00",
+   "completedAt": "2026-09-14T12:00:00",
+   "completedByUid": "u-kim",
+   "completedByName": "Kimberly Reid",
+   "assignedToUid": "u-kim",
+   "assignedToName": "Kimberly Reid",
+   "collaborators": [
+    {
+     "uid": "u-kim",
+     "name": "Kimberly Reid",
+     "role": "manager"
+    },
+    {
+     "uid": "u-mar",
+     "name": "Marcus Hall",
+     "role": "admin"
+    }
+   ],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-019",
+   "orderNumber": "G3D-FX0019",
+   "name": "Fixture job 19",
+   "customer": "Montego Print House",
+   "quantity": 5,
+   "completedQuantity": 5,
+   "status": "completed",
+   "category": "miscellaneous",
+   "tags": [],
+   "createdAt": "2026-08-14T09:15:00",
+   "dueDate": "2026-08-20T23:59:00",
+   "completedAt": "2026-08-16T17:30:00",
+   "completedByUid": "u-kim",
+   "completedByName": "Kimberly Reid",
+   "assignedToUid": "u-kim",
+   "assignedToName": "Kimberly Reid",
+   "collaborators": [],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-020",
+   "orderNumber": "G3D-FX0020",
+   "name": "Fixture job 20",
+   "customer": "",
+   "quantity": 10,
+   "completedQuantity": 10,
+   "status": "completed",
+   "category": "design",
+   "tags": [],
+   "createdAt": "2026-10-01T09:15:00",
+   "dueDate": "2026-10-10T23:59:00",
+   "completedAt": "2026-10-05T16:00:00",
+   "completedByUid": "u-kim",
+   "completedByName": "Kimberly Reid",
+   "assignedToUid": "u-kim",
+   "assignedToName": "Kimberly Reid",
+   "collaborators": [
+    {
+     "uid": "u-mar",
+     "name": "Marcus Hall",
+     "role": "admin"
+    },
+    {
+     "uid": "u-ana",
+     "name": "Ana Brown",
+     "role": "staff"
+    }
+   ],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-021",
+   "orderNumber": "G3D-FX0021",
+   "name": "Fixture job 21",
+   "customer": "  island grill  ",
+   "quantity": 5,
+   "completedQuantity": 5,
+   "status": "completed",
+   "category": "repair",
+   "tags": [],
+   "createdAt": "2026-09-06T09:15:00",
+   "dueDate": "2026-09-08T23:59:00",
+   "completedAt": "2026-09-06T16:30:00",
+   "completedByUid": "u-ana",
+   "completedByName": "Ana Brown",
+   "assignedToUid": "u-ana",
+   "assignedToName": "Ana Brown",
+   "collaborators": [
+    {
+     "uid": "u-kim",
+     "name": "Kimberly Reid",
+     "role": "manager"
+    },
+    {
+     "uid": "u-dev",
+     "name": "Devon Clarke",
+     "role": "staff"
+    }
+   ],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-022",
+   "orderNumber": "G3D-FX0022",
+   "name": "Fixture job 22",
+   "customer": "Ocho Rios Tours",
+   "quantity": 2,
+   "completedQuantity": 2,
+   "status": "completed",
+   "category": "manufacturing",
+   "tags": [],
+   "createdAt": "2026-09-18T09:15:00",
+   "dueDate": "2026-09-20T23:59:00",
+   "completedAt": "2026-09-21T16:00:00",
+   "completedByUid": "u-dev",
+   "completedByName": "Devon Clarke",
+   "assignedToUid": "u-dev",
+   "assignedToName": "Devon Clarke",
+   "collaborators": [
+    {
+     "uid": "u-mar",
+     "name": "Marcus Hall",
+     "role": "admin"
+    },
+    {
+     "uid": "u-ana",
+     "name": "Ana Brown",
+     "role": "staff"
+    }
+   ],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-023",
+   "orderNumber": "G3D-FX0023",
+   "name": "Pins batch A",
+   "customer": "Kingston Makerspace",
+   "quantity": 30,
+   "completedQuantity": 30,
+   "status": "completed",
+   "category": "manufacturing",
+   "tags": [
+    "pins"
+   ],
+   "createdAt": "2026-09-01T10:00:00",
+   "dueDate": "2026-09-05T23:59:00",
+   "completedAt": "2026-09-04T11:00:00",
+   "completedByUid": "u-ana",
+   "completedByName": "Ana Brown",
+   "assignedToUid": "u-ana",
+   "assignedToName": "Ana Brown",
+   "collaborators": [],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-024",
+   "orderNumber": "G3D-FX0024",
+   "name": "Pins batch B crossing 50",
+   "customer": "Kingston Makerspace",
+   "quantity": 45,
+   "completedQuantity": 45,
+   "status": "completed",
+   "category": "manufacturing",
+   "tags": [
+    "pins"
+   ],
+   "createdAt": "2026-09-06T10:00:00",
+   "dueDate": "2026-09-12T23:59:00",
+   "completedAt": "2026-09-15T14:00:00",
+   "completedByUid": "u-dev",
+   "completedByName": "Devon Clarke",
+   "assignedToUid": "u-dev",
+   "assignedToName": "Devon Clarke",
+   "collaborators": [],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-025",
+   "orderNumber": "G3D-FX0025",
+   "name": "Restored after QA (stale completedAt)",
+   "customer": "UWI Engineering",
+   "quantity": 3,
+   "completedQuantity": 0,
+   "status": "pending",
+   "category": "manufacturing",
+   "tags": [],
+   "createdAt": "2026-08-20T10:00:00",
+   "dueDate": "2026-09-30T23:59:00",
+   "completedAt": "2026-09-10T09:00:00",
+   "completedByUid": "",
+   "completedByName": "",
+   "assignedToUid": "u-kim",
+   "assignedToName": "Kimberly Reid",
+   "collaborators": [],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-026",
+   "orderNumber": "G3D-FX0026",
+   "name": "Legacy undated completion",
+   "customer": "Hope Gardens Trust",
+   "quantity": 12,
+   "completedQuantity": 12,
+   "status": "completed",
+   "category": "manufacturing",
+   "tags": [
+    "pins"
+   ],
+   "createdAt": null,
+   "dueDate": "2026-03-01T23:59:00",
+   "completedAt": null,
+   "completedByUid": "",
+   "completedByName": "Old System",
+   "assignedToUid": "",
+   "assignedToName": "",
+   "collaborators": [],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-027",
+   "orderNumber": "G3D-FX0027",
+   "name": "Overdue enclosure",
+   "customer": "Port Royal Marine",
+   "quantity": 2,
+   "completedQuantity": 0,
+   "status": "started",
+   "category": "repair",
+   "tags": [],
+   "createdAt": "2026-08-25T10:00:00",
+   "dueDate": "2026-09-20T23:59:00",
+   "completedAt": null,
+   "completedByUid": "",
+   "completedByName": "",
+   "assignedToUid": "u-dev",
+   "assignedToName": "Devon Clarke",
+   "collaborators": [],
+   "dueDateChangedAt": "2026-09-12T16:00:00",
+   "previousDueDate": "2026-09-14T23:59:00",
+   "dueDateChangeNote": "Waiting on replacement hinge",
+   "dueDateChangedByName": "Kimberly Reid"
+  },
+  {
+   "id": "job-028",
+   "orderNumber": "G3D-FX0028",
+   "name": "Overdue then finished in October",
+   "customer": "Negril Surf Shop",
+   "quantity": 4,
+   "completedQuantity": 4,
+   "status": "completed",
+   "category": "manufacturing",
+   "tags": [],
+   "createdAt": "2026-09-02T10:00:00",
+   "dueDate": "2026-09-25T23:59:00",
+   "completedAt": "2026-10-03T10:00:00",
+   "completedByUid": "u-ana",
+   "completedByName": "Ana Brown",
+   "assignedToUid": "u-ana",
+   "assignedToName": "Ana Brown",
+   "collaborators": [],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-029",
+   "orderNumber": "G3D-FX0029",
+   "name": "Open, not yet due",
+   "customer": "Montego Print House",
+   "quantity": 8,
+   "completedQuantity": 0,
+   "status": "pending",
+   "category": "manufacturing",
+   "tags": [],
+   "createdAt": "2026-09-28T10:00:00",
+   "dueDate": "2026-10-30T23:59:00",
+   "completedAt": null,
+   "completedByUid": "",
+   "completedByName": "",
+   "assignedToUid": "",
+   "assignedToName": "",
+   "collaborators": [],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-030",
+   "orderNumber": "G3D-FX0030",
+   "name": "Created after September",
+   "customer": "Ocho Rios Tours",
+   "quantity": 1,
+   "completedQuantity": 0,
+   "status": "pending",
+   "category": "manufacturing",
+   "tags": [],
+   "createdAt": "2026-10-02T10:00:00",
+   "dueDate": "2026-10-06T23:59:00",
+   "completedAt": null,
+   "completedByUid": "",
+   "completedByName": "",
+   "assignedToUid": "",
+   "assignedToName": "",
+   "collaborators": [],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-031",
+   "orderNumber": "G3D-FX0031",
+   "name": "Last-second September completion",
+   "customer": "",
+   "quantity": 1,
+   "completedQuantity": 1,
+   "status": "completed",
+   "category": "design",
+   "tags": [],
+   "createdAt": "2026-09-29T10:00:00",
+   "dueDate": "2026-09-30T23:59:00",
+   "completedAt": "2026-09-30T23:59:00",
+   "completedByUid": "",
+   "completedByName": "",
+   "assignedToUid": "",
+   "assignedToName": "",
+   "collaborators": [],
+   "dueDateChangedAt": "2026-09-29T12:00:00",
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  },
+  {
+   "id": "job-032",
+   "orderNumber": "G3D-FX0032",
+   "name": "Last year job",
+   "customer": "Island Grill",
+   "quantity": 6,
+   "completedQuantity": 6,
+   "status": "completed",
+   "category": "manufacturing",
+   "tags": [],
+   "createdAt": "2025-09-01T10:00:00",
+   "dueDate": "2025-09-10T23:59:00",
+   "completedAt": "2025-09-08T10:00:00",
+   "completedByUid": "u-mar",
+   "completedByName": "Marcus Hall",
+   "assignedToUid": "",
+   "assignedToName": "",
+   "collaborators": [],
+   "dueDateChangedAt": null,
+   "previousDueDate": null,
+   "dueDateChangeNote": "",
+   "dueDateChangedByName": ""
+  }
+ ],
+ "materials": [
+  {
+   "id": "m1",
+   "name": "Pin Backs",
+   "unit": "pcs",
+   "quantity": 120,
+   "totalQuantity": 1000
+  },
+  {
+   "id": "m2",
+   "name": "Lamina",
+   "unit": "sheets",
+   "quantity": 9,
+   "totalQuantity": 20
+  },
+  {
+   "id": "m3",
+   "name": "PLA Black",
+   "unit": "kg",
+   "quantity": 0.75,
+   "totalQuantity": 0
+  }
+ ],
+ "machines": [
+  {
+   "id": "mc1",
+   "name": "Prusa MK4 #1",
+   "location": "Bay A",
+   "maintenanceHistory": [
+    {
+     "completedAt": "2026-09-03T08:00:00",
+     "procedureTitles": [
+      "Clean bed",
+      "Lubricate rods"
+     ],
+     "completedByName": "Ana Brown",
+     "notes": "Bed re-levelled"
+    },
+    {
+     "completedAt": "2026-08-02T08:00:00",
+     "procedureTitles": [
+      "Nozzle swap"
+     ],
+     "completedByName": "Devon Clarke",
+     "notes": ""
+    },
+    {
+     "completedAt": "2026-09-24T17:45:00",
+     "procedureTitles": [
+      "Belt tension"
+     ],
+     "completedByName": "",
+     "notes": ""
+    }
+   ]
+  },
+  {
+   "id": "mc2",
+   "name": "Bambu X1C",
+   "location": "",
+   "maintenanceHistory": [
+    {
+     "completedAt": null,
+     "procedureTitles": [
+      "Legacy"
+     ],
+     "completedByName": "x",
+     "notes": ""
+    }
+   ]
+  },
+  {
+   "id": "mc3",
+   "name": "Laser Cutter",
+   "location": "Workshop",
+   "maintenanceHistory": [
+    {
+     "completedAt": "2026-07-15T09:00:00",
+     "procedureTitles": [
+      "Mirror clean"
+     ],
+     "completedByName": "Marcus Hall",
+     "notes": ""
+    }
+   ]
+  }
+ ],
+ "periods": [
+  {
+   "name": "september",
+   "period": {
+    "kind": "month",
+    "year": 2026,
+    "month": 9
+   }
+  },
+  {
+   "name": "october-in-progress",
+   "period": {
+    "kind": "month",
+    "year": 2026,
+    "month": 10
+   }
+  },
+  {
+   "name": "q3",
+   "period": {
+    "kind": "quarter",
+    "year": 2026,
+    "quarter": 3
+   }
+  },
+  {
+   "name": "year",
+   "period": {
+    "kind": "year",
+    "year": 2026
+   }
+  },
+  {
+   "name": "custom",
+   "period": {
+    "kind": "custom",
+    "start": "2026-09-10",
+    "end": "2026-09-20"
+   }
+  },
+  {
+   "name": "future-empty",
+   "period": {
+    "kind": "month",
+    "year": 2027,
+    "month": 1
+   }
+  }
+ ]
+}
