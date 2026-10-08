@@ -72,10 +72,19 @@ const server = createServer(async (request, response) => {
     return;
   }
 
+  // The suite rebuilds every run, so the shell must never be cached: a stale
+  // index.html would point at the old bundle. Files under /assets/ carry a
+  // content hash in their name, so a rebuild changes their URLs and caching
+  // them can never hide new code. They are served immutable, as production
+  // serves them. Without that, Firefox re-fetches the bundled JetBrains Mono
+  // on every navigation, a test that navigates in a loop cancels one fetch
+  // mid-flight, and the console error ("downloadable font: download failed …
+  // status=2152398850") fails the test. serveInterFromDisk fixes the same
+  // problem for Inter.
+  const hashedAsset = file.startsWith(join(ROOT, 'assets') + '/');
   response.writeHead(200, {
     'Content-Type': TYPES.get(extname(file)) ?? 'application/octet-stream',
-    // The suite rebuilds every run; a cached bundle would hide the new one.
-    'Cache-Control': 'no-store',
+    'Cache-Control': hashedAsset ? 'public, max-age=31536000, immutable' : 'no-store',
   });
   response.end(body);
 });
