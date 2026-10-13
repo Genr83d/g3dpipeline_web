@@ -22,6 +22,15 @@ export function formatDays(days: number | null): string {
   return days === null ? '—' : `${(Math.round(days * 10) / 10).toFixed(1)} d`;
 }
 
+/** 0.5 → "30 min", 6.5 → "6.5 h", 64.5 → "2.7 d"; null → "—". Calendar time,
+ *  so a weekend counts. */
+export function formatHours(hours: number | null): string {
+  if (hours === null) return '—';
+  if (hours < 1) return `${Math.round(hours * 60)} min`;
+  if (hours < 48) return `${(Math.round(hours * 10) / 10).toFixed(1)} h`;
+  return `${(Math.round((hours / 24) * 10) / 10).toFixed(1)} d`;
+}
+
 export type KpiKey = keyof ReportKpis;
 
 /** Whether an increase in this KPI is good news, bad news, or neither. */

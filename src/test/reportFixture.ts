@@ -1,5 +1,16 @@
 import fixture from './fixtures/report-fixture.json';
-import type { Job, JobCategory, JobStatus, JobTag, Machine, Material, UserRole } from '../types';
+import type {
+  Hazard,
+  HazardSeverity,
+  HazardStatus,
+  Job,
+  JobCategory,
+  JobStatus,
+  JobTag,
+  Machine,
+  Material,
+  UserRole,
+} from '../types';
 import type { ReportPeriod } from '../lib/reportPeriods';
 import { OPERATIONAL_MACHINE_FIELDS } from '../lib/machineStatus';
 
@@ -61,20 +72,86 @@ export const fixtureMaterials: Material[] = fixture.materials.map((m) => ({
   updatedByName: '',
 }));
 
-export const fixtureMachines: Machine[] = fixture.machines.map((m) => ({
-  id: m.id,
-  name: m.name,
-  location: m.location,
-  notes: '',
-  procedures: [],
-  maintenanceHistory: m.maintenanceHistory.map((r) => ({ ...r, completedAt: date(r.completedAt) })),
-  createdAt: null,
-  createdByUid: '',
-  createdByName: '',
+interface RawDowntime {
+  downSince: string;
+  repairedAt: string;
+  reason: string;
+  reportedByName: string;
+  repairedByName: string;
+  assignedToName: string;
+}
+
+interface RawMachineStatus {
+  status?: string;
+  downReason?: string;
+  downSince?: string;
+  downReportedByName?: string;
+  repairAssignedToName?: string;
+  downtimeHistory?: RawDowntime[];
+}
+
+export const fixtureMachines: Machine[] = fixture.machines.map((m) => {
+  const raw = m as typeof m & RawMachineStatus;
+  const down = raw.status === 'down';
+  return {
+    id: m.id,
+    name: m.name,
+    location: m.location,
+    notes: '',
+    procedures: [],
+    maintenanceHistory: m.maintenanceHistory.map((r) => ({ ...r, completedAt: date(r.completedAt) })),
+    createdAt: null,
+    createdByUid: '',
+    createdByName: '',
+    updatedAt: null,
+    updatedByUid: '',
+    updatedByName: '',
+    ...OPERATIONAL_MACHINE_FIELDS,
+    status: down ? 'down' : 'operational',
+    downReason: raw.downReason ?? '',
+    downSince: date(raw.downSince ?? null),
+    downReportedByName: raw.downReportedByName ?? '',
+    repairAssignedToName: raw.repairAssignedToName ?? '',
+    downtimeHistory: (raw.downtimeHistory ?? []).map((r) => ({
+      ...r,
+      downSince: new Date(r.downSince),
+      repairedAt: new Date(r.repairedAt),
+    })),
+  };
+});
+
+interface RawHazard {
+  id: string;
+  title: string;
+  location: string;
+  severity: string;
+  status: string;
+  createdAt: string | null;
+  reportedByName: string;
+  assignedToName: string;
+  resolvedAt: string | null;
+  resolvedByName: string;
+  resolutionNote: string;
+}
+
+export const fixtureHazards: Hazard[] = (fixture.hazards as RawHazard[]).map((h) => ({
+  id: h.id,
+  title: h.title,
+  description: '',
+  location: h.location,
+  severity: h.severity as HazardSeverity,
+  status: h.status as HazardStatus,
+  reportedByUid: '',
+  reportedByName: h.reportedByName,
+  assignedToUid: '',
+  assignedToName: h.assignedToName,
+  assignedByName: '',
+  assignedAt: null,
+  resolutionNote: h.resolutionNote,
+  resolvedAt: date(h.resolvedAt),
+  resolvedByName: h.resolvedByName,
+  createdAt: date(h.createdAt),
   updatedAt: null,
-  updatedByUid: '',
-  updatedByName: '',
-  ...OPERATIONAL_MACHINE_FIELDS,
 }));
 
 export const fixturePeriods = fixture.periods as Array<{ name: string; period: ReportPeriod }>;

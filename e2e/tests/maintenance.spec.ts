@@ -1,6 +1,7 @@
 import { test, expect, storageStatePath } from '../support/fixtures';
 import { SEEDED, uniqueName } from '../support/seed';
 import { createCleanup } from '../support/cleanup';
+import { listDocuments } from '../support/emulator';
 
 /** P1. Machines CRUD plus the procedure checklist and the maintenance log
  *  that depends on it. */
@@ -205,6 +206,20 @@ test.describe('machine status', () => {
     await expect(card.getByTestId('machine-down-pill')).toHaveCount(0);
     await expect(card.getByRole('button', { name: 'Report down' })).toBeVisible();
     await expect(page.getByTestId('nav-machine-alert')).toHaveCount(0);
+
+    // The breakdown was kept, so a report can total the downtime.
+    await expect
+      .poll(async () => {
+        const saved = (await listDocuments('machines')).find((m) => m.data.name === name);
+        return saved?.data.downtimeHistory;
+      })
+      .toEqual([
+        expect.objectContaining({
+          reason: 'Spindle will not spin up',
+          assignedToName: 'Sasha Second',
+          repairedByName: 'Ada Admin',
+        }),
+      ]);
   });
 
   test.describe('as staff', () => {

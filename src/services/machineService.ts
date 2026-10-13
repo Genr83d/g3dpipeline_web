@@ -1,5 +1,6 @@
 import {
   addDoc,
+  arrayUnion,
   collection,
   deleteDoc,
   doc,
@@ -18,6 +19,7 @@ import {
   toDate,
   type AppUser,
   type Machine,
+  type MachineDowntimeRecord,
   type MaintenanceHistoryRecord,
   type MaintenanceProcedure,
 } from '../types';
@@ -93,7 +95,32 @@ export function parseMachine(id: string, data: Record<string, unknown>): Machine
     repairAssignedAt: toDate(data.repairAssignedAt),
     lastRepairedAt: toDate(data.lastRepairedAt),
     lastRepairedByName: text(data.lastRepairedByName),
+    downtimeHistory: parseDowntimeHistory(data.downtimeHistory),
   };
+}
+
+function parseDowntimeRecord(value: unknown): MachineDowntimeRecord | null {
+  const data = value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+  const downSince = toDate(data.downSince);
+  const repairedAt = toDate(data.repairedAt);
+  // A record with no start or end has no duration to report.
+  if (!downSince || !repairedAt) return null;
+  return {
+    downSince,
+    repairedAt,
+    reason: text(data.reason),
+    reportedByName: text(data.reportedByName),
+    repairedByName: text(data.repairedByName),
+    assignedToName: text(data.assignedToName),
+  };
+}
+
+function parseDowntimeHistory(value: unknown): MachineDowntimeRecord[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map(parseDowntimeRecord)
+    .filter((record): record is MachineDowntimeRecord => record !== null)
+    .sort((a, b) => b.repairedAt.getTime() - a.repairedAt.getTime());
 }
 
 function text(value: unknown): string {
@@ -213,7 +240,22 @@ export async function assignMachineRepair(
  *  fields, keeping only who repaired it and when. */
 export async function markMachineRepaired(actor: MachineActor, machine: Machine): Promise<void> {
   if (!canMarkMachineRepaired(actor)) throw new Error('Your account cannot mark machines repaired.');
+  // The breakdown goes into the history before the down fields are cleared, so
+  // a report can total downtime. arrayUnion appends without reading the list
+  // first, and a record needs its start time to have a duration.
+  const record: MachineDowntimeRecord | null =
+    machine.status === 'down' && machine.downSince
+      ? {
+          downSince: machine.downSince,
+          repairedAt: new Date(),
+          reason: machine.downReason,
+          reportedByName: machine.downReportedByName,
+          repairedByName: actorDisplayName(actor),
+          assignedToName: machine.repairAssignedToName,
+        }
+      : null;
   await updateDoc(doc(db, 'machines', machine.id), {
+    ...(record ? { downtimeHistory: arrayUnion(record) } : {}),
     status: 'operational',
     downReason: '',
     downSince: deleteField(),

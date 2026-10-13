@@ -948,7 +948,42 @@
      "completedByName": "",
      "notes": ""
     }
-   ]
+   ],
+   "downtimeHistory": [
+    {
+     "downSince": "2026-09-10T09:00:00",
+     "repairedAt": "2026-09-10T15:30:00",
+     "reason": "Nozzle jam",
+     "reportedByName": "Ana Brown",
+     "repairedByName": "Devon Clarke",
+     "assignedToName": "Devon Clarke"
+    },
+    {
+     "downSince": "2026-08-30T20:00:00",
+     "repairedAt": "2026-09-02T08:00:00",
+     "reason": "Heater cartridge failed",
+     "reportedByName": "",
+     "repairedByName": "Ana Brown",
+     "assignedToName": ""
+    },
+    {
+     "downSince": "2026-07-04T10:00:00",
+     "repairedAt": "2026-07-05T10:00:00",
+     "reason": "Belt snapped",
+     "reportedByName": "Ana Brown",
+     "repairedByName": "Devon Clarke",
+     "assignedToName": "Devon Clarke"
+    },
+    {
+     "downSince": "2026-09-29T22:00:00",
+     "repairedAt": "2026-10-02T10:00:00",
+     "reason": "Z-axis motor stalled",
+     "reportedByName": "Devon Clarke",
+     "repairedByName": "Ana Brown",
+     "assignedToName": "Ana Brown"
+    }
+   ],
+   "status": "operational"
   },
   {
    "id": "mc2",
@@ -963,7 +998,13 @@
      "completedByName": "x",
      "notes": ""
     }
-   ]
+   ],
+   "status": "down",
+   "downReason": "AMS feeder fault",
+   "downSince": "2026-09-28T07:30:00",
+   "downReportedByName": "Devon Clarke",
+   "repairAssignedToName": "Ana Brown",
+   "downtimeHistory": []
   },
   {
    "id": "mc3",
@@ -978,7 +1019,9 @@
      "completedByName": "Marcus Hall",
      "notes": ""
     }
-   ]
+   ],
+   "downtimeHistory": [],
+   "status": "operational"
   }
  ],
  "periods": [
@@ -1028,6 +1071,112 @@
     "year": 2027,
     "month": 1
    }
+  }
+ ],
+ "hazards": [
+  {
+   "id": "hz1",
+   "title": "Exposed wiring on the CNC enclosure",
+   "location": "Machine shop",
+   "severity": "critical",
+   "status": "resolved",
+   "createdAt": "2026-09-02T09:00:00",
+   "reportedByName": "Devon Clarke",
+   "assignedToName": "Ana Brown",
+   "resolvedAt": "2026-09-02T17:00:00",
+   "resolvedByName": "Ana Brown",
+   "resolutionNote": "Conduit refitted and tested."
+  },
+  {
+   "id": "hz2",
+   "title": "Oil on the floor by press 2",
+   "location": "Press bay",
+   "severity": "high",
+   "status": "inProgress",
+   "createdAt": "2026-09-15T10:00:00",
+   "reportedByName": "Ana Brown",
+   "assignedToName": "Devon Clarke",
+   "resolvedAt": null,
+   "resolvedByName": "",
+   "resolutionNote": ""
+  },
+  {
+   "id": "hz3",
+   "title": "Loose handrail on the mezzanine",
+   "location": "Mezzanine",
+   "severity": "medium",
+   "status": "resolved",
+   "createdAt": "2026-08-20T08:30:00",
+   "reportedByName": "Kimberly Reid",
+   "assignedToName": "Devon Clarke",
+   "resolvedAt": "2026-09-05T11:00:00",
+   "resolvedByName": "Devon Clarke",
+   "resolutionNote": "Bolts replaced."
+  },
+  {
+   "id": "hz4",
+   "title": "Flickering light over bench 3",
+   "location": "Workshop",
+   "severity": "low",
+   "status": "open",
+   "createdAt": "2026-09-28T16:00:00",
+   "reportedByName": "",
+   "assignedToName": "",
+   "resolvedAt": null,
+   "resolvedByName": "",
+   "resolutionNote": ""
+  },
+  {
+   "id": "hz5",
+   "title": "Fire exit blocked by pallets",
+   "location": "Loading bay",
+   "severity": "high",
+   "status": "resolved",
+   "createdAt": "2026-09-30T23:30:00",
+   "reportedByName": "Devon Clarke",
+   "assignedToName": "Ana Brown",
+   "resolvedAt": "2026-10-03T09:00:00",
+   "resolvedByName": "Ana Brown",
+   "resolutionNote": "Pallets moved; floor marked."
+  },
+  {
+   "id": "hz6",
+   "title": "Cracked guard on the bandsaw",
+   "location": "Machine shop",
+   "severity": "medium",
+   "status": "open",
+   "createdAt": "2026-10-05T13:00:00",
+   "reportedByName": "Ana Brown",
+   "assignedToName": "",
+   "resolvedAt": null,
+   "resolvedByName": "",
+   "resolutionNote": ""
+  },
+  {
+   "id": "hz7",
+   "title": "Missing first-aid kit refill",
+   "location": "Office",
+   "severity": "low",
+   "status": "resolved",
+   "createdAt": "2026-08-01T09:00:00",
+   "reportedByName": "Kimberly Reid",
+   "assignedToName": "Ana Brown",
+   "resolvedAt": null,
+   "resolvedByName": "Ana Brown",
+   "resolutionNote": ""
+  },
+  {
+   "id": "hz8",
+   "title": "Report awaiting its timestamp",
+   "location": "Workshop",
+   "severity": "high",
+   "status": "open",
+   "createdAt": null,
+   "reportedByName": "Ana Brown",
+   "assignedToName": "",
+   "resolvedAt": null,
+   "resolvedByName": "",
+   "resolutionNote": ""
   }
  ]
 }

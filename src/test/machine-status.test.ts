@@ -7,6 +7,7 @@ vi.mock('firebase/firestore', () => ({
   addDoc: vi.fn(),
   deleteDoc: vi.fn(),
   deleteField: vi.fn(),
+  arrayUnion: vi.fn(),
   updateDoc: vi.fn(),
   onSnapshot: vi.fn(),
   query: vi.fn(),
@@ -104,6 +105,35 @@ describe('machine status helpers', () => {
     const parsed = parseMachine('m1', { name: 'Lathe', status: 'broken', downReason: 42 });
     expect(parsed.status).toBe('operational');
     expect(parsed.downReason).toBe('');
+  });
+
+  it('parses the downtime history newest first and drops records with no duration', () => {
+    const parsed = parseMachine('m1', {
+      name: 'Lathe',
+      downtimeHistory: [
+        {
+          downSince: new Date('2026-09-01T08:00:00'),
+          repairedAt: new Date('2026-09-01T12:00:00'),
+          reason: 'Jam',
+          reportedByName: 'Ana',
+          repairedByName: 'Sam',
+          assignedToName: 'Sam',
+        },
+        { downSince: new Date('2026-09-10T08:00:00'), repairedAt: new Date('2026-09-10T09:00:00') },
+        { downSince: new Date('2026-09-20T08:00:00') },
+        { repairedAt: new Date('2026-09-21T08:00:00') },
+        'garbage',
+        null,
+      ],
+    });
+    expect(parsed.downtimeHistory.map((r) => r.repairedAt)).toEqual([
+      new Date('2026-09-10T09:00:00'),
+      new Date('2026-09-01T12:00:00'),
+    ]);
+    expect(parsed.downtimeHistory[1]).toMatchObject({ reason: 'Jam', repairedByName: 'Sam' });
+    expect(parsed.downtimeHistory[0].reason).toBe('');
+    expect(parseMachine('m1', { name: 'Lathe' }).downtimeHistory).toEqual([]);
+    expect(parseMachine('m1', { name: 'Lathe', downtimeHistory: 'none' }).downtimeHistory).toEqual([]);
   });
 
   it('labels the pill with the repairer, or Unassigned', () => {

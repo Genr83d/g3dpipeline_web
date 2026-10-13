@@ -5,6 +5,7 @@ import {
   KPI_ORDER,
   formatCount,
   formatDays,
+  formatHours,
   formatKpi,
   formatPercent,
   kpiDelta,
@@ -67,6 +68,8 @@ export function ReportDocument({ report, logoSrc }: ReportDocumentProps) {
         <Delivery report={report} />
         <Materials report={report} />
         <Maintenance report={report} />
+        <Downtime report={report} />
+        <Hazards report={report} />
         <Appendix report={report} />
       </Page>
     </Document>
@@ -699,6 +702,233 @@ function Maintenance({ report }: { report: ReportData }) {
           </Text>
         </View>
       )}
+    </View>
+  );
+}
+
+/* ── 09 Machine downtime ────────────────────────────────────────────────── */
+
+function Downtime({ report }: { report: ReportData }) {
+  const { machines, totalIncidents, totalHours, meanRepairHours, stillDown } = report.downtime;
+  const heading = (
+    <SectionHeading
+      number="09"
+      title="Machine downtime"
+      caption={
+        totalIncidents === 0
+          ? undefined
+          : `${formatCount(totalIncidents)} breakdown${totalIncidents === 1 ? '' : 's'} across ${formatCount(machines.length)} machine${machines.length === 1 ? '' : 's'}, ${formatHours(totalHours)} down in total. Mean time to repair ${formatHours(meanRepairHours)}.`
+      }
+    />
+  );
+
+  if (machines.length === 0) {
+    return (
+      <View wrap={false}>
+        {heading}
+        <EmptyLine>No machine was reported down in this period.</EmptyLine>
+      </View>
+    );
+  }
+
+  return (
+    <View>
+      <Table
+        lead={heading}
+        columns={[
+          { label: 'Machine', flex: 3.2 },
+          { label: 'Breakdowns', flex: 1.2, align: 'right', mono: true },
+          { label: 'Time down', flex: 1.3, align: 'right', mono: true },
+          { label: 'Availability', flex: 2.3 },
+        ]}
+        rows={machines.map((m) => [
+          <View>
+            <Text style={{ ...s.body, color: c.ink }}>{m.name}</Text>
+            {m.location ? <Text style={{ ...s.muted, fontSize: 6.5 }}>{m.location}</Text> : null}
+          </View>,
+          formatCount(m.incidents.length),
+          formatHours(m.hours),
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <ProportionBar
+              value={m.availability ?? 0}
+              width={62}
+              color={m.availability === null ? c.faint : availabilityColor(m.availability)}
+            />
+            <Text style={{ ...s.mono, fontSize: 7, color: c.label, marginLeft: 5 }}>
+              {formatPercent(m.availability)}
+            </Text>
+          </View>,
+        ])}
+      />
+      {stillDown.length > 0 && (
+        <View
+          style={{
+            flexDirection: 'row',
+            marginTop: 6,
+            padding: 7,
+            backgroundColor: c.dangerSoft,
+            borderRadius: 2,
+          }}
+          wrap={false}
+        >
+          <Led color={c.danger} size={4.5} />
+          <Text style={{ ...s.body, fontSize: 7.5, color: c.ink, marginLeft: 6, flex: 1 }}>
+            {report.inProgress ? 'Still down' : 'Down at the end of the period'}: {stillDown.join(', ')}.
+          </Text>
+        </View>
+      )}
+      {machines.map((m) => (
+        <Table
+          key={m.name}
+          zebra={false}
+          dense
+          lead={
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', marginTop: 12, marginBottom: 3 }}>
+              <Text style={{ fontFamily: pdfFonts.sans, fontWeight: 600, fontSize: 9, color: c.ink }}>
+                {m.name}
+              </Text>
+              <Text style={{ ...s.label, marginLeft: 'auto' }}>
+                {formatHours(m.hours)} down · {m.incidents.length} breakdown{m.incidents.length === 1 ? '' : 's'}
+              </Text>
+            </View>
+          }
+          columns={[
+            { label: 'Went down', flex: 1.7, mono: true },
+            { label: 'Back up', flex: 1.7, mono: true },
+            { label: 'In period', flex: 1.15, align: 'right', mono: true },
+            { label: 'Fault', flex: 2.4 },
+            { label: 'Reported by', flex: 1.3 },
+            { label: 'Repair', flex: 1.4 },
+          ]}
+          rows={m.incidents.map((i) => [
+            formatReportDateTime(i.startedAt),
+            i.ongoing ? (
+              <Text style={{ ...s.mono, color: c.danger }}>
+                {i.endedAt === null ? 'Still down' : `${formatReportDateTime(i.endedAt)}`}
+              </Text>
+            ) : (
+              formatReportDateTime(i.endedAt!)
+            ),
+            formatHours(i.hoursInPeriod),
+            i.reason || '—',
+            i.reportedByName,
+            i.repairedByName || (i.assignedToName ? `${i.assignedToName} (assigned)` : 'Unassigned'),
+          ])}
+        />
+      ))}
+      <Text style={{ ...s.muted, fontSize: 6.5, marginTop: 6 }}>
+        Calendar time from when a machine was reported down to when it was marked repaired. A breakdown
+        that crosses the start or end of the period counts only the part inside it, but its full length
+        counts toward mean time to repair once repaired. A date in red means the machine was still down when
+        the period ended. Availability is the share of the period the machine was up.
+      </Text>
+    </View>
+  );
+}
+
+function availabilityColor(rate: number): string {
+  return rate >= 0.95 ? c.secondary : rate >= 0.8 ? c.amber : c.danger;
+}
+
+/* ── 10 Hazards ─────────────────────────────────────────────────────────── */
+
+const severityColor: Readonly<Record<string, string>> = {
+  low: c.primary,
+  medium: c.amber,
+  high: c.danger,
+  critical: c.danger,
+};
+
+function Hazards({ report }: { report: ReportData }) {
+  const { reported, resolved, openAtEnd, meanResolveHours, bySeverity, rows } = report.hazards;
+  const heading = (
+    <SectionHeading
+      number="10"
+      title="Hazards"
+      caption={
+        rows.length === 0
+          ? undefined
+          : `${formatCount(reported)} reported, ${formatCount(resolved)} resolved, ${formatCount(openAtEnd)} still open ${report.inProgress ? 'now' : 'at the end of the period'}. Mean time to resolve ${formatHours(meanResolveHours)}.`
+      }
+    />
+  );
+
+  if (rows.length === 0) {
+    return (
+      <View wrap={false}>
+        {heading}
+        <EmptyLine>No hazards were reported, resolved or left open in this period.</EmptyLine>
+      </View>
+    );
+  }
+
+  return (
+    <View>
+      <Table
+        lead={heading}
+        columns={[
+          { label: 'Severity', flex: 2 },
+          { label: 'Reported', flex: 1, align: 'right', mono: true },
+          { label: 'Resolved', flex: 1, align: 'right', mono: true },
+          { label: report.inProgress ? 'Open now' : 'Open at end', flex: 1.2, align: 'right', mono: true },
+        ]}
+        rows={bySeverity.map((row) => [
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Led color={severityColor[row.severity]} size={4.5} />
+            <Text style={{ ...s.body, color: c.ink, marginLeft: 5 }}>{row.label}</Text>
+          </View>,
+          formatCount(row.reported),
+          formatCount(row.resolved),
+          formatCount(row.openAtEnd),
+        ])}
+      />
+      <TableBlock
+        lead={<SubHeading>Hazard log</SubHeading>}
+        empty=""
+        dense
+        columns={[
+          { label: 'Severity', flex: 1.15 },
+          { label: 'Hazard · location', flex: 3.6 },
+          { label: 'Reported', flex: 1.55, mono: true },
+          { label: 'Status', flex: 1.2 },
+          { label: 'Handled by', flex: 1.9 },
+        ]}
+        rows={rows.map((r) => [
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Led color={severityColor[r.severity]} size={4.5} />
+            <Text style={{ ...s.body, fontSize: 7.5, color: c.ink, marginLeft: 4 }}>{r.severityLabel}</Text>
+          </View>,
+          <View>
+            <Text style={{ ...s.body, fontSize: 7.5, lineHeight: 1.3, color: c.ink, maxLines: 2, textOverflow: 'ellipsis' }}>
+              {r.title}
+            </Text>
+            <Text style={{ ...s.muted, fontSize: 6.5, lineHeight: 1.3, maxLines: 1, textOverflow: 'ellipsis' }}>
+              {[r.location, r.resolutionNote].filter(Boolean).join(' · ')}
+            </Text>
+          </View>,
+          <View>
+            <Text style={{ ...s.mono, fontSize: 7 }}>{formatReportDate(r.reportedAt)}</Text>
+            <Text style={{ ...s.muted, fontSize: 6.5 }}>{r.reportedByName}</Text>
+          </View>,
+          <View>
+            <Text style={{ ...s.body, fontSize: 7.5, color: r.resolvedAt || r.statusLabel === 'Resolved' ? c.secondary : c.danger }}>
+              {r.statusLabel}
+            </Text>
+            <Text style={{ ...s.muted, fontSize: 6.5 }}>
+              {r.daysOpen === null ? (r.resolvedAt ? formatReportDate(r.resolvedAt) : '') : `${r.daysOpen} d open`}
+            </Text>
+          </View>,
+          r.statusLabel === 'Resolved'
+            ? r.resolvedByName || r.assignedToName || '—'
+            : r.assignedToName
+              ? r.assignedToName
+              : 'Unassigned',
+        ])}
+      />
+      <Text style={{ ...s.muted, fontSize: 6.5, marginTop: 6 }}>
+        Includes every hazard reported in the period, every one resolved in it, and any still unresolved at the
+        end. Status is as at the end of the period.
+      </Text>
     </View>
   );
 }

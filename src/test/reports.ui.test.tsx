@@ -28,6 +28,7 @@ vi.mock('../routes/Workspace', async () => {
     useJobsOutlet: () => ({ jobs: f.fixtureJobs, loading: false, error: null, retry }),
     useInventoryOutlet: () => ({ materials: f.fixtureMaterials, loading: false, error: null, retry }),
     useMachinesOutlet: () => ({ machines: f.fixtureMachines, loading: false, error: null, retry }),
+    useHazardsOutlet: () => ({ hazards: f.fixtureHazards, loading: false, error: null, retry }),
   };
 });
 vi.mock('../reports/renderReportPdf', () => ({

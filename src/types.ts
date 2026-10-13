@@ -113,6 +113,17 @@ export interface MaintenanceHistoryRecord {
 
 export type MachineStatus = 'operational' | 'down';
 
+/** One breakdown that was repaired: when the machine went down, when it came
+ *  back, and who dealt with it. Kept so reports can total downtime. */
+export interface MachineDowntimeRecord {
+  downSince: Date;
+  repairedAt: Date;
+  reason: string;
+  reportedByName: string;
+  repairedByName: string;
+  assignedToName: string;
+}
+
 export interface Machine {
   id: string;
   name: string;
@@ -139,6 +150,8 @@ export interface Machine {
   repairAssignedAt: Date | null;
   lastRepairedAt: Date | null;
   lastRepairedByName: string;
+  /** Repaired breakdowns, newest first. */
+  downtimeHistory: MachineDowntimeRecord[];
 }
 
 /** How bad a shop-floor hazard is, least to most severe. */
