@@ -91,9 +91,10 @@ test('Complete stays disabled until every unit and section is done', async ({ pa
   await page.getByRole('button', { name: 'Mark as Completed' }).click();
   await expect(jobCard(page, name)).toHaveCount(0);
 
-  const stored = (await listDocuments('jobs')).find((job) => job.data.name === name);
-  expect(stored?.data).toMatchObject({ status: 'completed', completedQuantity: 3 });
-  expect(stored?.data.repairProcesses).toEqual([
+  const stored = async () =>
+    (await listDocuments('jobs')).find((job) => job.data.name === name)?.data;
+  await expect.poll(stored).toMatchObject({ status: 'completed', completedQuantity: 3 });
+  expect((await stored())?.repairProcesses).toEqual([
     expect.objectContaining({ name: 'Printing', progress: 100 }),
     expect.objectContaining({ name: 'Finishing', progress: 100 }),
   ]);

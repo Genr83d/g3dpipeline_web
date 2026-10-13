@@ -74,8 +74,8 @@ test('staff report, a manager assigns, the assignee resolves, a manager reopens,
   await expect(staffCard.getByRole('button', { name: 'Assign' })).toHaveCount(0);
   await expect(staffCard.getByRole('button', { name: 'Delete hazard report' })).toHaveCount(0);
 
-  const reported = await storedHazard(title);
-  expect(reported?.data).toMatchObject({
+  // The card shows the local write at once; the server copy can lag a beat.
+  await expect.poll(async () => (await storedHazard(title))?.data).toMatchObject({
     status: 'open',
     severity: 'critical',
     location: 'Loading dock',
@@ -114,8 +114,7 @@ test('staff report, a manager assigns, the assignee resolves, a manager reopens,
   await expect(resolvedCard).toContainText('Cleared the pallets and taped the exit zone.');
   await expect(resolvedCard).toContainText(`Resolved by${ACCOUNTS.staff.name}`);
 
-  const stored = await storedHazard(title);
-  expect(stored?.data).toMatchObject({
+  await expect.poll(async () => (await storedHazard(title))?.data).toMatchObject({
     status: 'resolved',
     resolutionNote: 'Cleared the pallets and taped the exit zone.',
     resolvedByName: ACCOUNTS.staff.name,
@@ -129,9 +128,12 @@ test('staff report, a manager assigns, the assignee resolves, a manager reopens,
   await expect(manager.getByRole('status').filter({ hasText: 'Hazard reopened.' })).toBeVisible();
   await manager.getByRole('button', { name: /^Active \(/ }).click();
   await expect(hazardCard(manager, title)).toContainText('Open');
-  const reopened = await storedHazard(title);
-  expect(reopened?.data.status).toBe('open');
-  expect(reopened?.data.resolutionNote).toBeUndefined();
+  await expect
+    .poll(async () => {
+      const data = (await storedHazard(title))?.data;
+      return { status: data?.status, note: data?.resolutionNote ?? null };
+    })
+    .toEqual({ status: 'open', note: null });
 
   // ---- Admin: delete it -------------------------------------------------
   const adminContext = await newAppContext(browser, 'admin');
@@ -142,7 +144,7 @@ test('staff report, a manager assigns, the assignee resolves, a manager reopens,
   await adminCard.getByRole('button', { name: 'Delete hazard report' }).click();
   await admin.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
   await expect(hazardCard(admin, title)).toHaveCount(0);
-  expect(await storedHazard(title)).toBeUndefined();
+  await expect.poll(async () => storedHazard(title)).toBeUndefined();
 
   await staffContext.close();
   await managerContext.close();
@@ -191,7 +193,7 @@ test('the reporter can correct a report nobody has picked up yet', async ({ page
   await form.getByRole('button', { name: 'Save Changes' }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await expect(hazardCard(page, corrected)).toContainText('High');
-  expect((await storedHazard(corrected))?.data.severity).toBe('high');
+  await expect.poll(async () => (await storedHazard(corrected))?.data.severity).toBe('high');
 });
 
 test.describe('AWF staff', () => {
@@ -214,6 +216,8 @@ test.describe('AWF staff', () => {
     await page.getByRole('dialog').getByLabel('What is the hazard?').fill(title);
     await page.getByRole('dialog').getByRole('button', { name: 'Report Hazard' }).click();
     await expect(hazardCard(page, title)).toBeVisible();
-    expect((await storedHazard(title))?.data.reportedByName).toBe(ACCOUNTS.awf.name);
+    await expect
+      .poll(async () => (await storedHazard(title))?.data.reportedByName)
+      .toBe(ACCOUNTS.awf.name);
   });
 });
