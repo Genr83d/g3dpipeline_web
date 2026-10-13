@@ -8,11 +8,3 @@ export function Spinner({ className = 'h-10 w-10' }: { className?: string }) {
     />
   );
 }
-
-export function CenteredSpinner() {
-  return (
-    <div className="flex justify-center py-24">
-      <Spinner />
-    </div>
-  );
-}

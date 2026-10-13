@@ -38,7 +38,7 @@ export const MONTH_NAMES = [
 
 const DAY_MS = 86_400_000;
 
-export function shortMonthName(monthIndex: number): string {
+function shortMonthName(monthIndex: number): string {
   return MONTH_NAMES[monthIndex].slice(0, 3);
 }
 
@@ -52,7 +52,7 @@ export function dayKey(d: Date): string {
 }
 
 /** `YYYY-MM-DD` → local midnight. */
-export function parseDayKey(key: string): Date {
+function parseDayKey(key: string): Date {
   const [y, m, d] = key.split('-').map(Number);
   return new Date(y, m - 1, d);
 }
@@ -143,7 +143,7 @@ export function previousPeriod(period: ReportPeriod): ReportPeriod {
 }
 
 /** Filename-safe period token: 2026-09, 2026-Q3, 2026, 2026-03-01_2026-06-15. */
-export function periodSlug(period: ReportPeriod): string {
+function periodSlug(period: ReportPeriod): string {
   switch (period.kind) {
     case 'month':
       return `${period.year}-${pad(period.month)}`;
@@ -208,8 +208,4 @@ export function periodBuckets(range: ReportRange): ReportBucket[] {
     cursor = next;
   }
   return buckets;
-}
-
-export function currentMonthPeriod(now: Date = new Date()): ReportPeriod {
-  return { kind: 'month', year: now.getFullYear(), month: now.getMonth() + 1 };
 }

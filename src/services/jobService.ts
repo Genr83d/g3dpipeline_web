@@ -423,7 +423,7 @@ function storedQuantity(data: Record<string, unknown>): number {
   return typeof data.quantity === 'number' ? data.quantity : 0;
 }
 
-export const JOB_NOT_FINISHED_MESSAGE = 'This job is not finished yet:';
+const JOB_NOT_FINISHED_MESSAGE = 'This job is not finished yet:';
 
 /** Marks the job completed once every unit and section is done, deducting whatever the job's tags consume in the
  *  same transaction — see src/lib/jobTags.ts for the rules.

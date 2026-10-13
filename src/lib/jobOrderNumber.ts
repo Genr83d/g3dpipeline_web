@@ -1,6 +1,6 @@
 /** Shared with the Flutter app: `G3D-` followed by the first eight characters
  *  of the Firestore document ID, uppercased. */
-export const JOB_ORDER_NUMBER_PREFIX = 'G3D-';
+const JOB_ORDER_NUMBER_PREFIX = 'G3D-';
 
 const ORDER_NUMBER_ID_LENGTH = 8;
 

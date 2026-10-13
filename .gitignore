@@ -14,3 +14,4 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 e2e/.logs
+test-results

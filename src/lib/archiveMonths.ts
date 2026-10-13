@@ -29,7 +29,7 @@ const monthYearFmt = new Intl.DateTimeFormat(undefined, {
 });
 
 export const ARCHIVE_ALL_MONTHS_LABEL = 'All months';
-export const ARCHIVE_UNKNOWN_MONTH_LABEL = 'Unknown month';
+const ARCHIVE_UNKNOWN_MONTH_LABEL = 'Unknown month';
 
 export function archiveMonthKey(completedAt: Date): ArchiveMonthKey {
   const month = String(completedAt.getMonth() + 1).padStart(2, '0');

@@ -41,11 +41,11 @@ export function hazardStatusLabel(status: HazardStatus): string {
   return STATUS_LABELS[status];
 }
 
-export function parseHazardSeverity(value: unknown): HazardSeverity {
+function parseHazardSeverity(value: unknown): HazardSeverity {
   return value === 'low' || value === 'high' || value === 'critical' ? value : 'medium';
 }
 
-export function parseHazardStatus(value: unknown): HazardStatus {
+function parseHazardStatus(value: unknown): HazardStatus {
   return value === 'inProgress' || value === 'resolved' ? value : 'open';
 }
 
@@ -157,7 +157,7 @@ export function validateHazardInput(input: HazardInput): string | null {
   return null;
 }
 
-export const RESOLUTION_REQUIRED_MESSAGE = 'Say what was done to make it safe.';
+const RESOLUTION_REQUIRED_MESSAGE = 'Say what was done to make it safe.';
 
 export function validateResolutionNote(note: string): string | null {
   const trimmed = note.trim();
