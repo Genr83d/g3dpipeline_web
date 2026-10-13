@@ -710,6 +710,14 @@ function Maintenance({ report }: { report: ReportData }) {
 
 function Downtime({ report }: { report: ReportData }) {
   const { machines, totalIncidents, totalHours, meanRepairHours, stillDown } = report.downtime;
+  const downtimeNote = (
+    <Text style={{ ...s.muted, fontSize: 6.5, marginTop: 6 }}>
+        Calendar time from when a machine was reported down to when it was marked repaired. A breakdown
+        that crosses the start or end of the period counts only the part inside it, but its full length
+        counts toward mean time to repair once repaired. A date in red means the machine was still down when
+        the period ended. Availability is the share of the period the machine was up.
+      </Text>
+  );
   const heading = (
     <SectionHeading
       number="09"
@@ -777,11 +785,12 @@ function Downtime({ report }: { report: ReportData }) {
           </Text>
         </View>
       )}
-      {machines.map((m) => (
+      {machines.map((m, index) => (
         <Table
           key={m.name}
           zebra={false}
           dense
+          footer={index === machines.length - 1 ? downtimeNote : undefined}
           lead={
             <View style={{ flexDirection: 'row', alignItems: 'baseline', marginTop: 12, marginBottom: 3 }}>
               <Text style={{ fontFamily: pdfFonts.sans, fontWeight: 600, fontSize: 9, color: c.ink }}>
@@ -816,12 +825,6 @@ function Downtime({ report }: { report: ReportData }) {
           ])}
         />
       ))}
-      <Text style={{ ...s.muted, fontSize: 6.5, marginTop: 6 }}>
-        Calendar time from when a machine was reported down to when it was marked repaired. A breakdown
-        that crosses the start or end of the period counts only the part inside it, but its full length
-        counts toward mean time to repair once repaired. A date in red means the machine was still down when
-        the period ended. Availability is the share of the period the machine was up.
-      </Text>
     </View>
   );
 }
@@ -885,6 +888,12 @@ function Hazards({ report }: { report: ReportData }) {
       <TableBlock
         lead={<SubHeading>Hazard log</SubHeading>}
         empty=""
+        footer={
+          <Text style={{ ...s.muted, fontSize: 6.5, marginTop: 6 }}>
+        Includes every hazard reported in the period, every one resolved in it, and any still unresolved at the
+        end. Status is as at the end of the period.
+      </Text>
+        }
         dense
         columns={[
           { label: 'Severity', flex: 1.15 },
@@ -925,10 +934,6 @@ function Hazards({ report }: { report: ReportData }) {
               : 'Unassigned',
         ])}
       />
-      <Text style={{ ...s.muted, fontSize: 6.5, marginTop: 6 }}>
-        Includes every hazard reported in the period, every one resolved in it, and any still unresolved at the
-        end. Status is as at the end of the period.
-      </Text>
     </View>
   );
 }

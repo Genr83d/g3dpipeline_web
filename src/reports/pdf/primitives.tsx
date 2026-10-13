@@ -132,6 +132,7 @@ export function Table({
   rows,
   zebra = true,
   lead,
+  footer,
   dense = false,
 }: {
   columns: readonly Column[];
@@ -141,6 +142,8 @@ export function Table({
   dense?: boolean;
   /** Heading that must stay on the same page as the table's first rows. */
   lead?: ReactNode;
+  /** A note that must stay on the same page as the table's last row. */
+  footer?: ReactNode;
 }) {
   const header = (
     <View
@@ -208,6 +211,7 @@ export function Table({
         {lead}
         {header}
         {body}
+        {footer}
       </View>
     );
   }
@@ -215,7 +219,17 @@ export function Table({
     <View>
       {lead && <View minPresenceAhead={70}>{lead}</View>}
       {header}
-      {body}
+      {footer ? (
+        <>
+          {body.slice(0, -1)}
+          <View wrap={false}>
+            {body[body.length - 1]}
+            {footer}
+          </View>
+        </>
+      ) : (
+        body
+      )}
     </View>
   );
 }
@@ -275,6 +289,7 @@ export function TableBlock({
   rows: ReadonlyArray<ReadonlyArray<ReactNode>>;
   zebra?: boolean;
   dense?: boolean;
+  footer?: ReactNode;
 }) {
   if (rows.length === 0) {
     return (
