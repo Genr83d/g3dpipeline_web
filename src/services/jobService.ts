@@ -39,12 +39,12 @@ import {
 import { inventoryCol } from './inventoryService';
 import { isSameCalendarDate } from '../lib/format';
 import { resolvedCompletedQuantity, validateCompletedQuantity } from '../lib/jobProgress';
+import { jobCompletionBlockers } from '../lib/jobCompletion';
 import { jobOrderNumber, orderNumberFromDocumentId } from '../lib/jobOrderNumber';
 import {
   applySectionProgressUpdates,
   clampSectionProgress,
   clearRemovedCollaborators,
-  completedJobSections,
   mergeJobSections,
   parseJobSections,
   resetJobSections,
@@ -423,7 +423,9 @@ function storedQuantity(data: Record<string, unknown>): number {
   return typeof data.quantity === 'number' ? data.quantity : 0;
 }
 
-/** Marks the job completed, deducting whatever the job's tags consume in the
+export const JOB_NOT_FINISHED_MESSAGE = 'This job is not finished yet:';
+
+/** Marks the job completed once every unit and section is done, deducting whatever the job's tags consume in the
  *  same transaction — see src/lib/jobTags.ts for the rules.
  *
  *  Queries (per-tag completed totals, inventory lookup by name) run before the
@@ -468,7 +470,18 @@ export async function completeJob(actor: Actor, self: Assigner, jobId: string): 
     }
 
     const quantity = storedQuantity(data);
-    const sections = parseJobSections(data.repairProcesses);
+
+    // The freshly read job, not the card the user clicked, decides whether the
+    // work is finished. The Firestore rules enforce the same gate.
+    const blockers = jobCompletionBlockers({
+      category: parseJobCategory(data.category),
+      quantity,
+      completedQuantity: resolvedCompletedQuantity(data.completedQuantity, quantity, 'started'),
+      repairProcesses: parseJobSections(data.repairProcesses),
+    });
+    if (blockers.length > 0) {
+      throw new Error(`${JOB_NOT_FINISHED_MESSAGE} ${blockers.join('; ')}.`);
+    }
 
     // Every material is read and checked before anything is written: a
     // transaction cannot read after a write, and a job that cannot pay for all
@@ -500,11 +513,11 @@ export async function completeJob(actor: Actor, self: Assigner, jobId: string): 
 
     tx.update(jobRef, {
       status: 'completed',
+      // Equal to the stored count for every category that counts units;
+      // software development jobs record their single deliverable. Sections
+      // are already at 100% and are left exactly as stored: the rules refuse
+      // a completing write that touches them.
       completedQuantity: quantity,
-      // Finishing a job finishes each of its sections, owners intact.
-      ...(sections.length > 0
-        ? { repairProcesses: sectionsToFirestore(completedJobSections(sections)) }
-        : {}),
       completedAt: serverTimestamp(),
       completedByUid: actor.uid,
       completedByName: byName,

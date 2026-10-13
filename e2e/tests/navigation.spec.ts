@@ -9,6 +9,7 @@ const TABS = [
   { label: 'Jobs', url: '/', heading: 'Jobs' },
   { label: 'Inventory', url: '/inventory', heading: 'Inventory' },
   { label: 'Maintenance', url: '/maintenance', heading: 'Maintenance' },
+  { label: 'Hazards', url: '/hazards', heading: 'Hazards' },
   { label: 'Summary', url: '/summary', heading: 'Summary' },
   { label: 'Archive', url: '/archive', heading: 'Archive' },
 ];
@@ -19,7 +20,9 @@ test('every workspace tab navigates and marks itself current', async ({ page }) 
   const tabs = page.getByRole('navigation', { name: 'Workspace tabs' });
 
   for (const tab of TABS) {
-    await tabs.getByRole('link', { name: tab.label, exact: true }).click();
+    // Anchored, not exact: the Hazards tab adds ", N urgent" to its name while
+    // another worker's test has an urgent hazard open.
+    await tabs.getByRole('link', { name: new RegExp(`^${tab.label}`) }).click();
     await expect(page).toHaveURL(new RegExp(`${tab.url === '/' ? '/$' : tab.url}`));
     await expect(page.getByRole('heading', { name: tab.heading, level: 1 })).toBeVisible();
   }

@@ -107,6 +107,28 @@ export function watchAssignableUsers(
   );
 }
 
+/** Every active account, any role, for picking who sorts out a hazard. One
+ *  equality filter, so no composite index; sorted in the client. */
+export function watchActiveUsers(
+  onUsers: (users: AppUser[]) => void,
+  onError: (err: Error) => void,
+): Unsubscribe {
+  const q = query(collection(db, 'users'), where('status', '==', 'active'));
+  return onSnapshot(
+    q,
+    (snap) =>
+      onUsers(
+        snap.docs
+          .map((d) => parseUser(d.id, d.data()))
+          .sort(
+            (a, b) =>
+              (a.name || a.email).localeCompare(b.name || b.email) || a.email.localeCompare(b.email),
+          ),
+      ),
+    onError,
+  );
+}
+
 /** Admin: change a non-admin user's status. Rules only allow this exact patch. */
 export async function setUserStatus(uid: string, status: UserStatus): Promise<void> {
   await updateDoc(doc(db, 'users', uid), { status, updatedAt: serverTimestamp() });

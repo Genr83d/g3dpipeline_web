@@ -58,6 +58,16 @@ test('every interactive control in the archive has an accessible name', async ({
   expect(unnamed, `controls without an accessible name: ${unnamed.join(', ')}`).toEqual([]);
 });
 
+test('every interactive control on the hazards page has an accessible name', async ({ page }) => {
+  await page.goto('/hazards');
+  await waitForWorkspace(page);
+  await expect(page.getByRole('heading', { name: 'Hazards', level: 1 })).toBeVisible();
+  await expect(page.getByRole('article', { name: SEEDED.openHazard })).toBeVisible();
+
+  const unnamed = await unnamedControls(page);
+  expect(unnamed, `controls without an accessible name: ${unnamed.join(', ')}`).toEqual([]);
+});
+
 test('the archive month filter is named, labelled, and reachable from the keyboard', async ({
   page,
 }) => {

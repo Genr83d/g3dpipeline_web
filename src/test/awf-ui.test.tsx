@@ -66,6 +66,10 @@ vi.mock('../hooks/useMachines', () => ({
   useMachines: () => ({ machines: [], loading: false, error: null, retry: vi.fn() }),
 }));
 
+vi.mock('../hooks/useHazards', () => ({
+  useHazards: () => ({ hazards: [], loading: false, error: null, retry: vi.fn() }),
+}));
+
 vi.mock('../components/Toast', () => ({
   useToast: () => ({ toast: testState.toast }),
 }));
@@ -386,7 +390,8 @@ describe('AWF account menu', () => {
 });
 
 describe('AWF workspace navigation', () => {
-  it('contains and navigates between only Jobs, Summary, and Archive', async () => {
+  it('contains and navigates between only Jobs, Hazards, Summary, and Archive', async () => {
+    // AWF staff work the same floor, so they see and report hazards too.
     setRole('awf');
     const user = userEvent.setup();
     render(
@@ -394,6 +399,7 @@ describe('AWF workspace navigation', () => {
         <Routes>
           <Route element={<Workspace />}>
             <Route index element={<div>Jobs page</div>} />
+            <Route path="hazards" element={<div>Hazards page</div>} />
             <Route path="summary" element={<div>Summary page</div>} />
             <Route path="archive" element={<div>Archive page</div>} />
           </Route>
@@ -404,11 +410,15 @@ describe('AWF workspace navigation', () => {
     const navigation = screen.getByRole('navigation', { name: 'Workspace tabs' });
     expect(within(navigation).getAllByRole('link').map((link) => link.textContent)).toEqual([
       'Jobs',
+      'Hazards',
       'Summary',
       'Archive',
     ]);
     expect(within(navigation).queryByText('Inventory')).not.toBeInTheDocument();
     expect(within(navigation).queryByText('Maintenance')).not.toBeInTheDocument();
+
+    await user.click(within(navigation).getByRole('link', { name: 'Hazards' }));
+    expect(await screen.findByText('Hazards page')).toBeInTheDocument();
 
     await user.click(within(navigation).getByRole('link', { name: 'Summary' }));
     expect(await screen.findByText('Summary page')).toBeInTheDocument();

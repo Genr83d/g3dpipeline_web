@@ -14,6 +14,7 @@ const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const Jobs = lazy(() => import('./pages/Jobs'));
 const Inventory = lazy(() => import('./pages/Inventory'));
 const Maintenance = lazy(() => import('./pages/Maintenance'));
+const Hazards = lazy(() => import('./pages/Hazards'));
 const Summary = lazy(() => import('./pages/Summary'));
 const Archive = lazy(() => import('./pages/Archive'));
 const Reports = lazy(() => import('./pages/Reports'));
@@ -137,6 +138,7 @@ export default function App() {
                       </NonAwfOnly>
                     }
                   />
+                  <Route path="hazards" element={<RouteSuspense><Hazards /></RouteSuspense>} />
                   <Route path="summary" element={<RouteSuspense><Summary /></RouteSuspense>} />
                   <Route path="archive" element={<RouteSuspense><Archive /></RouteSuspense>} />
                   <Route

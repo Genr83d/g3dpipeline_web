@@ -16,6 +16,7 @@ import { isManagerOrAdminRole, roleLabel } from '../lib/roles';
 import { jobCategoryLabel, jobQuantityConfig } from '../lib/jobCategories';
 import { jobTagLabel } from '../lib/jobTags';
 import { jobCompletionRatio } from '../lib/jobProgress';
+import { jobCompletionBlockers } from '../lib/jobCompletion';
 import {
   overallSectionProgress,
   sectionCollaboratorName,
@@ -272,7 +273,6 @@ export function JobCard({
   const canUpdateProgress = Boolean(
     viewer &&
     showsQuantity &&
-    job.quantity !== 1 &&
     onUpdateProgress &&
     canUpdateJobProgress(job, viewer),
   );
@@ -287,6 +287,9 @@ export function JobCard({
       viewer,
     ),
   );
+  const completionBlockers = jobCompletionBlockers(job);
+  const readyToComplete = completionBlockers.length === 0;
+  const completionHintId = `job-completion-blockers-${job.id}`;
   const completionRatio = jobCompletionRatio(job.completedQuantity, job.quantity);
   const completionPercentage = Math.round(completionRatio * 100);
   const isManagerOrAdmin = profile ? isManagerOrAdminRole(profile.role) : false;
@@ -466,6 +469,25 @@ export function JobCard({
         )}
       </div>
 
+      {/* Why Complete is disabled: each unit count or section still short of
+          done, so the person knows exactly what to finish. */}
+      {job.status === 'started' && canComplete && onComplete && !readyToComplete && (
+        <div
+          id={completionHintId}
+          data-testid={completionHintId}
+          className="rounded border border-amber-400/45 bg-amber-50 px-3 py-2.5 text-sm dark:border-amber-400/30 dark:bg-amber-950/40"
+        >
+          <p className="font-semibold text-amber-800 dark:text-amber-300">
+            Finish the work to complete this job
+          </p>
+          <ul className="mt-1 list-disc space-y-0.5 pl-5 text-slate-700 dark:text-slate-200">
+            {completionBlockers.map((blocker) => (
+              <li key={blocker}>{blocker}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div
         data-testid={`job-actions-${job.id}`}
         className="mt-auto flex flex-nowrap items-center justify-center gap-[12px] border-t border-[var(--rule)] pt-3.5"
@@ -491,7 +513,15 @@ export function JobCard({
           </button>
         )}
         {job.status === 'started' && canComplete && onComplete && (
-          <button className="btn-secondary" onClick={() => onComplete(job)}>
+          // Stays visible but disabled until the work is done; the checklist
+          // above says what is left.
+          <button
+            className="btn-secondary"
+            disabled={!readyToComplete}
+            aria-describedby={readyToComplete ? undefined : completionHintId}
+            title={readyToComplete ? undefined : 'Finish every unit and section first'}
+            onClick={() => onComplete(job)}
+          >
             <IconCheck className="h-4 w-4" /> Complete
           </button>
         )}

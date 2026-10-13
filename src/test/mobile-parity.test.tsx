@@ -226,7 +226,7 @@ describe('expanded job card actions', () => {
 
     rerender(
       <JobCard
-        job={job({ status: 'started', assignedToUid: 'current-user' })}
+        job={job({ status: 'started', assignedToUid: 'current-user', completedQuantity: 10 })}
         onComplete={onComplete}
       />,
     );

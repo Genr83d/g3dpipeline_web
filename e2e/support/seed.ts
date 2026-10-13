@@ -53,6 +53,9 @@ export const SEEDED = {
   healthyMaterial: 'Seed Aluminium Sheet',
   lowMaterial: 'Seed Pin Backs',
   machine: 'Seed CNC Router',
+  /** Open, assigned to staffTwo, reported by staff. Read-only for tests. */
+  openHazard: 'Seed Loose Handrail',
+  resolvedHazard: 'Seed Swept Spill',
 } as const;
 
 /** Deadlines are pinned far from "now" so a seeded job's overdue state never
@@ -365,12 +368,58 @@ async function seedMachines(users: SeededUsers): Promise<void> {
   });
 }
 
+// Medium and low only: an unresolved high or critical hazard lights the tab,
+// which would change its accessible name under every other suite.
+async function seedHazards(users: SeededUsers): Promise<void> {
+  const { manager, staff, staffTwo } = users;
+  const reported = {
+    reportedByUid: staff.uid,
+    reportedByName: staff.name,
+    createdAt: CREATED,
+    updatedAt: CREATED,
+    updatedByUid: staff.uid,
+    updatedByName: staff.name,
+  };
+  await addDocument('hazards', {
+    ...reported,
+    title: SEEDED.openHazard,
+    description: 'The rail on the mezzanine stairs moves when you lean on it.',
+    location: 'Mezzanine stairs',
+    severity: 'medium',
+    status: 'open',
+    assignedToUid: staffTwo.uid,
+    assignedToName: staffTwo.name,
+    assignedByUid: manager.uid,
+    assignedByName: manager.name,
+    assignedAt: CREATED,
+  });
+  await addDocument('hazards', {
+    ...reported,
+    title: SEEDED.resolvedHazard,
+    description: '',
+    location: 'Print room',
+    severity: 'low',
+    status: 'resolved',
+    assignedToUid: staff.uid,
+    assignedToName: staff.name,
+    resolutionNote: 'Mopped up and moved the coolant drum onto a tray.',
+    resolvedAt: CREATED,
+    resolvedByUid: staff.uid,
+    resolvedByName: staff.name,
+  });
+}
+
 /** Wipes both emulators and rebuilds the fixture world. Runs once, in
  *  global setup, before any worker starts. */
 export async function seedEmulators(): Promise<SeededUsers> {
   await Promise.all([clearFirestore(), clearAuthUsers()]);
   const users = await seedUsers();
-  await Promise.all([seedJobs(users), seedInventory(users), seedMachines(users)]);
+  await Promise.all([
+    seedJobs(users),
+    seedInventory(users),
+    seedMachines(users),
+    seedHazards(users),
+  ]);
   return users;
 }
 

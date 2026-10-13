@@ -13,6 +13,7 @@ import { isManagerOrAdminRole } from '../lib/roles';
 import {
   parseSectionNames,
   sectionHelperText,
+  MAX_JOB_SECTIONS,
   sectionRequiredMessage,
   sectionsHeading,
   sectionsToText,
@@ -204,6 +205,9 @@ export function JobForm({
     }
     if (sectionNames.length === 0) {
       return setError(sectionRequiredMessage(category), 'sections');
+    }
+    if (sectionNames.length > MAX_JOB_SECTIONS) {
+      return setError(`A job can have at most ${MAX_JOB_SECTIONS} sections.`, 'sections');
     }
     setError('');
     setBusy(true);

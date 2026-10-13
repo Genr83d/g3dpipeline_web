@@ -98,7 +98,32 @@ test('manager plans a job, staff works it to completion, manager restores it', a
   await expect(staff.getByRole('dialog')).toBeHidden();
   await expect(staffCard.getByText('50% overall')).toBeVisible();
 
-  await staffCard.getByRole('button', { name: 'Complete' }).click();
+  // Half-done work cannot be completed: the button is disabled and the card
+  // lists exactly what is left.
+  const complete = staffCard.getByRole('button', { name: 'Complete' });
+  await expect(complete).toBeDisabled();
+  const blockers = staffCard.getByTestId(/^job-completion-blockers-/);
+  await expect(blockers).toContainText('2 of 4 units still to finish');
+  await expect(blockers).toContainText('Assembly is at 0%');
+
+  // Finish the work: every unit, then the remaining section.
+  await staffCard.getByRole('button', { name: 'Update job progress' }).click();
+  await staff.getByRole('dialog').getByRole('spinbutton').fill('4');
+  await staff.getByRole('dialog').getByRole('button', { name: /Save/ }).click();
+  await expect(staff.getByRole('dialog')).toBeHidden();
+  await expect(staffCard).toContainText('4/4 units');
+  await expect(complete).toBeDisabled();
+  await expect(blockers).not.toContainText('units still to finish');
+
+  await staffCard.getByRole('button', { name: 'Update section progress' }).click();
+  await staff.getByRole('dialog').getByLabel('Assembly').fill('100');
+  await staff.getByRole('dialog').getByRole('button', { name: 'Save Progress' }).click();
+  await expect(staff.getByRole('dialog')).toBeHidden();
+  await expect(staffCard.getByText('100% overall')).toBeVisible();
+  await expect(blockers).toHaveCount(0);
+
+  await expect(complete).toBeEnabled();
+  await complete.click();
   await expect(staff.getByRole('heading', { name: 'Complete Job?' })).toBeVisible();
   await staff.getByRole('button', { name: 'Mark as Completed' }).click();
 
@@ -108,8 +133,9 @@ test('manager plans a job, staff works it to completion, manager restores it', a
   const archived = jobCard(staff, jobName);
   await expect(archived).toBeVisible();
   await expect(archived.getByText('COMPLETED', { exact: true })).toBeVisible();
-  // Completing a job finishes every section.
+  // Completion records the finished work exactly as it stood.
   await expect(archived.getByText('100% overall')).toBeVisible();
+  await expect(archived).toContainText('4/4 units');
 
   // ---- Manager: restore it from the archive ----------------------------
   await manager.goto('/archive');

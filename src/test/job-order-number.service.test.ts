@@ -224,6 +224,7 @@ describe('order numbers are written once, at creation', () => {
         status: 'started',
         name: 'Actuator repair',
         quantity: 1,
+        completedQuantity: 1,
         collaboratorUids: [actor.uid],
       }),
     });

@@ -440,27 +440,39 @@ describe('assigning collaborators to sections', () => {
 });
 
 describe('completing and restoring jobs with sections', () => {
-  it('finishes every section when the job is completed, keeping owners', async () => {
+  it('refuses to complete while any section is below 100%', async () => {
     storedJob({
       status: 'started',
       name: 'Actuator repair',
       category: 'repair',
       quantity: 1,
+      completedQuantity: 1,
       collaboratorUids: [actor.uid],
       repairProcesses: ACTUATOR_PROCESSES,
     });
 
+    await expect(completeJob(actor, self('staff'), 'job-1')).rejects.toThrow(
+      /^This job is not finished yet: .*%\.$/,
+    );
+    expect(transactionPayload()).toBeUndefined();
+  });
+
+  it('completes once every section is done, leaving the sections untouched', async () => {
+    storedJob({
+      status: 'started',
+      name: 'Actuator repair',
+      category: 'repair',
+      quantity: 1,
+      completedQuantity: 1,
+      collaboratorUids: [actor.uid],
+      repairProcesses: ACTUATOR_PROCESSES.map((section) => ({ ...section, progress: 100 })),
+    });
+
     await completeJob(actor, self('staff'), 'job-1');
 
-    expect(transactionPayload()).toMatchObject({
-      status: 'completed',
-      repairProcesses: [
-        { name: 'Cleaning', progress: 100, collaboratorUid: 'worker-1' },
-        { name: 'Welding', progress: 100, collaboratorUid: 'worker-1' },
-        { name: 'Machining', progress: 100, collaboratorUid: 'worker-2' },
-        { name: 'Spraying', progress: 100 },
-      ],
-    });
+    // The rules refuse a completing write that touches the sections.
+    expect(transactionPayload()).toMatchObject({ status: 'completed', completedQuantity: 1 });
+    expect(transactionPayload()).not.toHaveProperty('repairProcesses');
   });
 
   it('restores every section to 0% and unassigned, without losing its name', async () => {

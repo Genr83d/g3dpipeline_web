@@ -39,7 +39,8 @@ export function jobPanelTabs(
   const tabs: PanelTab<JobPanelTab>[] = [];
   if (canEditJob(job.status, viewer.role)) tabs.push({ id: 'details', label: 'Details' });
   const showsQuantity = jobQuantityConfig(job.category).usesQuantity;
-  if (showsQuantity && job.quantity !== 1 && canUpdateJobProgress(job, viewer)) {
+  // Single-unit jobs included: completion needs every unit recorded.
+  if (showsQuantity && canUpdateJobProgress(job, viewer)) {
     tabs.push({ id: 'units', label: 'Units', badge: `${job.completedQuantity}/${job.quantity}` });
   }
   if (

@@ -132,6 +132,17 @@ test('inventory offers a floating add action on phones and fits everywhere', asy
     .click();
   await expect(page.getByRole('heading', { name: 'Maintenance', level: 1 })).toBeVisible();
   await expectNoHorizontalOverflow(page, 'maintenance');
+
+  await page.getByRole('navigation', { name: 'Workspace tabs' })
+    .getByRole('link', { name: /^Hazards/ })
+    .click();
+  await expect(page.getByRole('heading', { name: 'Hazards', level: 1 })).toBeVisible();
+  await expect(page.getByRole('article', { name: SEEDED.openHazard })).toBeVisible();
+  await expectNoHorizontalOverflow(page, 'hazards');
+  await page.getByRole('button', { name: 'Report hazard' }).last().click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expectNoHorizontalOverflow(page, 'hazard report form');
+  await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click();
 });
 
 test('settings pages stay within the viewport', async ({ page }) => {

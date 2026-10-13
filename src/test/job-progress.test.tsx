@@ -92,10 +92,12 @@ describe('job progress UI', () => {
     expect(screen.getByTestId('job-progress-fill-job-1')).toHaveStyle({ width: '80%' });
   });
 
-  it('hides progress for quantity-free categories and edit for one-unit jobs', () => {
+  it('lets one-unit jobs record their unit, and hides progress for quantity-free categories', () => {
+    // Completion needs every unit recorded, so a single unit has to be
+    // recordable too.
     const onUpdate = vi.fn();
     const { rerender } = render(<JobCard job={job({ quantity: 1, completedQuantity: 0 })} onUpdateProgress={onUpdate} />);
-    expect(screen.queryByRole('button', { name: 'Update job progress' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Update job progress' })).toBeInTheDocument();
     rerender(<JobCard job={job({ category: 'softwareDevelopment', quantity: 1, completedQuantity: 0 })} onUpdateProgress={onUpdate} />);
     expect(screen.queryByText(/0\/1 units/)).not.toBeInTheDocument();
   });

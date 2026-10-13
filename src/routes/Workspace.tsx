@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { useJobs, type JobsState } from '../hooks/useJobs';
 import { useInventory, type InventoryState } from '../hooks/useInventory';
 import { useMachines, type MachinesState } from '../hooks/useMachines';
+import { useHazards, type HazardsState } from '../hooks/useHazards';
+import { isUrgentHazard } from '../lib/hazards';
 import { useAuth } from '../context/AuthProvider';
 import { useAppearance } from '../context/AppearanceProvider';
 import { AccountMenu } from '../components/AccountMenu';
@@ -14,18 +16,22 @@ const tabs = [
   { to: '/', label: 'Jobs', end: true, tour: 'nav-jobs' },
   { to: '/inventory', label: 'Inventory', end: false, tour: 'nav-inventory' },
   { to: '/maintenance', label: 'Maintenance', end: false, tour: 'nav-maintenance' },
+  { to: '/hazards', label: 'Hazards', end: false, tour: 'nav-hazards' },
   { to: '/summary', label: 'Summary', end: false, tour: 'nav-summary' },
   { to: '/archive', label: 'Archive', end: false, tour: 'nav-archive' },
 ];
 
+// AWF staff work the same floor, so they see and report hazards too.
 const awfTabs = tabs.filter(
-  (tab) => tab.to === '/' || tab.to === '/summary' || tab.to === '/archive',
+  (tab) =>
+    tab.to === '/' || tab.to === '/hazards' || tab.to === '/summary' || tab.to === '/archive',
 );
 
 export interface WorkspaceOutletState {
   jobs: JobsState;
   inventory: InventoryState;
   machines: MachinesState;
+  hazards: HazardsState;
 }
 
 /** Signed-in shell and the single owner of all role-dependent data streams. */
@@ -40,6 +46,8 @@ export function Workspace() {
   const jobsState = useJobs(isActive, role, roleKey);
   const inventoryState = useInventory(nonAwfEnabled, roleKey);
   const machinesState = useMachines(nonAwfEnabled, roleKey);
+  const hazardsState = useHazards(isActive, roleKey);
+  const urgentHazards = hazardsState.hazards.filter(isUrgentHazard).length;
   const visibleTabs = isAwf ? awfTabs : tabs;
   const redirectedAwfEntry = useRef(false);
 
@@ -56,6 +64,7 @@ export function Workspace() {
     jobs: jobsState,
     inventory: inventoryState,
     machines: machinesState,
+    hazards: hazardsState,
   };
 
   return (
@@ -85,6 +94,11 @@ export function Workspace() {
                 to={tab.to}
                 end={tab.end}
                 data-tour={tab.tour}
+                aria-label={
+                  tab.to === '/hazards' && urgentHazards > 0
+                    ? `${tab.label}, ${urgentHazards} urgent`
+                    : undefined
+                }
                 className="relative shrink-0 grow rounded-sm px-1 py-1.5 text-center text-[0.8125rem] min-[380px]:px-1.5 font-semibold focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none sm:grow-0 sm:px-4 sm:text-sm"
               >
                 {({ isActive: active }) => (
@@ -98,6 +112,14 @@ export function Workspace() {
                     )}
                     <span className={`relative ${active ? 'font-bold text-primary dark:text-indigo-300' : 'text-slate-600 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white'}`}>
                       {tab.label}
+                      {/* Unresolved high or critical hazards light the tab. */}
+                      {tab.to === '/hazards' && urgentHazards > 0 && (
+                        <span
+                          aria-hidden
+                          data-testid="nav-hazard-alert"
+                          className="absolute -top-0.5 -right-2 h-2 w-2 rounded-full bg-danger ring-2 ring-white dark:bg-red-400 dark:ring-slate-900"
+                        />
+                      )}
                     </span>
                   </>
                 )}
@@ -136,4 +158,8 @@ export function useInventoryOutlet(): InventoryState {
 
 export function useMachinesOutlet(): MachinesState {
   return useOutletContext<WorkspaceOutletState>().machines;
+}
+
+export function useHazardsOutlet(): HazardsState {
+  return useOutletContext<WorkspaceOutletState>().hazards;
 }
