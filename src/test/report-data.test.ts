@@ -4,9 +4,11 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { buildReport, reportToJson, type ReportData } from '../lib/reportData';
+import { formatHours } from '../lib/reportFormat';
 import type { ReportPeriod } from '../lib/reportPeriods';
 import {
   fixtureGeneratedBy,
+  fixtureHazards,
   fixtureJobs,
   fixtureMachines,
   fixtureMaterials,
@@ -25,6 +27,7 @@ function build(period: ReportPeriod): ReportData {
     jobs: fixtureJobs,
     materials: fixtureMaterials,
     machines: fixtureMachines,
+      hazards: fixtureHazards,
     period,
     now: fixtureNow,
     generatedBy: fixtureGeneratedBy,
@@ -99,6 +102,96 @@ describe('buildReport', () => {
     expect(september.maintenance.idleMachines).toEqual(['Bambu X1C', 'Laser Cutter']);
   });
 
+  it('totals downtime as calendar hours inside the period, splitting breakdowns that span it', () => {
+    const prusa = september.downtime.machines.find((m) => m.name === 'Prusa MK4 #1')!;
+    // Down 30 Aug 20:00 to 2 Sep 08:00: only 1-2 September falls in September.
+    expect(prusa.incidents[0].hoursInPeriod).toBe(32);
+    expect(prusa.incidents[1].hoursInPeriod).toBe(6.5);
+    expect(prusa.hours).toBe(64.5);
+    expect(september.downtime.totalHours).toBe(129);
+    expect(september.downtime.totalIncidents).toBe(4);
+    // 64.5 of 720 hours down.
+    expect(prusa.availability).toBeCloseTo(1 - 64.5 / 720, 10);
+  });
+
+  it('flags breakdowns still open at the end of the period, even if repaired later', () => {
+    const prusa = september.downtime.machines.find((m) => m.name === 'Prusa MK4 #1')!;
+    const zAxis = prusa.incidents.find((i) => i.reason === 'Z-axis motor stalled')!;
+    expect(zAxis.ongoing).toBe(true);
+    expect(zAxis.endedAt).toEqual(new Date('2026-10-02T10:00:00'));
+    expect(september.downtime.stillDown).toEqual(['Bambu X1C', 'Prusa MK4 #1']);
+    const october = build({ kind: 'month', year: 2026, month: 10 });
+    expect(october.downtime.stillDown).toEqual(['Bambu X1C']);
+    // Counted to now, not to the end of October.
+    expect(october.downtime.machines.find((m) => m.name === 'Bambu X1C')?.hours).toBe(180);
+  });
+
+  it('averages repair time over breakdowns repaired in the period, using their full length', () => {
+    // 60 h (heater, repaired 2 Sep) and 6.5 h (nozzle) — not the 26 h of
+    // September the open Z-axis breakdown contributes.
+    expect(september.downtime.meanRepairHours).toBe(33.25);
+  });
+
+  it('names an unrecorded reporter and leaves machines that never broke out of the downtime table', () => {
+    const prusa = september.downtime.machines.find((m) => m.name === 'Prusa MK4 #1')!;
+    expect(prusa.incidents[0].reportedByName).toBe('Unrecorded');
+    expect(september.downtime.machines.map((m) => m.name)).not.toContain('Laser Cutter');
+  });
+
+  it('reports no downtime for a period that has not started', () => {
+    const future = build({ kind: 'month', year: 2027, month: 1 });
+    expect(future.downtime).toEqual({
+      machines: [],
+      totalIncidents: 0,
+      totalHours: 0,
+      meanRepairHours: null,
+      stillDown: [],
+    });
+    expect(future.hazards.openAtEnd).toBe(0);
+    expect(future.hazards.rows).toEqual([]);
+  });
+
+  it('counts hazards reported, resolved, and open by the end of the period', () => {
+    expect(september.hazards.reported).toBe(4);
+    expect(september.hazards.resolved).toBe(2);
+    expect(september.hazards.openAtEnd).toBe(3);
+    // 8 h for the wiring, 386.5 h for the handrail that was reported in August.
+    expect(september.hazards.meanResolveHours).toBe(197.25);
+    const critical = september.hazards.bySeverity.find((s) => s.severity === 'critical');
+    expect(critical).toMatchObject({ reported: 1, resolved: 1, openAtEnd: 0 });
+  });
+
+  it('shows a hazard as open at period end when it was only resolved afterwards', () => {
+    const exit = september.hazards.rows.find((r) => r.title.startsWith('Fire exit'))!;
+    expect(exit.statusLabel).toBe('Open');
+    expect(exit.resolvedAt).toBeNull();
+    const october = build({ kind: 'month', year: 2026, month: 10 });
+    const resolved = october.hazards.rows.find((r) => r.title.startsWith('Fire exit'))!;
+    expect(resolved.statusLabel).toBe('Resolved');
+    expect(resolved.resolvedByName).toBe('Ana Brown');
+  });
+
+  it('lists unresolved hazards first, worst first, and ignores a report with no timestamp', () => {
+    const labels = september.hazards.rows.map((r) => `${r.statusLabel}:${r.severity}`);
+    expect(labels).toEqual([
+      'In progress:high',
+      'Open:high',
+      'Open:low',
+      'Resolved:critical',
+      'Resolved:medium',
+    ]);
+    const all = build({ kind: 'year', year: 2026 });
+    expect(all.hazards.rows.map((r) => r.title)).not.toContain('Report awaiting its timestamp');
+  });
+
+  it('treats a resolved hazard with no resolution time as closed but never resolved in a period', () => {
+    const q3 = build({ kind: 'quarter', year: 2026, quarter: 3 });
+    const legacy = q3.hazards.rows.find((r) => r.title.startsWith('Missing first-aid'))!;
+    expect(legacy.statusLabel).toBe('Resolved');
+    expect(legacy.resolvedAt).toBeNull();
+    expect(q3.hazards.resolved).toBe(2);
+  });
+
   it('does not flag a material with no full-stock amount as low', () => {
     const pla = september.materials.stock.find((m) => m.name === 'PLA Black');
     expect(pla?.low).toBe(false);
@@ -127,6 +220,16 @@ describe('buildReport', () => {
       writeFileSync(EXPECTED_PATH, `${JSON.stringify(actual, null, 1)}\n`);
     }
     expect(actual).toEqual(JSON.parse(readFileSync(EXPECTED_PATH, 'utf8')));
+  });
+});
+
+describe('formatHours', () => {
+  it('shows minutes, hours or days, and a dash for nothing', () => {
+    expect(formatHours(null)).toBe('—');
+    expect(formatHours(0.5)).toBe('30 min');
+    expect(formatHours(6.5)).toBe('6.5 h');
+    expect(formatHours(47.9)).toBe('47.9 h');
+    expect(formatHours(64.5)).toBe('2.7 d');
   });
 });
 

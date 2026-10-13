@@ -500,6 +500,181 @@
     "Laser Cutter"
    ]
   },
+  "downtime": {
+   "machines": [
+    {
+     "name": "Bambu X1C",
+     "location": "",
+     "incidents": [
+      {
+       "startedAt": "2026-09-28T07:30:00",
+       "endedAt": null,
+       "ongoing": true,
+       "hoursInPeriod": 64.5,
+       "reason": "AMS feeder fault",
+       "reportedByName": "Devon Clarke",
+       "repairedByName": "",
+       "assignedToName": "Ana Brown"
+      }
+     ],
+     "hours": 64.5,
+     "availability": 0.9104
+    },
+    {
+     "name": "Prusa MK4 #1",
+     "location": "Bay A",
+     "incidents": [
+      {
+       "startedAt": "2026-08-30T20:00:00",
+       "endedAt": "2026-09-02T08:00:00",
+       "ongoing": false,
+       "hoursInPeriod": 32,
+       "reason": "Heater cartridge failed",
+       "reportedByName": "Unrecorded",
+       "repairedByName": "Ana Brown",
+       "assignedToName": ""
+      },
+      {
+       "startedAt": "2026-09-10T09:00:00",
+       "endedAt": "2026-09-10T15:30:00",
+       "ongoing": false,
+       "hoursInPeriod": 6.5,
+       "reason": "Nozzle jam",
+       "reportedByName": "Ana Brown",
+       "repairedByName": "Devon Clarke",
+       "assignedToName": "Devon Clarke"
+      },
+      {
+       "startedAt": "2026-09-29T22:00:00",
+       "endedAt": "2026-10-02T10:00:00",
+       "ongoing": true,
+       "hoursInPeriod": 26,
+       "reason": "Z-axis motor stalled",
+       "reportedByName": "Devon Clarke",
+       "repairedByName": "Ana Brown",
+       "assignedToName": "Ana Brown"
+      }
+     ],
+     "hours": 64.5,
+     "availability": 0.9104
+    }
+   ],
+   "totalIncidents": 4,
+   "totalHours": 129,
+   "meanRepairHours": 33.25,
+   "stillDown": [
+    "Bambu X1C",
+    "Prusa MK4 #1"
+   ]
+  },
+  "hazards": {
+   "reported": 4,
+   "resolved": 2,
+   "openAtEnd": 3,
+   "meanResolveHours": 197.25,
+   "bySeverity": [
+    {
+     "severity": "critical",
+     "label": "Critical",
+     "reported": 1,
+     "resolved": 1,
+     "openAtEnd": 0
+    },
+    {
+     "severity": "high",
+     "label": "High",
+     "reported": 2,
+     "resolved": 0,
+     "openAtEnd": 2
+    },
+    {
+     "severity": "medium",
+     "label": "Medium",
+     "reported": 0,
+     "resolved": 1,
+     "openAtEnd": 0
+    },
+    {
+     "severity": "low",
+     "label": "Low",
+     "reported": 1,
+     "resolved": 0,
+     "openAtEnd": 1
+    }
+   ],
+   "rows": [
+    {
+     "title": "Oil on the floor by press 2",
+     "location": "Press bay",
+     "severity": "high",
+     "severityLabel": "High",
+     "statusLabel": "In progress",
+     "reportedAt": "2026-09-15T10:00:00",
+     "reportedByName": "Ana Brown",
+     "assignedToName": "Devon Clarke",
+     "resolvedAt": null,
+     "resolvedByName": "",
+     "resolutionNote": "",
+     "daysOpen": 15
+    },
+    {
+     "title": "Fire exit blocked by pallets",
+     "location": "Loading bay",
+     "severity": "high",
+     "severityLabel": "High",
+     "statusLabel": "Open",
+     "reportedAt": "2026-09-30T23:30:00",
+     "reportedByName": "Devon Clarke",
+     "assignedToName": "Ana Brown",
+     "resolvedAt": null,
+     "resolvedByName": "",
+     "resolutionNote": "",
+     "daysOpen": 0
+    },
+    {
+     "title": "Flickering light over bench 3",
+     "location": "Workshop",
+     "severity": "low",
+     "severityLabel": "Low",
+     "statusLabel": "Open",
+     "reportedAt": "2026-09-28T16:00:00",
+     "reportedByName": "Unrecorded",
+     "assignedToName": "",
+     "resolvedAt": null,
+     "resolvedByName": "",
+     "resolutionNote": "",
+     "daysOpen": 2
+    },
+    {
+     "title": "Exposed wiring on the CNC enclosure",
+     "location": "Machine shop",
+     "severity": "critical",
+     "severityLabel": "Critical",
+     "statusLabel": "Resolved",
+     "reportedAt": "2026-09-02T09:00:00",
+     "reportedByName": "Devon Clarke",
+     "assignedToName": "Ana Brown",
+     "resolvedAt": "2026-09-02T17:00:00",
+     "resolvedByName": "Ana Brown",
+     "resolutionNote": "Conduit refitted and tested.",
+     "daysOpen": null
+    },
+    {
+     "title": "Loose handrail on the mezzanine",
+     "location": "Mezzanine",
+     "severity": "medium",
+     "severityLabel": "Medium",
+     "statusLabel": "Resolved",
+     "reportedAt": "2026-08-20T08:30:00",
+     "reportedByName": "Kimberly Reid",
+     "assignedToName": "Devon Clarke",
+     "resolvedAt": "2026-09-05T11:00:00",
+     "resolvedByName": "Devon Clarke",
+     "resolutionNote": "Bolts replaced.",
+     "daysOpen": null
+    }
+   ]
+  },
   "appendix": [
    {
     "orderNumber": "G3D-FX0023",
@@ -1060,6 +1235,146 @@
     "Prusa MK4 #1"
    ]
   },
+  "downtime": {
+   "machines": [
+    {
+     "name": "Bambu X1C",
+     "location": "",
+     "incidents": [
+      {
+       "startedAt": "2026-09-28T07:30:00",
+       "endedAt": null,
+       "ongoing": true,
+       "hoursInPeriod": 180,
+       "reason": "AMS feeder fault",
+       "reportedByName": "Devon Clarke",
+       "repairedByName": "",
+       "assignedToName": "Ana Brown"
+      }
+     ],
+     "hours": 180,
+     "availability": 0
+    },
+    {
+     "name": "Prusa MK4 #1",
+     "location": "Bay A",
+     "incidents": [
+      {
+       "startedAt": "2026-09-29T22:00:00",
+       "endedAt": "2026-10-02T10:00:00",
+       "ongoing": false,
+       "hoursInPeriod": 34,
+       "reason": "Z-axis motor stalled",
+       "reportedByName": "Devon Clarke",
+       "repairedByName": "Ana Brown",
+       "assignedToName": "Ana Brown"
+      }
+     ],
+     "hours": 34,
+     "availability": 0.8111
+    }
+   ],
+   "totalIncidents": 2,
+   "totalHours": 214,
+   "meanRepairHours": 60,
+   "stillDown": [
+    "Bambu X1C"
+   ]
+  },
+  "hazards": {
+   "reported": 1,
+   "resolved": 1,
+   "openAtEnd": 3,
+   "meanResolveHours": 57.5,
+   "bySeverity": [
+    {
+     "severity": "critical",
+     "label": "Critical",
+     "reported": 0,
+     "resolved": 0,
+     "openAtEnd": 0
+    },
+    {
+     "severity": "high",
+     "label": "High",
+     "reported": 0,
+     "resolved": 1,
+     "openAtEnd": 1
+    },
+    {
+     "severity": "medium",
+     "label": "Medium",
+     "reported": 1,
+     "resolved": 0,
+     "openAtEnd": 1
+    },
+    {
+     "severity": "low",
+     "label": "Low",
+     "reported": 0,
+     "resolved": 0,
+     "openAtEnd": 1
+    }
+   ],
+   "rows": [
+    {
+     "title": "Oil on the floor by press 2",
+     "location": "Press bay",
+     "severity": "high",
+     "severityLabel": "High",
+     "statusLabel": "In progress",
+     "reportedAt": "2026-09-15T10:00:00",
+     "reportedByName": "Ana Brown",
+     "assignedToName": "Devon Clarke",
+     "resolvedAt": null,
+     "resolvedByName": "",
+     "resolutionNote": "",
+     "daysOpen": 23
+    },
+    {
+     "title": "Cracked guard on the bandsaw",
+     "location": "Machine shop",
+     "severity": "medium",
+     "severityLabel": "Medium",
+     "statusLabel": "Open",
+     "reportedAt": "2026-10-05T13:00:00",
+     "reportedByName": "Ana Brown",
+     "assignedToName": "",
+     "resolvedAt": null,
+     "resolvedByName": "",
+     "resolutionNote": "",
+     "daysOpen": 3
+    },
+    {
+     "title": "Flickering light over bench 3",
+     "location": "Workshop",
+     "severity": "low",
+     "severityLabel": "Low",
+     "statusLabel": "Open",
+     "reportedAt": "2026-09-28T16:00:00",
+     "reportedByName": "Unrecorded",
+     "assignedToName": "",
+     "resolvedAt": null,
+     "resolvedByName": "",
+     "resolutionNote": "",
+     "daysOpen": 10
+    },
+    {
+     "title": "Fire exit blocked by pallets",
+     "location": "Loading bay",
+     "severity": "high",
+     "severityLabel": "High",
+     "statusLabel": "Resolved",
+     "reportedAt": "2026-09-30T23:30:00",
+     "reportedByName": "Devon Clarke",
+     "assignedToName": "Ana Brown",
+     "resolvedAt": "2026-10-03T09:00:00",
+     "resolvedByName": "Ana Brown",
+     "resolutionNote": "Pallets moved; floor marked.",
+     "daysOpen": null
+    }
+   ]
+  },
   "appendix": [
    {
     "orderNumber": "G3D-FX0003",
@@ -1553,6 +1868,205 @@
    "totalServices": 4,
    "idleMachines": [
     "Bambu X1C"
+   ]
+  },
+  "downtime": {
+   "machines": [
+    {
+     "name": "Bambu X1C",
+     "location": "",
+     "incidents": [
+      {
+       "startedAt": "2026-09-28T07:30:00",
+       "endedAt": null,
+       "ongoing": true,
+       "hoursInPeriod": 64.5,
+       "reason": "AMS feeder fault",
+       "reportedByName": "Devon Clarke",
+       "repairedByName": "",
+       "assignedToName": "Ana Brown"
+      }
+     ],
+     "hours": 64.5,
+     "availability": 0.9708
+    },
+    {
+     "name": "Prusa MK4 #1",
+     "location": "Bay A",
+     "incidents": [
+      {
+       "startedAt": "2026-07-04T10:00:00",
+       "endedAt": "2026-07-05T10:00:00",
+       "ongoing": false,
+       "hoursInPeriod": 24,
+       "reason": "Belt snapped",
+       "reportedByName": "Ana Brown",
+       "repairedByName": "Devon Clarke",
+       "assignedToName": "Devon Clarke"
+      },
+      {
+       "startedAt": "2026-08-30T20:00:00",
+       "endedAt": "2026-09-02T08:00:00",
+       "ongoing": false,
+       "hoursInPeriod": 60,
+       "reason": "Heater cartridge failed",
+       "reportedByName": "Unrecorded",
+       "repairedByName": "Ana Brown",
+       "assignedToName": ""
+      },
+      {
+       "startedAt": "2026-09-10T09:00:00",
+       "endedAt": "2026-09-10T15:30:00",
+       "ongoing": false,
+       "hoursInPeriod": 6.5,
+       "reason": "Nozzle jam",
+       "reportedByName": "Ana Brown",
+       "repairedByName": "Devon Clarke",
+       "assignedToName": "Devon Clarke"
+      },
+      {
+       "startedAt": "2026-09-29T22:00:00",
+       "endedAt": "2026-10-02T10:00:00",
+       "ongoing": true,
+       "hoursInPeriod": 26,
+       "reason": "Z-axis motor stalled",
+       "reportedByName": "Devon Clarke",
+       "repairedByName": "Ana Brown",
+       "assignedToName": "Ana Brown"
+      }
+     ],
+     "hours": 116.5,
+     "availability": 0.9472
+    }
+   ],
+   "totalIncidents": 5,
+   "totalHours": 181,
+   "meanRepairHours": 30.1667,
+   "stillDown": [
+    "Bambu X1C",
+    "Prusa MK4 #1"
+   ]
+  },
+  "hazards": {
+   "reported": 6,
+   "resolved": 2,
+   "openAtEnd": 3,
+   "meanResolveHours": 197.25,
+   "bySeverity": [
+    {
+     "severity": "critical",
+     "label": "Critical",
+     "reported": 1,
+     "resolved": 1,
+     "openAtEnd": 0
+    },
+    {
+     "severity": "high",
+     "label": "High",
+     "reported": 2,
+     "resolved": 0,
+     "openAtEnd": 2
+    },
+    {
+     "severity": "medium",
+     "label": "Medium",
+     "reported": 1,
+     "resolved": 1,
+     "openAtEnd": 0
+    },
+    {
+     "severity": "low",
+     "label": "Low",
+     "reported": 2,
+     "resolved": 0,
+     "openAtEnd": 1
+    }
+   ],
+   "rows": [
+    {
+     "title": "Oil on the floor by press 2",
+     "location": "Press bay",
+     "severity": "high",
+     "severityLabel": "High",
+     "statusLabel": "In progress",
+     "reportedAt": "2026-09-15T10:00:00",
+     "reportedByName": "Ana Brown",
+     "assignedToName": "Devon Clarke",
+     "resolvedAt": null,
+     "resolvedByName": "",
+     "resolutionNote": "",
+     "daysOpen": 15
+    },
+    {
+     "title": "Fire exit blocked by pallets",
+     "location": "Loading bay",
+     "severity": "high",
+     "severityLabel": "High",
+     "statusLabel": "Open",
+     "reportedAt": "2026-09-30T23:30:00",
+     "reportedByName": "Devon Clarke",
+     "assignedToName": "Ana Brown",
+     "resolvedAt": null,
+     "resolvedByName": "",
+     "resolutionNote": "",
+     "daysOpen": 0
+    },
+    {
+     "title": "Flickering light over bench 3",
+     "location": "Workshop",
+     "severity": "low",
+     "severityLabel": "Low",
+     "statusLabel": "Open",
+     "reportedAt": "2026-09-28T16:00:00",
+     "reportedByName": "Unrecorded",
+     "assignedToName": "",
+     "resolvedAt": null,
+     "resolvedByName": "",
+     "resolutionNote": "",
+     "daysOpen": 2
+    },
+    {
+     "title": "Exposed wiring on the CNC enclosure",
+     "location": "Machine shop",
+     "severity": "critical",
+     "severityLabel": "Critical",
+     "statusLabel": "Resolved",
+     "reportedAt": "2026-09-02T09:00:00",
+     "reportedByName": "Devon Clarke",
+     "assignedToName": "Ana Brown",
+     "resolvedAt": "2026-09-02T17:00:00",
+     "resolvedByName": "Ana Brown",
+     "resolutionNote": "Conduit refitted and tested.",
+     "daysOpen": null
+    },
+    {
+     "title": "Loose handrail on the mezzanine",
+     "location": "Mezzanine",
+     "severity": "medium",
+     "severityLabel": "Medium",
+     "statusLabel": "Resolved",
+     "reportedAt": "2026-08-20T08:30:00",
+     "reportedByName": "Kimberly Reid",
+     "assignedToName": "Devon Clarke",
+     "resolvedAt": "2026-09-05T11:00:00",
+     "resolvedByName": "Devon Clarke",
+     "resolutionNote": "Bolts replaced.",
+     "daysOpen": null
+    },
+    {
+     "title": "Missing first-aid kit refill",
+     "location": "Office",
+     "severity": "low",
+     "severityLabel": "Low",
+     "statusLabel": "Resolved",
+     "reportedAt": "2026-08-01T09:00:00",
+     "reportedByName": "Kimberly Reid",
+     "assignedToName": "Ana Brown",
+     "resolvedAt": null,
+     "resolvedByName": "Ana Brown",
+     "resolutionNote": "",
+     "daysOpen": null
+    }
    ]
   },
   "appendix": [
@@ -2206,6 +2720,218 @@
     "Bambu X1C"
    ]
   },
+  "downtime": {
+   "machines": [
+    {
+     "name": "Bambu X1C",
+     "location": "",
+     "incidents": [
+      {
+       "startedAt": "2026-09-28T07:30:00",
+       "endedAt": null,
+       "ongoing": true,
+       "hoursInPeriod": 244.5,
+       "reason": "AMS feeder fault",
+       "reportedByName": "Devon Clarke",
+       "repairedByName": "",
+       "assignedToName": "Ana Brown"
+      }
+     ],
+     "hours": 244.5,
+     "availability": 0.9637
+    },
+    {
+     "name": "Prusa MK4 #1",
+     "location": "Bay A",
+     "incidents": [
+      {
+       "startedAt": "2026-07-04T10:00:00",
+       "endedAt": "2026-07-05T10:00:00",
+       "ongoing": false,
+       "hoursInPeriod": 24,
+       "reason": "Belt snapped",
+       "reportedByName": "Ana Brown",
+       "repairedByName": "Devon Clarke",
+       "assignedToName": "Devon Clarke"
+      },
+      {
+       "startedAt": "2026-08-30T20:00:00",
+       "endedAt": "2026-09-02T08:00:00",
+       "ongoing": false,
+       "hoursInPeriod": 60,
+       "reason": "Heater cartridge failed",
+       "reportedByName": "Unrecorded",
+       "repairedByName": "Ana Brown",
+       "assignedToName": ""
+      },
+      {
+       "startedAt": "2026-09-10T09:00:00",
+       "endedAt": "2026-09-10T15:30:00",
+       "ongoing": false,
+       "hoursInPeriod": 6.5,
+       "reason": "Nozzle jam",
+       "reportedByName": "Ana Brown",
+       "repairedByName": "Devon Clarke",
+       "assignedToName": "Devon Clarke"
+      },
+      {
+       "startedAt": "2026-09-29T22:00:00",
+       "endedAt": "2026-10-02T10:00:00",
+       "ongoing": false,
+       "hoursInPeriod": 60,
+       "reason": "Z-axis motor stalled",
+       "reportedByName": "Devon Clarke",
+       "repairedByName": "Ana Brown",
+       "assignedToName": "Ana Brown"
+      }
+     ],
+     "hours": 150.5,
+     "availability": 0.9776
+    }
+   ],
+   "totalIncidents": 5,
+   "totalHours": 395,
+   "meanRepairHours": 37.625,
+   "stillDown": [
+    "Bambu X1C"
+   ]
+  },
+  "hazards": {
+   "reported": 7,
+   "resolved": 3,
+   "openAtEnd": 3,
+   "meanResolveHours": 150.6667,
+   "bySeverity": [
+    {
+     "severity": "critical",
+     "label": "Critical",
+     "reported": 1,
+     "resolved": 1,
+     "openAtEnd": 0
+    },
+    {
+     "severity": "high",
+     "label": "High",
+     "reported": 2,
+     "resolved": 1,
+     "openAtEnd": 1
+    },
+    {
+     "severity": "medium",
+     "label": "Medium",
+     "reported": 2,
+     "resolved": 1,
+     "openAtEnd": 1
+    },
+    {
+     "severity": "low",
+     "label": "Low",
+     "reported": 2,
+     "resolved": 0,
+     "openAtEnd": 1
+    }
+   ],
+   "rows": [
+    {
+     "title": "Oil on the floor by press 2",
+     "location": "Press bay",
+     "severity": "high",
+     "severityLabel": "High",
+     "statusLabel": "In progress",
+     "reportedAt": "2026-09-15T10:00:00",
+     "reportedByName": "Ana Brown",
+     "assignedToName": "Devon Clarke",
+     "resolvedAt": null,
+     "resolvedByName": "",
+     "resolutionNote": "",
+     "daysOpen": 23
+    },
+    {
+     "title": "Cracked guard on the bandsaw",
+     "location": "Machine shop",
+     "severity": "medium",
+     "severityLabel": "Medium",
+     "statusLabel": "Open",
+     "reportedAt": "2026-10-05T13:00:00",
+     "reportedByName": "Ana Brown",
+     "assignedToName": "",
+     "resolvedAt": null,
+     "resolvedByName": "",
+     "resolutionNote": "",
+     "daysOpen": 3
+    },
+    {
+     "title": "Flickering light over bench 3",
+     "location": "Workshop",
+     "severity": "low",
+     "severityLabel": "Low",
+     "statusLabel": "Open",
+     "reportedAt": "2026-09-28T16:00:00",
+     "reportedByName": "Unrecorded",
+     "assignedToName": "",
+     "resolvedAt": null,
+     "resolvedByName": "",
+     "resolutionNote": "",
+     "daysOpen": 10
+    },
+    {
+     "title": "Exposed wiring on the CNC enclosure",
+     "location": "Machine shop",
+     "severity": "critical",
+     "severityLabel": "Critical",
+     "statusLabel": "Resolved",
+     "reportedAt": "2026-09-02T09:00:00",
+     "reportedByName": "Devon Clarke",
+     "assignedToName": "Ana Brown",
+     "resolvedAt": "2026-09-02T17:00:00",
+     "resolvedByName": "Ana Brown",
+     "resolutionNote": "Conduit refitted and tested.",
+     "daysOpen": null
+    },
+    {
+     "title": "Fire exit blocked by pallets",
+     "location": "Loading bay",
+     "severity": "high",
+     "severityLabel": "High",
+     "statusLabel": "Resolved",
+     "reportedAt": "2026-09-30T23:30:00",
+     "reportedByName": "Devon Clarke",
+     "assignedToName": "Ana Brown",
+     "resolvedAt": "2026-10-03T09:00:00",
+     "resolvedByName": "Ana Brown",
+     "resolutionNote": "Pallets moved; floor marked.",
+     "daysOpen": null
+    },
+    {
+     "title": "Loose handrail on the mezzanine",
+     "location": "Mezzanine",
+     "severity": "medium",
+     "severityLabel": "Medium",
+     "statusLabel": "Resolved",
+     "reportedAt": "2026-08-20T08:30:00",
+     "reportedByName": "Kimberly Reid",
+     "assignedToName": "Devon Clarke",
+     "resolvedAt": "2026-09-05T11:00:00",
+     "resolvedByName": "Devon Clarke",
+     "resolutionNote": "Bolts replaced.",
+     "daysOpen": null
+    },
+    {
+     "title": "Missing first-aid kit refill",
+     "location": "Office",
+     "severity": "low",
+     "severityLabel": "Low",
+     "statusLabel": "Resolved",
+     "reportedAt": "2026-08-01T09:00:00",
+     "reportedByName": "Kimberly Reid",
+     "assignedToName": "Ana Brown",
+     "resolvedAt": null,
+     "resolvedByName": "Ana Brown",
+     "resolutionNote": "",
+     "daysOpen": null
+    }
+   ]
+  },
   "appendix": [
    {
     "orderNumber": "G3D-FX0017",
@@ -2759,6 +3485,84 @@
     "Prusa MK4 #1"
    ]
   },
+  "downtime": {
+   "machines": [
+    {
+     "name": "Prusa MK4 #1",
+     "location": "Bay A",
+     "incidents": [
+      {
+       "startedAt": "2026-09-10T09:00:00",
+       "endedAt": "2026-09-10T15:30:00",
+       "ongoing": false,
+       "hoursInPeriod": 6.5,
+       "reason": "Nozzle jam",
+       "reportedByName": "Ana Brown",
+       "repairedByName": "Devon Clarke",
+       "assignedToName": "Devon Clarke"
+      }
+     ],
+     "hours": 6.5,
+     "availability": 0.9754
+    }
+   ],
+   "totalIncidents": 1,
+   "totalHours": 6.5,
+   "meanRepairHours": 6.5,
+   "stillDown": []
+  },
+  "hazards": {
+   "reported": 1,
+   "resolved": 0,
+   "openAtEnd": 1,
+   "meanResolveHours": null,
+   "bySeverity": [
+    {
+     "severity": "critical",
+     "label": "Critical",
+     "reported": 0,
+     "resolved": 0,
+     "openAtEnd": 0
+    },
+    {
+     "severity": "high",
+     "label": "High",
+     "reported": 1,
+     "resolved": 0,
+     "openAtEnd": 1
+    },
+    {
+     "severity": "medium",
+     "label": "Medium",
+     "reported": 0,
+     "resolved": 0,
+     "openAtEnd": 0
+    },
+    {
+     "severity": "low",
+     "label": "Low",
+     "reported": 0,
+     "resolved": 0,
+     "openAtEnd": 0
+    }
+   ],
+   "rows": [
+    {
+     "title": "Oil on the floor by press 2",
+     "location": "Press bay",
+     "severity": "high",
+     "severityLabel": "High",
+     "statusLabel": "In progress",
+     "reportedAt": "2026-09-15T10:00:00",
+     "reportedByName": "Ana Brown",
+     "assignedToName": "Devon Clarke",
+     "resolvedAt": null,
+     "resolvedByName": "",
+     "resolutionNote": "",
+     "daysOpen": 5
+    }
+   ]
+  },
   "appendix": [
    {
     "orderNumber": "G3D-FX0006",
@@ -3095,6 +3899,50 @@
     "Laser Cutter",
     "Prusa MK4 #1"
    ]
+  },
+  "downtime": {
+   "machines": [],
+   "totalIncidents": 0,
+   "totalHours": 0,
+   "meanRepairHours": null,
+   "stillDown": []
+  },
+  "hazards": {
+   "reported": 0,
+   "resolved": 0,
+   "openAtEnd": 0,
+   "meanResolveHours": null,
+   "bySeverity": [
+    {
+     "severity": "critical",
+     "label": "Critical",
+     "reported": 0,
+     "resolved": 0,
+     "openAtEnd": 0
+    },
+    {
+     "severity": "high",
+     "label": "High",
+     "reported": 0,
+     "resolved": 0,
+     "openAtEnd": 0
+    },
+    {
+     "severity": "medium",
+     "label": "Medium",
+     "reported": 0,
+     "resolved": 0,
+     "openAtEnd": 0
+    },
+    {
+     "severity": "low",
+     "label": "Low",
+     "reported": 0,
+     "resolved": 0,
+     "openAtEnd": 0
+    }
+   ],
+   "rows": []
   },
   "appendix": [],
   "undatedCompletions": 1

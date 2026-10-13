@@ -11,6 +11,7 @@ import { registerReportFonts } from '../reports/pdf/fonts';
 import { ReportDocument } from '../reports/pdf/ReportDocument';
 import {
   fixtureGeneratedBy,
+  fixtureHazards,
   fixtureJobs,
   fixtureMachines,
   fixtureMaterials,
@@ -47,6 +48,7 @@ describe('report PDF', () => {
       jobs: fixtureJobs,
       materials: fixtureMaterials,
       machines: fixtureMachines,
+      hazards: fixtureHazards,
       period,
       now: fixtureNow,
       generatedBy: fixtureGeneratedBy,
@@ -73,6 +75,7 @@ describe('report PDF', () => {
       jobs,
       materials: fixtureMaterials,
       machines: fixtureMachines,
+      hazards: fixtureHazards,
       period: { kind: 'month', year: 2026, month: 9 },
       now: fixtureNow,
       generatedBy: fixtureGeneratedBy,

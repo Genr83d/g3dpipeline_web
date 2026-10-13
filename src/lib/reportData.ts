@@ -1,4 +1,5 @@
-import type { Job, JobCategory, JobTag, Machine, Material } from '../types';
+import type { Hazard, HazardSeverity, Job, JobCategory, JobTag, Machine, Material } from '../types';
+import { hazardSeverityLabel } from './hazards';
 import { JOB_CATEGORY_OPTIONS } from './jobCategories';
 import { materialsConsumed } from './jobTags';
 import {
@@ -23,6 +24,7 @@ import {
  *  stale `completedAt` while pending again, and must not inflate output. */
 
 const DAY_MS = 86_400_000;
+const HOUR_MS = 3_600_000;
 const TOP_CUSTOMER_LIMIT = 10;
 export const NO_CUSTOMER_LABEL = 'No customer';
 export const UNRECORDED_PERSON_LABEL = 'Unrecorded';
@@ -126,6 +128,76 @@ export interface MachineMaintenanceRow {
   services: MaintenanceServiceRow[];
 }
 
+export interface HazardRow {
+  title: string;
+  location: string;
+  severity: HazardSeverity;
+  severityLabel: string;
+  /** The state at the end of the period, not necessarily today's. */
+  statusLabel: string;
+  reportedAt: Date;
+  reportedByName: string;
+  assignedToName: string;
+  /** Only when it was resolved by the end of the period. */
+  resolvedAt: Date | null;
+  resolvedByName: string;
+  resolutionNote: string;
+  /** Calendar days it had been open at the end of the period; null once resolved. */
+  daysOpen: number | null;
+}
+
+export interface HazardSeverityRow {
+  severity: HazardSeverity;
+  label: string;
+  reported: number;
+  resolved: number;
+  openAtEnd: number;
+}
+
+export interface HazardSummary {
+  reported: number;
+  resolved: number;
+  /** Unresolved at the end of the period (or now, for one in progress). */
+  openAtEnd: number;
+  /** Mean hours from report to resolution, over hazards resolved in the period. */
+  meanResolveHours: number | null;
+  bySeverity: HazardSeverityRow[];
+  rows: HazardRow[];
+}
+
+export interface DowntimeIncidentRow {
+  startedAt: Date;
+  /** When it was repaired; null while the machine is still down. */
+  endedAt: Date | null;
+  /** Still down at the end of the period (or now, for one in progress). */
+  ongoing: boolean;
+  /** Calendar hours of this breakdown that fall inside the period. */
+  hoursInPeriod: number;
+  reason: string;
+  reportedByName: string;
+  /** Who repaired it; '' while it is still down. */
+  repairedByName: string;
+  assignedToName: string;
+}
+
+export interface MachineDowntimeRow {
+  name: string;
+  location: string;
+  incidents: DowntimeIncidentRow[];
+  hours: number;
+  /** 0–1: the share of the period the machine was up; null for an empty period. */
+  availability: number | null;
+}
+
+export interface DowntimeSummary {
+  machines: MachineDowntimeRow[];
+  totalIncidents: number;
+  totalHours: number;
+  /** Mean hours from breakdown to repair, over breakdowns repaired in the period. */
+  meanRepairHours: number | null;
+  stillDown: string[];
+}
+
 export interface AppendixRow {
   orderNumber: string;
   name: string;
@@ -170,6 +242,8 @@ export interface ReportData {
     totalServices: number;
     idleMachines: string[];
   };
+  downtime: DowntimeSummary;
+  hazards: HazardSummary;
   appendix: AppendixRow[];
   /** Completed jobs with no `completedAt` at all, which no period can claim. */
   undatedCompletions: number;
@@ -179,6 +253,7 @@ export interface BuildReportInput {
   jobs: readonly Job[];
   materials: readonly Material[];
   machines: readonly Machine[];
+  hazards: readonly Hazard[];
   period: ReportPeriod;
   now: Date;
   generatedBy: string;
@@ -421,6 +496,188 @@ function buildMaintenance(
   };
 }
 
+const SEVERITIES_WORST_FIRST: readonly HazardSeverity[] = ['critical', 'high', 'medium', 'low'];
+
+/** Resolved by `asOf`. A resolved hazard with no resolution time is treated as
+ *  already closed, since nothing says when it reopened. */
+function closedBy(hazard: Hazard, asOf: Date): boolean {
+  return hazard.status === 'resolved' && (hazard.resolvedAt === null || hazard.resolvedAt < asOf);
+}
+
+function buildHazards(
+  hazards: readonly Hazard[],
+  range: ReportRange,
+  now: Date,
+): HazardSummary {
+  const asOf = asOfFor(range, now);
+  // A future period has no "end of period" state to describe yet.
+  const live = range.start < now;
+  // A report still waiting on its server timestamp cannot be placed in time.
+  const dated = hazards.filter((h) => h.createdAt !== null);
+  const reportedIn = dated.filter((h) => inRange(h.createdAt, range));
+  const resolvedIn = dated.filter(
+    (h) => h.status === 'resolved' && inRange(h.resolvedAt, range),
+  );
+  const openAtEnd = live ? dated.filter((h) => h.createdAt! < asOf && !closedBy(h, asOf)) : [];
+
+  const resolveHours = resolvedIn.map((h) =>
+    Math.max(0, (h.resolvedAt!.getTime() - h.createdAt!.getTime()) / HOUR_MS),
+  );
+
+  const shown = new Set<Hazard>([...reportedIn, ...resolvedIn, ...openAtEnd]);
+  const rows: HazardRow[] = [...shown]
+    .map((h) => {
+      const closed = closedBy(h, asOf);
+      return {
+        hazard: h,
+        row: {
+          title: h.title.trim(),
+          location: h.location.trim(),
+          severity: h.severity,
+          severityLabel: hazardSeverityLabel(h.severity),
+          statusLabel: closed ? 'Resolved' : h.status === 'inProgress' ? 'In progress' : 'Open',
+          reportedAt: h.createdAt!,
+          reportedByName: h.reportedByName.trim() || UNRECORDED_PERSON_LABEL,
+          assignedToName: h.assignedToName.trim(),
+          resolvedAt: closed ? h.resolvedAt : null,
+          resolvedByName: closed ? h.resolvedByName.trim() : '',
+          resolutionNote: closed ? h.resolutionNote.trim() : '',
+          daysOpen: closed
+            ? null
+            : Math.max(0, calendarDaysBetween(h.createdAt!, new Date(asOf.getTime() - 1))),
+        } satisfies HazardRow,
+        open: !closed,
+      };
+    })
+    .sort(
+      (a, b) =>
+        Number(b.open) - Number(a.open) ||
+        SEVERITIES_WORST_FIRST.indexOf(a.row.severity) -
+          SEVERITIES_WORST_FIRST.indexOf(b.row.severity) ||
+        a.row.reportedAt.getTime() - b.row.reportedAt.getTime() ||
+        compareText(a.row.title, b.row.title),
+    )
+    .map((entry) => entry.row);
+
+  return {
+    reported: reportedIn.length,
+    resolved: resolvedIn.length,
+    openAtEnd: openAtEnd.length,
+    meanResolveHours:
+      resolveHours.length === 0
+        ? null
+        : resolveHours.reduce((sum, v) => sum + v, 0) / resolveHours.length,
+    bySeverity: SEVERITIES_WORST_FIRST.map((severity) => ({
+      severity,
+      label: hazardSeverityLabel(severity),
+      reported: reportedIn.filter((h) => h.severity === severity).length,
+      resolved: resolvedIn.filter((h) => h.severity === severity).length,
+      openAtEnd: openAtEnd.filter((h) => h.severity === severity).length,
+    })),
+    rows,
+  };
+}
+
+interface RawIncident {
+  start: Date;
+  /** null while the machine is still down. */
+  end: Date | null;
+  reason: string;
+  reportedByName: string;
+  repairedByName: string;
+  assignedToName: string;
+}
+
+/** Every breakdown of a machine: the repaired ones in its history, plus the
+ *  current one if it is down right now. */
+function incidentsOf(machine: Machine): RawIncident[] {
+  const repaired: RawIncident[] = machine.downtimeHistory.map((r) => ({
+    start: r.downSince,
+    end: r.repairedAt,
+    reason: r.reason,
+    reportedByName: r.reportedByName,
+    repairedByName: r.repairedByName,
+    assignedToName: r.assignedToName,
+  }));
+  if (machine.status === 'down' && machine.downSince) {
+    repaired.push({
+      start: machine.downSince,
+      end: null,
+      reason: machine.downReason,
+      reportedByName: machine.downReportedByName,
+      repairedByName: '',
+      assignedToName: machine.repairAssignedToName,
+    });
+  }
+  return repaired;
+}
+
+function buildDowntime(
+  machines: readonly Machine[],
+  range: ReportRange,
+  now: Date,
+): DowntimeSummary {
+  const asOf = asOfFor(range, now);
+  const elapsedMs = asOf.getTime() - range.start.getTime();
+  const repairHours: number[] = [];
+
+  const rows: MachineDowntimeRow[] = [...machines]
+    .sort((a, b) => compareText(a.name, b.name))
+    .map((machine) => {
+      const incidents = incidentsOf(machine)
+        // Overlaps the period: started before it ends and was still down after it
+        // began. A breakdown that is still open counts as down until `asOf`.
+        .filter((i) => i.start < asOf && (i.end ?? asOf) > range.start)
+        .sort((a, b) => a.start.getTime() - b.start.getTime())
+        .map((i) => {
+          const from = Math.max(i.start.getTime(), range.start.getTime());
+          const to = Math.min((i.end ?? asOf).getTime(), asOf.getTime());
+          if (i.end !== null && inRange(i.end, range)) {
+            repairHours.push((i.end.getTime() - i.start.getTime()) / HOUR_MS);
+          }
+          return {
+            ms: Math.max(0, to - from),
+            row: {
+              startedAt: i.start,
+              endedAt: i.end,
+              ongoing: i.end === null || i.end >= asOf,
+              hoursInPeriod: Math.max(0, to - from) / HOUR_MS,
+              reason: i.reason.trim(),
+              reportedByName: i.reportedByName.trim() || UNRECORDED_PERSON_LABEL,
+              repairedByName: i.repairedByName.trim(),
+              assignedToName: i.assignedToName.trim(),
+            } satisfies DowntimeIncidentRow,
+          };
+        });
+      const downMs = incidents.reduce((sum, i) => sum + i.ms, 0);
+      return {
+        name: machine.name,
+        location: machine.location,
+        incidents: incidents.map((i) => i.row),
+        hours: downMs / HOUR_MS,
+        availability: elapsedMs > 0 ? Math.max(0, 1 - downMs / elapsedMs) : null,
+      };
+    })
+    .filter((row) => row.incidents.length > 0);
+
+  // Summed from milliseconds, once, so the total never depends on the order
+  // the rows happen to be added in.
+  const totalMs = rows.reduce(
+    (sum, r) => sum + Math.round(r.hours * HOUR_MS),
+    0,
+  );
+  return {
+    machines: rows,
+    totalIncidents: rows.reduce((sum, r) => sum + r.incidents.length, 0),
+    totalHours: totalMs / HOUR_MS,
+    meanRepairHours:
+      repairHours.length === 0
+        ? null
+        : repairHours.reduce((sum, v) => sum + v, 0) / repairHours.length,
+    stillDown: rows.filter((r) => r.incidents.some((i) => i.ongoing)).map((r) => r.name),
+  };
+}
+
 /** Calendar days from one local date to another, ignoring time of day: due
  *  on the 12th and completed on the 15th is 3 days late at any hour. */
 function calendarDaysBetween(from: Date, to: Date): number {
@@ -430,7 +687,7 @@ function calendarDaysBetween(from: Date, to: Date): number {
 }
 
 export function buildReport(input: BuildReportInput): ReportData {
-  const { jobs, materials, machines, period, now, generatedBy } = input;
+  const { jobs, materials, machines, hazards, period, now, generatedBy } = input;
   const range = periodRange(period);
   const previous = previousPeriod(period);
   const previousRange = periodRange(previous);
@@ -515,6 +772,8 @@ export function buildReport(input: BuildReportInput): ReportData {
     delivery: { late, overdue, reschedules },
     materials: { consumed: buildMaterialUse(jobs, materials, range), stock: buildStock(materials) },
     maintenance: buildMaintenance(machines, range),
+    downtime: buildDowntime(machines, range, now),
+    hazards: buildHazards(hazards, range, now),
     appendix: done.map((j) => ({
       orderNumber: j.orderNumber,
       name: j.name,
@@ -592,6 +851,31 @@ export function reportToJson(report: ReportData): unknown {
       machines: report.maintenance.machines.map((m) => ({
         ...m,
         services: m.services.map((s) => ({ ...s, completedAt: date(s.completedAt) })),
+      })),
+    },
+    downtime: {
+      ...report.downtime,
+      totalHours: num(report.downtime.totalHours),
+      meanRepairHours: num(report.downtime.meanRepairHours),
+      machines: report.downtime.machines.map((m) => ({
+        ...m,
+        hours: num(m.hours),
+        availability: num(m.availability),
+        incidents: m.incidents.map((i) => ({
+          ...i,
+          startedAt: date(i.startedAt),
+          endedAt: date(i.endedAt),
+          hoursInPeriod: num(i.hoursInPeriod),
+        })),
+      })),
+    },
+    hazards: {
+      ...report.hazards,
+      meanResolveHours: num(report.hazards.meanResolveHours),
+      rows: report.hazards.rows.map((r) => ({
+        ...r,
+        reportedAt: date(r.reportedAt),
+        resolvedAt: date(r.resolvedAt),
       })),
     },
     appendix: report.appendix.map((r) => ({

@@ -1,6 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthProvider';
-import { useInventoryOutlet, useJobsOutlet, useMachinesOutlet } from '../routes/Workspace';
+import {
+  useHazardsOutlet,
+  useInventoryOutlet,
+  useJobsOutlet,
+  useMachinesOutlet,
+} from '../routes/Workspace';
 import { useToast } from '../components/Toast';
 import { EmptyState } from '../components/EmptyState';
 import { PageHeader } from '../components/PageHeader';
@@ -55,6 +60,7 @@ export default function Reports() {
   const jobsState = useJobsOutlet();
   const inventoryState = useInventoryOutlet();
   const machinesState = useMachinesOutlet();
+  const hazardsState = useHazardsOutlet();
   const { profile } = useAuth();
   const { toast } = useToast();
 
@@ -70,12 +76,15 @@ export default function Reports() {
   const [customEnd, setCustomEnd] = useState(() => dayKey(today));
   const [busy, setBusy] = useState(false);
 
-  const loading = jobsState.loading || inventoryState.loading || machinesState.loading;
-  const loadError = jobsState.error ?? inventoryState.error ?? machinesState.error;
+  const loading =
+    jobsState.loading || inventoryState.loading || machinesState.loading || hazardsState.loading;
+  const loadError =
+    jobsState.error ?? inventoryState.error ?? machinesState.error ?? hazardsState.error;
   const retry = () => {
     if (jobsState.error) jobsState.retry();
     if (inventoryState.error) inventoryState.retry();
     if (machinesState.error) machinesState.retry();
+    if (hazardsState.error) hazardsState.retry();
   };
 
   const years = useMemo(() => reportYears(jobsState.jobs, today), [jobsState.jobs, today]);
@@ -113,12 +122,22 @@ export default function Reports() {
             jobs: jobsState.jobs,
             materials: inventoryState.materials,
             machines: machinesState.machines,
+            hazards: hazardsState.hazards,
             period,
             now: new Date(),
             generatedBy,
           })
         : null,
-    [period, loading, loadError, jobsState.jobs, inventoryState.materials, machinesState.machines, generatedBy],
+    [
+      period,
+      loading,
+      loadError,
+      jobsState.jobs,
+      inventoryState.materials,
+      machinesState.machines,
+      hazardsState.hazards,
+      generatedBy,
+    ],
   );
 
   async function handleDownload() {
@@ -131,6 +150,7 @@ export default function Reports() {
         jobs: jobsState.jobs,
         materials: inventoryState.materials,
         machines: machinesState.machines,
+        hazards: hazardsState.hazards,
         period,
         now: new Date(),
         generatedBy,

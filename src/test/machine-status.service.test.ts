@@ -6,6 +6,7 @@ const firestore = vi.hoisted(() => ({
   updateDoc: vi.fn(async (_ref: unknown, _patch: unknown) => undefined),
   serverTimestamp: vi.fn(() => ({ kind: 'serverTimestamp' })),
   deleteField: vi.fn(() => ({ kind: 'deleteField' })),
+  arrayUnion: vi.fn((...values: unknown[]) => ({ kind: 'arrayUnion', values })),
 }));
 
 vi.mock('firebase/firestore', () => ({
@@ -19,6 +20,7 @@ vi.mock('firebase/firestore', () => ({
   orderBy: vi.fn(),
   serverTimestamp: firestore.serverTimestamp,
   deleteField: firestore.deleteField,
+  arrayUnion: firestore.arrayUnion,
   runTransaction: vi.fn(),
   Timestamp: { now: vi.fn() },
 }));
@@ -164,6 +166,43 @@ describe('assignMachineRepair', () => {
 });
 
 describe('markMachineRepaired', () => {
+  const downSince = new Date('2026-10-01T09:00:00');
+
+  it('appends the breakdown to the downtime history', async () => {
+    await markMachineRepaired(
+      actor('staff'),
+      machine({
+        status: 'down',
+        downSince,
+        downReason: 'Hotend clogged',
+        downReportedByName: 'Ana',
+        repairAssignedToName: 'Sam',
+      }),
+    );
+    const history = patch().downtimeHistory as { kind: string; values: Record<string, unknown>[] };
+    expect(history.kind).toBe('arrayUnion');
+    expect(history.values).toHaveLength(1);
+    expect(history.values[0]).toMatchObject({
+      downSince,
+      reason: 'Hotend clogged',
+      reportedByName: 'Ana',
+      repairedByName: 'Pat staff',
+      assignedToName: 'Sam',
+    });
+    expect(history.values[0].repairedAt).toBeInstanceOf(Date);
+    expect((history.values[0].repairedAt as Date).getTime()).toBeGreaterThan(downSince.getTime());
+  });
+
+  it('records nothing when there is no start time to measure from', async () => {
+    await markMachineRepaired(actor('staff'), machine({ status: 'down', downSince: null }));
+    expect(patch()).not.toHaveProperty('downtimeHistory');
+  });
+
+  it('records nothing for a machine that was not down', async () => {
+    await markMachineRepaired(actor('staff'), machine({ downSince }));
+    expect(patch()).not.toHaveProperty('downtimeHistory');
+  });
+
   it('returns the machine to operational and clears the down and assignee fields', async () => {
     await markMachineRepaired(
       actor('staff'),

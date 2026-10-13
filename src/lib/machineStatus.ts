@@ -65,6 +65,7 @@ export const OPERATIONAL_MACHINE_FIELDS: Pick<
   | 'repairAssignedAt'
   | 'lastRepairedAt'
   | 'lastRepairedByName'
+  | 'downtimeHistory'
 > = {
   status: 'operational',
   downReason: '',
@@ -76,4 +77,5 @@ export const OPERATIONAL_MACHINE_FIELDS: Pick<
   repairAssignedAt: null,
   lastRepairedAt: null,
   lastRepairedByName: '',
+  downtimeHistory: [],
 };
