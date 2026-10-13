@@ -1,4 +1,4 @@
-import type { Job, JobCategory, JobCollaborator, JobSection } from '../types';
+import type { JobCategory, JobCollaborator, JobSection } from '../types';
 
 /** Repair jobs kept their original vocabulary; every other category calls the
  *  same list "job sections". Only the wording differs — the stored field, the
@@ -67,7 +67,7 @@ export function parseJobSections(value: unknown): JobSection[] {
 /** Model → Firestore. collaboratorUid is omitted while a section is
  *  unassigned, matching the Flutter writer so both clients round-trip the same
  *  document shape. */
-export function sectionToFirestore(section: JobSection): Record<string, unknown> {
+function sectionToFirestore(section: JobSection): Record<string, unknown> {
   const collaboratorUid = section.collaboratorUid.trim();
   return {
     name: section.name.trim(),
@@ -216,8 +216,3 @@ export function sectionCollaboratorName(
   return collaborators.find((collaborator) => collaborator.uid === uid)?.name.trim() ?? '';
 }
 
-/** True when the user owns at least one section on the job. Managers and
- *  admins reach the dialog through their role instead. */
-export function ownsAnySection(job: Pick<Job, 'repairProcesses'>, uid: string): boolean {
-  return job.repairProcesses.some((section) => section.collaboratorUid === uid);
-}

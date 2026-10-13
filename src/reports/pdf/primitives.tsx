@@ -19,7 +19,7 @@ export const s = StyleSheet.create({
 
 /** Registration ticks at a sheet's four corners — the drafting-sheet
  *  signature, in the sheet's signal colour. */
-export function CornerTicks({ color = c.primary, size = 6 }: { color?: string; size?: number }) {
+function CornerTicks({ color = c.primary, size = 6 }: { color?: string; size?: number }) {
   const w = 0.9;
   const tick = (pos: Style, borders: Style) => (
     <View style={{ position: 'absolute', width: size, height: size, ...pos, ...borders }} />
@@ -115,7 +115,7 @@ export function Led({ color, size = 5 }: { color: string; size?: number }) {
 }
 
 /** Tables up to this many rows never split across pages. */
-export const SHORT_TABLE_ROWS = 8;
+const SHORT_TABLE_ROWS = 8;
 
 export interface Column {
   label: string;

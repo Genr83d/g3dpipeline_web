@@ -21,7 +21,7 @@ export const signalText: Readonly<Record<SignalTone, string>> = {
   idle: 'text-slate-500 dark:text-slate-400',
 };
 
-export const signalFill: Readonly<Record<SignalTone, string>> = {
+const signalFill: Readonly<Record<SignalTone, string>> = {
   primary: 'bg-primary dark:bg-indigo-400',
   amber: 'bg-amber-500 dark:bg-amber-400',
   secondary: 'bg-secondary dark:bg-emerald-400',
@@ -29,7 +29,7 @@ export const signalFill: Readonly<Record<SignalTone, string>> = {
   idle: 'bg-slate-400 dark:bg-slate-500',
 };
 
-export const signalTrack: Readonly<Record<SignalTone, string>> = {
+const signalTrack: Readonly<Record<SignalTone, string>> = {
   primary: 'bg-primary/12 dark:bg-indigo-400/15',
   amber: 'bg-amber-500/15 dark:bg-amber-400/15',
   secondary: 'bg-secondary/15 dark:bg-emerald-400/15',

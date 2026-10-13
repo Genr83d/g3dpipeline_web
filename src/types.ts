@@ -31,9 +31,6 @@ export interface JobSection {
   collaboratorUid: string;
 }
 
-/** Historical name for {@link JobSection}, kept for the repair vocabulary. */
-export type RepairProcess = JobSection;
-
 export interface Job {
   id: string;
   /** Stable display reference such as G3D-ABC123XY. Jobs created before the

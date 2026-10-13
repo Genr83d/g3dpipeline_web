@@ -5,7 +5,7 @@ import { Led, signalText } from './Drafting';
 import { Modal } from './Modal';
 import { InlineSpinner } from './MachinePanel';
 
-export const MACHINE_FAULT_MAX = 500;
+const MACHINE_FAULT_MAX = 500;
 
 /** LED plus an uppercase mono label — the same pill the hazards use. Only a
  *  machine that is down gets one; a working machine stays quiet. */

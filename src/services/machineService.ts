@@ -32,7 +32,7 @@ import {
   type MachineViewer,
 } from '../lib/machineStatus';
 
-export const machinesCol = collection(db, 'machines');
+const machinesCol = collection(db, 'machines');
 
 function parseProcedure(value: unknown, index: number): MaintenanceProcedure {
   const data = value && typeof value === 'object' ? (value as Record<string, unknown>) : {};

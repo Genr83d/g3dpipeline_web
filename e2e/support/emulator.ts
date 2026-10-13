@@ -196,18 +196,6 @@ export async function addDocument(
   return body.name.split('/').pop()!;
 }
 
-export async function getDocument(
-  path: string,
-): Promise<Record<string, unknown> | null> {
-  const response = await fetch(`${DOCUMENTS}/${path}`, { headers: OWNER });
-  if (response.status === 404) return null;
-  await expectOk(response, `Reading ${path}`);
-  const body = (await response.json()) as { fields?: Record<string, Record<string, unknown>> };
-  return Object.fromEntries(
-    Object.entries(body.fields ?? {}).map(([key, value]) => [key, decode(value)]),
-  );
-}
-
 export async function deleteDocument(path: string): Promise<void> {
   const response = await fetch(`${DOCUMENTS}/${path}`, { method: 'DELETE', headers: OWNER });
   if (response.status === 404) return;

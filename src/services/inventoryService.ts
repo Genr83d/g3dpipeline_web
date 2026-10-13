@@ -15,7 +15,7 @@ import type { Actor } from './jobService';
 
 export const inventoryCol = collection(db, 'inventory');
 
-export function parseMaterial(id: string, data: Record<string, unknown>): Material {
+function parseMaterial(id: string, data: Record<string, unknown>): Material {
   return {
     id,
     name: typeof data.name === 'string' ? data.name : '',

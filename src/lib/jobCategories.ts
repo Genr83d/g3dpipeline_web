@@ -1,7 +1,7 @@
 import type { Job, JobCategory } from '../types';
 
 export const DEFAULT_JOB_CATEGORY: JobCategory = 'manufacturing';
-export const LEGACY_JOB_CATEGORY: JobCategory = 'miscellaneous';
+const LEGACY_JOB_CATEGORY: JobCategory = 'miscellaneous';
 
 export const JOB_CATEGORY_OPTIONS: ReadonlyArray<{
   value: JobCategory;

@@ -8,7 +8,7 @@ export const JOB_DOWNSTREAM_WARNING =
 export const JOB_DELETE_WARNING =
   'This permanently removes the job from the pipeline. It cannot be undone and may affect workflow, reporting, and billing.';
 
-export const UNTITLED_JOB_FALLBACK = 'Untitled job';
+const UNTITLED_JOB_FALLBACK = 'Untitled job';
 
 /** Confirmation dialog for consequential job actions (start/complete/delete).
  *  Cannot be dismissed while the request is in flight, blocks duplicate

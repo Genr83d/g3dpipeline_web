@@ -32,7 +32,7 @@ import { actorDisplayName, type Actor } from './jobService';
 /** Reads and writes `/hazards`. The Firestore rules (owned by the Flutter
  *  repository) are the authority on who may do what; the checks here give a
  *  clear message before a request would be refused. */
-export const hazardsCol = collection(db, 'hazards');
+const hazardsCol = collection(db, 'hazards');
 
 export type HazardActor = Actor & HazardViewer;
 

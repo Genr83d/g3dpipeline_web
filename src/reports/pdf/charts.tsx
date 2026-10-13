@@ -6,7 +6,7 @@ import { pdfColors as c, pdfFonts } from './theme';
 /** The smallest 1/2/5 × 10ⁿ at or above `max`, so gridlines land on round
  *  numbers. Never below 4, which keeps a quiet month from drawing 0.25-job
  *  gridlines. */
-export function niceCeiling(max: number): number {
+function niceCeiling(max: number): number {
   if (max <= 4) return 4;
   const magnitude = 10 ** Math.floor(Math.log10(max));
   for (const step of [1, 2, 2.5, 5, 10]) {

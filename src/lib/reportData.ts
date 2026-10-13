@@ -26,8 +26,8 @@ import {
 const DAY_MS = 86_400_000;
 const HOUR_MS = 3_600_000;
 const TOP_CUSTOMER_LIMIT = 10;
-export const NO_CUSTOMER_LABEL = 'No customer';
-export const UNRECORDED_PERSON_LABEL = 'Unrecorded';
+const NO_CUSTOMER_LABEL = 'No customer';
+const UNRECORDED_PERSON_LABEL = 'Unrecorded';
 
 export interface ReportKpis {
   completed: number;
@@ -265,7 +265,7 @@ function inRange(d: Date | null, range: ReportRange): d is Date {
 
 /** Plain code-unit ordering, case-insensitive. Deliberately not
  *  localeCompare, whose collation differs between JS engines and Dart. */
-export function compareText(a: string, b: string): number {
+function compareText(a: string, b: string): number {
   const x = a.toLowerCase();
   const y = b.toLowerCase();
   return x < y ? -1 : x > y ? 1 : 0;
@@ -282,7 +282,7 @@ function ratio(part: number, whole: number): number | null {
   return whole === 0 ? null : part / whole;
 }
 
-export function isOnTime(job: Job): boolean {
+function isOnTime(job: Job): boolean {
   return job.completedAt !== null && job.completedAt.getTime() <= job.dueDate.getTime();
 }
 
@@ -295,7 +295,7 @@ function turnarounds(jobs: readonly Job[]): number[] {
   return jobs.map(turnaroundDays).filter((d): d is number => d !== null);
 }
 
-export function completedInRange(jobs: readonly Job[], range: ReportRange): Job[] {
+function completedInRange(jobs: readonly Job[], range: ReportRange): Job[] {
   return jobs
     .filter((j) => j.status === 'completed' && inRange(j.completedAt, range))
     .sort((a, b) => a.completedAt!.getTime() - b.completedAt!.getTime() || compareText(a.id, b.id));
