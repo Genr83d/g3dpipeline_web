@@ -1,3 +1,4 @@
+import { userDisplayName } from '../lib/userName';
 import {
   addDoc,
   collection,
@@ -87,9 +88,7 @@ export async function updateHazardDetails(
   await updateDoc(doc(db, 'hazards', hazard.id), { ...details(input), ...stamp(actor) });
 }
 
-export function userDisplayName(user: Pick<AppUser, 'name' | 'email'>): string {
-  return user.name.trim() || user.email;
-}
+export { userDisplayName };
 
 /** Hands the hazard to `assignee`, or clears the assignment when null. */
 export async function assignHazard(

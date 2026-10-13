@@ -6,6 +6,7 @@ import { useInventory, type InventoryState } from '../hooks/useInventory';
 import { useMachines, type MachinesState } from '../hooks/useMachines';
 import { useHazards, type HazardsState } from '../hooks/useHazards';
 import { isUrgentHazard } from '../lib/hazards';
+import { isMachineDown } from '../lib/machineStatus';
 import { useAuth } from '../context/AuthProvider';
 import { useAppearance } from '../context/AppearanceProvider';
 import { AccountMenu } from '../components/AccountMenu';
@@ -48,6 +49,7 @@ export function Workspace() {
   const machinesState = useMachines(nonAwfEnabled, roleKey);
   const hazardsState = useHazards(isActive, roleKey);
   const urgentHazards = hazardsState.hazards.filter(isUrgentHazard).length;
+  const downMachines = machinesState.machines.filter(isMachineDown).length;
   const visibleTabs = isAwf ? awfTabs : tabs;
   const redirectedAwfEntry = useRef(false);
 
@@ -113,6 +115,14 @@ export function Workspace() {
                     <span className={`relative ${active ? 'font-bold text-primary dark:text-indigo-300' : 'text-slate-600 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white'}`}>
                       {tab.label}
                       {/* Unresolved high or critical hazards light the tab. */}
+                      {/* A machine that is down lights the Maintenance tab. */}
+                      {tab.to === '/maintenance' && downMachines > 0 && (
+                        <span
+                          aria-hidden
+                          data-testid="nav-machine-alert"
+                          className="absolute -top-0.5 -right-2 h-2 w-2 rounded-full bg-danger ring-2 ring-white dark:bg-red-400 dark:ring-slate-900"
+                        />
+                      )}
                       {tab.to === '/hazards' && urgentHazards > 0 && (
                         <span
                           aria-hidden

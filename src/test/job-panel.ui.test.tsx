@@ -6,6 +6,7 @@ import type { Job, Machine, UserRole } from '../types';
 import { JobForm } from '../components/JobForm';
 import { JobPanel, jobPanelTabs, type JobPanelState } from '../components/JobPanel';
 import Maintenance from '../pages/Maintenance';
+import { OPERATIONAL_MACHINE_FIELDS } from '../lib/machineStatus';
 
 const testState = vi.hoisted(() => ({
   auth: null as unknown,
@@ -35,11 +36,14 @@ vi.mock('../services/userService', () => ({
 vi.mock('../services/machineService', () => ({
   addMachine: vi.fn(),
   addProcedure: vi.fn(),
+  assignMachineRepair: vi.fn(),
   deleteMachine: vi.fn(),
   editMachine: vi.fn(),
   filterMachines: (machines: Machine[]) => machines,
   logCheckedMaintenance: vi.fn(),
+  markMachineRepaired: vi.fn(),
   removeProcedure: vi.fn(),
+  reportMachineDown: vi.fn(),
   setProcedureDone: vi.fn(),
 }));
 
@@ -259,6 +263,7 @@ describe('compact machine card', () => {
       updatedAt: null,
       updatedByUid: '',
       updatedByName: '',
+      ...OPERATIONAL_MACHINE_FIELDS,
       ...overrides,
     };
   }
