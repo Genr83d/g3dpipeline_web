@@ -12,7 +12,8 @@
  * exit signal, and sweep up an orphan from a previous run before starting.
  */
 import { spawn, spawnSync } from 'node:child_process';
-import { mkdirSync, openSync } from 'node:fs';
+import { existsSync, mkdirSync, openSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { createConnection } from 'node:net';
 
 const PROJECT = process.env.E2E_FIREBASE_PROJECT ?? 'g3d-pipeline-e2e';
@@ -45,6 +46,45 @@ function requireFirebaseCli() {
     ].join('\n'),
   );
   process.exit(1);
+}
+
+/** With E2E_REAL_RULES=1 the emulator enforces the production Firestore rules
+ *  instead of the permissive E2E ones, so the app is exercised against what
+ *  would actually be deployed. The rules live in the Flutter repository; point
+ *  E2E_REAL_RULES_PATH at another copy (a branch checkout) if needed.
+ *
+ *  Returns the extra CLI args, or [] for the default permissive ruleset. */
+function realRulesArgs() {
+  if (process.env.E2E_REAL_RULES !== '1') return [];
+
+  const rules = resolve(
+    process.env.E2E_REAL_RULES_PATH ??
+      '../../GENR8-Pipeline/G3D Jobs Lists/g3d_jobs_list/firestore.rules',
+  );
+  if (!existsSync(rules)) {
+    console.error(
+      `[emulators] production rules not found at ${rules}.\n` +
+        'Set E2E_REAL_RULES_PATH to the Flutter repo\'s firestore.rules.',
+    );
+    process.exit(1);
+  }
+
+  mkdirSync('e2e/.logs', { recursive: true });
+  const config = resolve('e2e/.logs/firebase.real-rules.json');
+  writeFileSync(
+    config,
+    JSON.stringify({
+      firestore: { rules },
+      emulators: {
+        auth: { port: PORTS[0] },
+        firestore: { port: PORTS[1] },
+        ui: { enabled: false },
+        singleProjectMode: true,
+      },
+    }),
+  );
+  console.log(`[emulators] enforcing production rules from ${rules}`);
+  return ['--config', config];
 }
 
 function portOpen(port) {
@@ -127,7 +167,15 @@ async function main() {
 
   const child = spawn(
     'npx',
-    ['firebase', 'emulators:start', '--project', PROJECT, '--only', 'auth,firestore'],
+    [
+      'firebase',
+      'emulators:start',
+      '--project',
+      PROJECT,
+      '--only',
+      'auth,firestore',
+      ...realRulesArgs(),
+    ],
     { stdio: ['ignore', logFd, logFd], detached: true },
   );
 

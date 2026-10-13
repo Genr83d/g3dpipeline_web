@@ -37,6 +37,8 @@ The six `VITE_FIREBASE_*` values come from the Firebase Console
 | `npm run test:e2e:update-snapshots` | accept new screenshot baselines |
 | `npm run test:e2e:report` | open the last HTML report |
 | `npm run emulators` | start the Firebase emulators on their own |
+| `npm run playground` | a local copy of the app to click through by hand: emulators enforcing the **production** rules, seeded test accounts, app on `127.0.0.1:5175`. Never touches the real project |
+| `npm run test:e2e:real-rules` | the Playwright suite against the production rules instead of the permissive E2E ones (add `-- --project=chromium` to pick an engine) |
 
 ## Typography
 
@@ -279,6 +281,10 @@ Requirements beyond `npm install`:
   allows any signed-in user, so the suite verifies the app's own routing, role
   gating, and service-layer enforcement — not the deployed ruleset. A
   regression that only the real rules would reject will not be caught here.
+  To check against them, run `npm run test:e2e:real-rules` or try the app by
+  hand with `npm run playground`. Both read the Flutter repository's
+  `firestore.rules` from `../../GENR8-Pipeline/G3D Jobs Lists/g3d_jobs_list/`
+  (set `E2E_REAL_RULES_PATH` to use another copy, such as a branch checkout).
 - **Real devices and real browsers.** "All browsers" means the three engines
   Playwright ships. Safari on an actual iPhone, or Chrome on an actual Android
   device, is still its own test pass.

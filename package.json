@@ -22,6 +22,8 @@
     "test:e2e:update-snapshots": "playwright test --project=visual --update-snapshots",
     "test:e2e:report": "playwright show-report e2e/.report",
     "emulators": "node e2e/scripts/emulators.mjs",
+    "playground": "node e2e/scripts/playground.mjs",
+    "test:e2e:real-rules": "E2E_REAL_RULES=1 playwright test",
     "preview": "vite preview"
   },
   "repository": {

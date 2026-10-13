@@ -170,3 +170,64 @@ test.describe('non-admin machine permissions', () => {
     await expect(card.getByRole('button', { name: 'Delete machine' })).toHaveCount(0);
   });
 });
+
+test.describe('machine status', () => {
+  test('reports a machine down, assigns the repair, and marks it repaired', async ({ page }) => {
+    const name = uniqueName(CREATED_PREFIX);
+    cleanup.track('machines', name);
+    await addMachine(page, name);
+    const card = machineCard(page, name);
+
+    // A working machine carries no down pill.
+    await expect(card.getByTestId('machine-down-pill')).toHaveCount(0);
+
+    await card.getByRole('button', { name: 'Report down' }).click();
+    const reportDialog = page.getByRole('dialog');
+    await expect(reportDialog.getByRole('button', { name: 'Report down' })).toBeDisabled();
+    await reportDialog.getByLabel('What is wrong?').fill('Spindle will not spin up');
+    await reportDialog.getByRole('button', { name: 'Report down' }).click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+
+    await expect(card.getByTestId('machine-down-pill')).toContainText('Down · Unassigned');
+    await expect(card).toContainText('Spindle will not spin up');
+    await expect(page.getByTestId('nav-machine-alert')).toBeVisible();
+
+    await card.getByRole('button', { name: 'Assign repair' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: /Sasha Second/ }).click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await expect(card.getByTestId('machine-down-pill')).toContainText('Down · Sasha Second');
+    await expect(card).toContainText('Repair by');
+
+    await card.getByRole('button', { name: 'Mark repaired' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Mark repaired' }).click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+
+    await expect(card.getByTestId('machine-down-pill')).toHaveCount(0);
+    await expect(card.getByRole('button', { name: 'Report down' })).toBeVisible();
+    await expect(page.getByTestId('nav-machine-alert')).toHaveCount(0);
+  });
+
+  test.describe('as staff', () => {
+    test.use({ storageState: storageStatePath('staff') });
+
+    test('staff can report down and mark repaired but cannot assign', async ({ page }) => {
+      const name = uniqueName(CREATED_PREFIX);
+      cleanup.track('machines', name);
+      // Staff can create machines too; the card is what matters here.
+      await addMachine(page, name);
+      const card = machineCard(page, name);
+
+      await card.getByRole('button', { name: 'Report down' }).click();
+      await page.getByRole('dialog').getByLabel('What is wrong?').fill('Belt snapped');
+      await page.getByRole('dialog').getByRole('button', { name: 'Report down' }).click();
+      await expect(page.getByRole('dialog')).toBeHidden();
+
+      await expect(card.getByTestId('machine-down-pill')).toBeVisible();
+      await expect(card.getByRole('button', { name: /assign repair/i })).toHaveCount(0);
+
+      await card.getByRole('button', { name: 'Mark repaired' }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Mark repaired' }).click();
+      await expect(card.getByTestId('machine-down-pill')).toHaveCount(0);
+    });
+  });
+});

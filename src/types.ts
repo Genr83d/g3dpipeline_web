@@ -111,6 +111,8 @@ export interface MaintenanceHistoryRecord {
   notes: string;
 }
 
+export type MachineStatus = 'operational' | 'down';
+
 export interface Machine {
   id: string;
   name: string;
@@ -124,6 +126,19 @@ export interface Machine {
   updatedAt: Date | null;
   updatedByUid: string;
   updatedByName: string;
+  /** Machines saved before status existed read as 'operational'. Shared with
+   *  the Flutter app; the Firestore rules there are authoritative. */
+  status: MachineStatus;
+  downReason: string;
+  downSince: Date | null;
+  downReportedByName: string;
+  /** '' while nobody is assigned to the repair. */
+  repairAssignedToUid: string;
+  repairAssignedToName: string;
+  repairAssignedByName: string;
+  repairAssignedAt: Date | null;
+  lastRepairedAt: Date | null;
+  lastRepairedByName: string;
 }
 
 /** How bad a shop-floor hazard is, least to most severe. */

@@ -290,6 +290,32 @@ export function MachinePanel({
           {tab === 'details' && (
             <div className="space-y-5">
               <dl>
+                <SpecLine label="Status">
+                  {machine.status === 'down' ? (
+                    <span className="text-danger dark:text-red-300">
+                      Down{machine.downSince ? ` since ${formatDate(machine.downSince)}` : ''}
+                    </span>
+                  ) : (
+                    <span className="text-secondary dark:text-emerald-300">Operational</span>
+                  )}
+                </SpecLine>
+                {machine.status === 'down' && machine.downReason && (
+                  <SpecLine label="Fault">{machine.downReason}</SpecLine>
+                )}
+                {machine.status === 'down' && (
+                  <SpecLine label="Repair by">
+                    {machine.repairAssignedToName || 'Unassigned'}
+                    {machine.repairAssignedToName && machine.repairAssignedByName
+                      ? ` · by ${machine.repairAssignedByName}`
+                      : ''}
+                  </SpecLine>
+                )}
+                {machine.status !== 'down' && machine.lastRepairedAt && (
+                  <SpecLine label="Last repaired">
+                    <span className="readout">{formatDate(machine.lastRepairedAt)}</span>
+                    {machine.lastRepairedByName && ` · ${machine.lastRepairedByName}`}
+                  </SpecLine>
+                )}
                 <SpecLine label="Location">{machine.location || '—'}</SpecLine>
                 <SpecLine label="Procedures">
                   <span className="readout">{machine.procedures.length}</span>

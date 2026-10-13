@@ -1,6 +1,7 @@
 import fixture from './fixtures/report-fixture.json';
 import type { Job, JobCategory, JobStatus, JobTag, Machine, Material, UserRole } from '../types';
 import type { ReportPeriod } from '../lib/reportPeriods';
+import { OPERATIONAL_MACHINE_FIELDS } from '../lib/machineStatus';
 
 /** Loads the shared report fixture. Timestamps are local wall-clock strings
  *  without an offset, so `new Date(...)` reads them in the test's timezone —
@@ -73,6 +74,7 @@ export const fixtureMachines: Machine[] = fixture.machines.map((m) => ({
   updatedAt: null,
   updatedByUid: '',
   updatedByName: '',
+  ...OPERATIONAL_MACHINE_FIELDS,
 }));
 
 export const fixturePeriods = fixture.periods as Array<{ name: string; period: ReportPeriod }>;

@@ -9,17 +9,26 @@ import {
   runTransaction,
   serverTimestamp,
   Timestamp,
+  deleteField,
   updateDoc,
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import {
   toDate,
+  type AppUser,
   type Machine,
   type MaintenanceHistoryRecord,
   type MaintenanceProcedure,
 } from '../types';
 import { actorDisplayName, type Actor } from './jobService';
+import { userDisplayName } from '../lib/userName';
+import {
+  canAssignMachineRepair,
+  canMarkMachineRepaired,
+  canReportMachineDown,
+  type MachineViewer,
+} from '../lib/machineStatus';
 
 export const machinesCol = collection(db, 'machines');
 
@@ -74,7 +83,21 @@ export function parseMachine(id: string, data: Record<string, unknown>): Machine
     updatedAt: toDate(data.updatedAt),
     updatedByUid: (data.updatedByUid as string) ?? '',
     updatedByName: (data.updatedByName as string) ?? '',
+    status: data.status === 'down' ? 'down' : 'operational',
+    downReason: text(data.downReason),
+    downSince: toDate(data.downSince),
+    downReportedByName: text(data.downReportedByName),
+    repairAssignedToUid: text(data.repairAssignedToUid),
+    repairAssignedToName: text(data.repairAssignedToName),
+    repairAssignedByName: text(data.repairAssignedByName),
+    repairAssignedAt: toDate(data.repairAssignedAt),
+    lastRepairedAt: toDate(data.lastRepairedAt),
+    lastRepairedByName: text(data.lastRepairedByName),
   };
+}
+
+function text(value: unknown): string {
+  return typeof value === 'string' ? value : '';
 }
 
 export function watchMachines(
@@ -125,6 +148,84 @@ export async function editMachine(
 ): Promise<void> {
   await updateDoc(doc(db, 'machines', machineId), {
     ...input,
+    ...audit(actor),
+  });
+}
+
+export type MachineActor = Actor & MachineViewer;
+
+/** Marks the machine down with `reason`. Reporting again while it is already
+ *  down just updates the reason and keeps the original down-since time. */
+export async function reportMachineDown(
+  actor: MachineActor,
+  machine: Machine,
+  reason: string,
+): Promise<void> {
+  if (!canReportMachineDown(actor)) throw new Error('Your account cannot report machines down.');
+  const trimmed = reason.trim();
+  if (!trimmed) throw new Error('Say what is wrong with the machine.');
+  await updateDoc(doc(db, 'machines', machine.id), {
+    status: 'down',
+    downReason: trimmed,
+    ...(machine.status === 'down'
+      ? {}
+      : {
+          downSince: serverTimestamp(),
+          downReportedByUid: actor.uid,
+          downReportedByName: actorDisplayName(actor),
+        }),
+    ...audit(actor),
+  });
+}
+
+/** Hands the repair to `assignee`, or clears the assignment when null. */
+export async function assignMachineRepair(
+  actor: MachineActor,
+  machine: Machine,
+  assignee: AppUser | null,
+): Promise<void> {
+  if (!canAssignMachineRepair(actor)) throw new Error('Only managers and admins assign repairs.');
+  if (machine.status !== 'down') throw new Error('Only a machine that is down needs a repair.');
+  if (assignee && assignee.status !== 'active') {
+    throw new Error('Repairs can only go to active accounts.');
+  }
+  await updateDoc(doc(db, 'machines', machine.id), {
+    ...(assignee
+      ? {
+          repairAssignedToUid: assignee.uid,
+          repairAssignedToName: userDisplayName(assignee),
+          repairAssignedByUid: actor.uid,
+          repairAssignedByName: actorDisplayName(actor),
+          repairAssignedAt: serverTimestamp(),
+        }
+      : {
+          repairAssignedToUid: '',
+          repairAssignedToName: '',
+          repairAssignedByUid: deleteField(),
+          repairAssignedByName: deleteField(),
+          repairAssignedAt: deleteField(),
+        }),
+    ...audit(actor),
+  });
+}
+
+/** Returns the machine to operational and clears the down and assignee
+ *  fields, keeping only who repaired it and when. */
+export async function markMachineRepaired(actor: MachineActor, machine: Machine): Promise<void> {
+  if (!canMarkMachineRepaired(actor)) throw new Error('Your account cannot mark machines repaired.');
+  await updateDoc(doc(db, 'machines', machine.id), {
+    status: 'operational',
+    downReason: '',
+    downSince: deleteField(),
+    downReportedByUid: '',
+    downReportedByName: '',
+    repairAssignedToUid: '',
+    repairAssignedToName: '',
+    repairAssignedByUid: deleteField(),
+    repairAssignedByName: deleteField(),
+    repairAssignedAt: deleteField(),
+    lastRepairedAt: serverTimestamp(),
+    lastRepairedByName: actorDisplayName(actor),
     ...audit(actor),
   });
 }
@@ -251,6 +352,8 @@ export function filterMachines(machines: Machine[], search: string): Machine[] {
     const haystack = [
       machine.name,
       machine.location,
+      machine.downReason,
+      machine.repairAssignedToName,
       ...machine.procedures.map((procedure) => procedure.title),
     ]
       .join(' ')

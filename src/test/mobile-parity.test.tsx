@@ -7,6 +7,7 @@ import { JobCard } from '../components/JobCard';
 import { FLOATING_ADD_CLEARANCE, FloatingAddButton } from '../components/FloatingAddButton';
 import Inventory from '../pages/Inventory';
 import Maintenance from '../pages/Maintenance';
+import { OPERATIONAL_MACHINE_FIELDS } from '../lib/machineStatus';
 
 const testState = vi.hoisted(() => ({
   auth: null as unknown,
@@ -40,11 +41,14 @@ vi.mock('../components/Toast', () => ({
 vi.mock('../services/machineService', () => ({
   addMachine: vi.fn(),
   addProcedure: vi.fn(),
+  assignMachineRepair: vi.fn(),
   deleteMachine: vi.fn(),
   editMachine: vi.fn(),
   filterMachines: (machines: Machine[], _search: string) => machines,
   logCheckedMaintenance: (...args: unknown[]) => testState.logCheckedMaintenance(...args),
+  markMachineRepaired: vi.fn(),
   removeProcedure: vi.fn(),
+  reportMachineDown: vi.fn(),
   setProcedureDone: vi.fn(),
 }));
 
@@ -141,6 +145,7 @@ function machine(overrides: Partial<Machine> = {}): Machine {
     updatedAt: null,
     updatedByUid: '',
     updatedByName: '',
+    ...OPERATIONAL_MACHINE_FIELDS,
     ...overrides,
   };
 }

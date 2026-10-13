@@ -9,6 +9,8 @@ import { PageHeader } from '../components/PageHeader';
 import { FloatingAddButton } from '../components/FloatingAddButton';
 import { MachineCardSkeleton, Skeleton } from '../components/Skeleton';
 import { DimRule, Led } from '../components/Drafting';
+import { AssignUserModal } from '../components/AssignUserModal';
+import { MachineDownPill, MarkRepairedModal, ReportDownModal } from '../components/MachineStatus';
 import {
   InlineSpinner,
   MachinePanel,
@@ -20,29 +22,45 @@ import {
 import {
   IconCheck,
   IconClose,
+  IconAlert,
   IconCloudOff,
   IconEdit,
   IconHistory,
   IconMapPin,
   IconNote,
   IconPlus,
+  IconUserPlus,
   IconSearch,
   IconTrash,
   IconWrench,
 } from '../components/icons';
 import { errorMessage, formatDate } from '../lib/format';
 import {
+  canAssignMachineRepair,
+  canMarkMachineRepaired,
+  canReportMachineDown,
+  compareMachines,
+  hasRepairAssignee,
+  isMachineDown,
+  isRepairAssignedTo,
+  type MachineViewer,
+} from '../lib/machineStatus';
+import {
   addMachine,
   addProcedure,
+  assignMachineRepair,
   deleteMachine,
   editMachine,
   filterMachines,
   logCheckedMaintenance,
+  markMachineRepaired,
   removeProcedure,
+  reportMachineDown,
   setProcedureDone,
   type MachineInput,
 } from '../services/machineService';
-import type { Machine, MaintenanceProcedure } from '../types';
+import { userDisplayName } from '../lib/userName';
+import type { AppUser, Machine, MaintenanceProcedure } from '../types';
 
 function checkedProcedures(machine: Machine): MaintenanceProcedure[] {
   return machine.procedures.filter((procedure) => procedure.isDone);
@@ -89,23 +107,34 @@ function MachineCard({
   machine,
   busyKey,
   isAdmin,
+  viewer,
   onEdit,
   onDelete,
   onAddProcedure,
   onToggleProcedure,
   onLog,
   onOpenPanel,
+  onReportDown,
+  onAssignRepair,
+  onMarkRepaired,
 }: {
   machine: Machine;
   busyKey: string | null;
   isAdmin: boolean;
+  viewer: MachineViewer;
   onEdit: (machine: Machine) => void;
   onDelete: (machine: Machine) => void;
   onAddProcedure: (machine: Machine, title: string) => Promise<boolean>;
   onToggleProcedure: (machine: Machine, procedure: MaintenanceProcedure, isDone: boolean) => void;
   onLog: (machine: Machine) => void;
   onOpenPanel: (machine: Machine, tab: MachinePanelTab) => void;
+  onReportDown: (machine: Machine) => void;
+  onAssignRepair: (machine: Machine) => void;
+  onMarkRepaired: (machine: Machine) => void;
 }) {
+  const down = isMachineDown(machine);
+  const assignedToMe = isRepairAssignedTo(machine, viewer.uid);
+  const statusBusy = busyKey === `machine-status:${machine.id}`;
   const checked = checkedProcedures(machine);
   const logBusy = busyKey === `maintenance-log:${machine.id}`;
   const maintainedAt = lastMaintained(machine);
@@ -115,7 +144,11 @@ function MachineCard({
   return (
     <article
       className={`surface surface-hover drafting-frame relative flex flex-col gap-4 p-4 ${
-        checked.length > 0 ? '[--tick:var(--color-secondary)] dark:[--tick:var(--color-emerald-400)]' : ''
+        down
+          ? '[--tick:var(--color-danger)] dark:[--tick:var(--color-red-400)]'
+          : checked.length > 0
+            ? '[--tick:var(--color-secondary)] dark:[--tick:var(--color-emerald-400)]'
+            : ''
       }`}
     >
       {/* Title block */}
@@ -143,8 +176,30 @@ function MachineCard({
               </span>
             </span>
           </p>
+          {down && (
+            <div className="flex flex-wrap items-center gap-2 pt-0.5">
+              <MachineDownPill machine={machine} />
+              {assignedToMe && (
+                <span className="inline-flex items-center gap-1 rounded-sm border border-current/35 px-1.5 py-0.5 text-[0.7rem] font-bold text-amber-700 dark:text-amber-300">
+                  <IconWrench className="h-3.5 w-3.5" />
+                  Assigned to you
+                </span>
+              )}
+            </div>
+          )}
         </div>
         <div className="flex shrink-0 items-center gap-1">
+          {/* A working machine stays compact: reporting it down is an icon. */}
+          {!down && canReportMachineDown(viewer) && (
+            <IconButton
+              label="Report down"
+              title="Report machine down"
+              disabled={statusBusy}
+              onClick={() => onReportDown(machine)}
+            >
+              <IconAlert className="h-4 w-4" />
+            </IconButton>
+          )}
           <IconButton label="Edit machine" title="Edit machine" onClick={() => onEdit(machine)}>
             <IconEdit className="h-4 w-4" />
           </IconButton>
@@ -160,6 +215,59 @@ function MachineCard({
           )}
         </div>
       </div>
+
+      {down && (
+        <dl className="-mt-1" data-testid="machine-down-details">
+          {machine.downSince && (
+            <div className="flex items-baseline gap-2 py-1 text-sm">
+              <dt className="shrink-0 text-slate-500 dark:text-slate-400">Down since</dt>
+              <dd className="readout min-w-0 text-danger dark:text-red-300">{formatDate(machine.downSince)}</dd>
+            </div>
+          )}
+          {machine.downReason && (
+            <div className="flex items-baseline gap-2 py-1 text-sm">
+              <dt className="shrink-0 text-slate-500 dark:text-slate-400">Fault</dt>
+              <dd className="min-w-0 font-semibold break-words text-slate-700 dark:text-slate-200">
+                {machine.downReason}
+              </dd>
+            </div>
+          )}
+          {hasRepairAssignee(machine) && (
+            <div className="flex items-baseline gap-2 py-1 text-sm">
+              <dt className="shrink-0 text-slate-500 dark:text-slate-400">Repair by</dt>
+              <dd className="min-w-0 font-semibold text-slate-700 dark:text-slate-200">
+                {machine.repairAssignedToName}
+              </dd>
+            </div>
+          )}
+        </dl>
+      )}
+
+      {down && (canAssignMachineRepair(viewer) || canMarkMachineRepaired(viewer)) && (
+        <div className="flex flex-wrap gap-2">
+          {canAssignMachineRepair(viewer) && (
+            <button
+              type="button"
+              className="btn-ghost py-2"
+              disabled={statusBusy}
+              onClick={() => onAssignRepair(machine)}
+            >
+              <IconUserPlus className="h-4 w-4" />{' '}
+              {hasRepairAssignee(machine) ? 'Reassign repair' : 'Assign repair'}
+            </button>
+          )}
+          {canMarkMachineRepaired(viewer) && (
+            <button
+              type="button"
+              className="btn-secondary py-2"
+              disabled={statusBusy}
+              onClick={() => onMarkRepaired(machine)}
+            >
+              {statusBusy ? <InlineSpinner /> : <IconCheck className="h-4 w-4" />} Mark repaired
+            </button>
+          )}
+        </div>
+      )}
 
       {machine.notes && (
         <button
@@ -291,7 +399,7 @@ function MachineCard({
 }
 
 export default function Maintenance() {
-  const { actor, isAdmin } = useAuth();
+  const { actor, profile, isAdmin } = useAuth();
   const { machines, loading, error, retry } = useMachinesOutlet();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
@@ -302,8 +410,16 @@ export default function Maintenance() {
   const [maintenanceNotes, setMaintenanceNotes] = useState('');
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [panel, setPanel] = useState<MachinePanelState | null>(null);
+  const [reporting, setReporting] = useState<Machine | null>(null);
+  const [assigning, setAssigning] = useState<Machine | null>(null);
+  const [repairing, setRepairing] = useState<Machine | null>(null);
 
-  const visible = useMemo(() => filterMachines(machines, search), [machines, search]);
+  // Machines that are down come first.
+  const visible = useMemo(
+    () => [...filterMachines(machines, search)].sort(compareMachines),
+    [machines, search],
+  );
+  const downCount = useMemo(() => machines.filter(isMachineDown).length, [machines]);
   const totalProcedures = useMemo(
     () => machines.reduce((sum, machine) => sum + machine.procedures.length, 0),
     [machines],
@@ -315,6 +431,10 @@ export default function Maintenance() {
   const searching = search.trim().length > 0;
 
   if (!actor) return null;
+  // `actor` is only set for an active account, so the role is always known.
+  const role = profile?.role ?? 'staff';
+  const viewer: MachineViewer = { uid: actor.uid, role };
+  const statusActor = { ...actor, role };
 
   async function runAction(
     key: string,
@@ -400,6 +520,37 @@ export default function Maintenance() {
     if (saved) closeConfirmLog();
   }
 
+  // Live record, so the dialogs follow a status change made elsewhere.
+  const live = (machine: Machine | null) =>
+    machine ? (machines.find((m) => m.id === machine.id) ?? null) : null;
+
+  async function handleReportDown(machine: Machine, reason: string) {
+    const saved = await runAction(
+      `machine-status:${machine.id}`,
+      () => reportMachineDown(statusActor, machine, reason),
+      `${machine.name} reported down.`,
+    );
+    if (saved) setReporting(null);
+  }
+
+  async function handleAssignRepair(machine: Machine, assignee: AppUser | null) {
+    const saved = await runAction(
+      `machine-status:${machine.id}`,
+      () => assignMachineRepair(statusActor, machine, assignee),
+      assignee ? `Repair assigned to ${userDisplayName(assignee)}.` : 'Repair unassigned.',
+    );
+    if (saved) setAssigning(null);
+  }
+
+  async function handleMarkRepaired(machine: Machine) {
+    const saved = await runAction(
+      `machine-status:${machine.id}`,
+      () => markMachineRepaired(statusActor, machine),
+      `${machine.name} is back in service.`,
+    );
+    if (saved) setRepairing(null);
+  }
+
   const addButton = (
     <button className="btn-primary" onClick={() => setAdding(true)} data-tour="add-machine">
       <IconPlus className="h-4 w-4" /> Add machine
@@ -421,7 +572,8 @@ export default function Maintenance() {
 
       {loading ? (
         <>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-4">
+            <Skeleton className="h-24" />
             <Skeleton className="h-24" />
             <Skeleton className="h-24" />
             <Skeleton className="h-24" />
@@ -445,10 +597,18 @@ export default function Maintenance() {
         />
       ) : (
         <>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-4">
             <div className="surface px-4 py-3">
               <p className="technical-label">Machines</p>
               <p className="readout text-2xl font-bold">{machines.length}</p>
+            </div>
+            <div className="surface px-4 py-3">
+              <p className="technical-label">Down</p>
+              <p
+                className={`readout text-2xl font-bold ${downCount > 0 ? 'text-danger dark:text-red-300' : ''}`}
+              >
+                {downCount}
+              </p>
             </div>
             <div className="surface px-4 py-3">
               <p className="technical-label">Procedures</p>
@@ -514,6 +674,10 @@ export default function Maintenance() {
                   machine={machine}
                   busyKey={busyKey}
                   isAdmin={isAdmin}
+                  viewer={viewer}
+                  onReportDown={setReporting}
+                  onAssignRepair={setAssigning}
+                  onMarkRepaired={setRepairing}
                   onEdit={setEditing}
                   onDelete={setDeleting}
                   onAddProcedure={handleAddProcedure}
@@ -543,6 +707,34 @@ export default function Maintenance() {
         }}
         onAddProcedure={handleAddProcedure}
         onRemoveProcedure={handleRemoveProcedure}
+      />
+
+      <ReportDownModal
+        machine={live(reporting)}
+        busy={reporting !== null && busyKey === `machine-status:${reporting.id}`}
+        onReport={(machine, reason) => void handleReportDown(machine, reason)}
+        onClose={() => setReporting(null)}
+      />
+
+      <AssignUserModal
+        open={live(assigning) !== null}
+        title="Who will repair it?"
+        subtitle={live(assigning)?.name ?? ''}
+        assignedToUid={live(assigning)?.repairAssignedToUid ?? ''}
+        assignedToName={live(assigning)?.repairAssignedToName ?? ''}
+        busy={assigning !== null && busyKey === `machine-status:${assigning.id}`}
+        onAssign={(assignee) => {
+          const machine = live(assigning);
+          if (machine) void handleAssignRepair(machine, assignee);
+        }}
+        onClose={() => setAssigning(null)}
+      />
+
+      <MarkRepairedModal
+        machine={live(repairing)}
+        busy={repairing !== null && busyKey === `machine-status:${repairing.id}`}
+        onConfirm={(machine) => void handleMarkRepaired(machine)}
+        onClose={() => setRepairing(null)}
       />
 
       <Modal open={adding} title="Add machine" onClose={() => setAdding(false)}>
