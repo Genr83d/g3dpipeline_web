@@ -120,6 +120,15 @@ the same source so the identity stays consistent.
   can't start the same job. Only the claimer can complete it. Managers and
   admins can edit and restore; only admins can delete. The UI hides any
   action the rules would reject.
+- **Completion gate** — a job can only be completed once every unit is
+  recorded as done (`completedQuantity === quantity`) and every section is at
+  100%. Software development jobs don't count units, so only their sections
+  apply. Until then Complete stays visible but disabled and the card lists
+  what is left ("8 of 20 units still to finish", "Routing is at 60%");
+  `completeJob` re-checks the freshly read job inside its transaction, and the
+  Firestore rules refuse a completing write on unfinished work, so no client
+  can skip it. Single-unit jobs record their unit like any other. A job holds
+  at most 25 sections, the most the rules can check (`src/lib/jobCompletion.ts`).
 - **Order numbers** — every job carries a permanent `orderNumber` such as
   `G3D-ABC123XY`, derived from the first eight characters of its document ID
   when the job is created and never rewritten by a later update. Jobs written
@@ -134,8 +143,9 @@ the same source so the identity stays consistent.
   own several. The card shows a bar per section with their rounded average.
   Managers and admins may move any section; a collaborator may move only the
   sections assigned to them, enforced in `jobService` as well as in the UI.
-  Completing a job sets every section to 100%; restoring one resets them to 0%
-  and unassigns them along with the team. Sections written before ownership
+  Completing a job leaves its sections exactly as recorded (all at 100%, which
+  the gate requires); restoring one resets them to 0% and unassigns them along
+  with the team. Sections written before ownership
   existed read `collaboratorUid` as `''`.
 - **Job tags and stock** — a job carries a `tags` array chosen from a closed
   list (`src/lib/jobTags.ts`), and tags are what drive inventory deduction.
@@ -169,9 +179,20 @@ the same source so the identity stays consistent.
   someone turns a deduction off, and it beats whatever the job is called.
   Saving a job through this app always writes the array, so each save retires
   one more document from the fallback.
-- **Tabs** — Jobs (live board with sorting and overdue flags), Summary
-  (live stats plus the most urgent jobs), Archive (completed, newest first,
-  filtered by completion month, with restore).
+- **Tabs** — Jobs (live board with sorting and overdue flags), Inventory,
+  Maintenance, Hazards, Summary (live stats plus the most urgent jobs),
+  Archive (completed, newest first, filtered by completion month, with
+  restore). AWF staff see Jobs, Hazards, Summary, and Archive.
+- **Hazards** — anything unsafe on the shop floor (`hazards` collection,
+  shared with the Flutter app). Anyone active, AWF included, reports one with
+  a title, optional location and details, and a severity (low, medium, high,
+  critical). Managers and admins assign the person who sorts it out; that
+  person (or management) starts it and resolves it with a required note on
+  what was done. Management can reopen a resolved hazard; the reporter can
+  correct a report until someone is assigned; only admins delete. Unresolved
+  high or critical hazards put a red dot on the tab, announced as "Hazards,
+  N urgent". Logic in `src/lib/hazards.ts`, writes in
+  `src/services/hazardService.ts`; the rules live in the Flutter repository.
 - **Archive months** — the archive filters by the month a job was *completed*,
   read from `completedAt` in the reader's own timezone, never from its
   deadline: a job due in August and shipped in September files under
@@ -289,6 +310,13 @@ Requirements beyond `npm install`:
   Septembers a year apart kept separate, undated completions under "Unknown
   month", pending and in-progress work never appearing, and the fallback to
   All months when the month in view is emptied by a restore.
+- **Completion gate** — Complete disabled with the list of what is left, the
+  list shrinking as units and sections are recorded, and completion once the
+  work is done; a single-unit job recording its unit.
+- **Hazards** — report (with validation), the urgent tab dot, a manager
+  assigning, the assignee starting and resolving with a required note, a
+  manager reopening, an admin deleting, the reporter correcting a report, who
+  sees which action, and AWF staff reporting.
 - **Job sections** — reading them on a card, assigning every section to a
   collaborator, unassigning a removed collaborator, and who may move which
   section's progress.
@@ -301,7 +329,8 @@ Requirements beyond `npm install`:
 - **Accessibility and keyboard** — landmarks, accessible names, label
   associations, dialog semantics, and mouse-free flows.
 - **User journeys** — a manager and a member of staff working the same job
-  through to completion and restore, in two live sessions.
+  through to completion (blocked until every unit and section is done) and
+  restore, in two live sessions.
 - **Responsive** — layout, navigation, dialogs, and touch targets on tablet
   and phone.
 

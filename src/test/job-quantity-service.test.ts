@@ -266,9 +266,43 @@ describe('transactional progress updates', () => {
     );
   });
 
-  it('sets completion to the latest total quantity', async () => {
-    jobDoc({ status: 'started', name: 'Regular order', quantity: 15, collaboratorUids: [actor.uid] });
+  it('refuses to complete while units are still outstanding', async () => {
+    jobDoc({
+      status: 'started',
+      name: 'Regular order',
+      quantity: 15,
+      completedQuantity: 14,
+      collaboratorUids: [actor.uid],
+    });
+    await expect(completeJob(actor, self('staff'), 'job-1')).rejects.toThrow(
+      'This job is not finished yet: 1 of 15 units still to finish.',
+    );
+    expect(lastTransactionPatch()).toBeUndefined();
+  });
+
+  it('completes once every unit is recorded', async () => {
+    jobDoc({
+      status: 'started',
+      name: 'Regular order',
+      quantity: 15,
+      completedQuantity: 15,
+      collaboratorUids: [actor.uid],
+    });
     await completeJob(actor, self('staff'), 'job-1');
     expect(lastTransactionPatch()).toMatchObject({ status: 'completed', completedQuantity: 15 });
+  });
+
+  it('completes a software development job on its sections alone', async () => {
+    jobDoc({
+      status: 'started',
+      name: 'Inventory dashboard',
+      category: 'softwareDevelopment',
+      quantity: 1,
+      completedQuantity: 0,
+      repairProcesses: [{ name: 'Build', progress: 100 }],
+      collaboratorUids: [actor.uid],
+    });
+    await completeJob(actor, self('staff'), 'job-1');
+    expect(lastTransactionPatch()).toMatchObject({ status: 'completed', completedQuantity: 1 });
   });
 });

@@ -181,12 +181,15 @@ function shop({
   });
 }
 
-/** A started job the current admin is allowed to complete. */
+/** A started, finished job the current admin is allowed to complete: every
+ *  unit is recorded, so the completion gate lets it through. */
 function startedJob(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  const quantity = typeof overrides.quantity === 'number' ? overrides.quantity : 12;
   return {
     status: 'started',
     name: 'Bracket set',
-    quantity: 12,
+    quantity,
+    completedQuantity: quantity,
     category: 'manufacturing',
     collaborators: [],
     collaboratorUids: [],

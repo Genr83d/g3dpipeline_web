@@ -125,13 +125,24 @@ export function mergeJobSections(
   });
 }
 
-/** Returns an error message, or null when the job has at least one section.
- *  Every category needs one. */
+/** The most sections a job can hold. The Firestore rules check each section
+ *  by index before a job may complete, so they can only verify a bounded
+ *  list. Matches the Flutter app. */
+export const MAX_JOB_SECTIONS = 25;
+
+/** Returns an error message, or null when the job has between one and
+ *  {@link MAX_JOB_SECTIONS} sections. Every category needs one. */
 export function validateJobSections(
   category: JobCategory,
   sections: readonly JobSection[],
 ): string | null {
-  return sections.length > 0 ? null : sectionRequiredMessage(category);
+  if (sections.length === 0) return sectionRequiredMessage(category);
+  if (sections.length > MAX_JOB_SECTIONS) {
+    return `A job can have at most ${MAX_JOB_SECTIONS} ${
+      usesRepairVocabulary(category) ? 'repair processes' : 'sections'
+    }.`;
+  }
+  return null;
 }
 
 /** Rounded arithmetic mean: (100 + 50 + 25 + 0) / 4 = 43.75 → 44%. */
@@ -139,11 +150,6 @@ export function overallSectionProgress(sections: readonly JobSection[]): number 
   if (sections.length === 0) return 0;
   const total = sections.reduce((sum, section) => sum + clampSectionProgress(section.progress), 0);
   return Math.round(total / sections.length);
-}
-
-/** Completing a job finishes every section; ownership is preserved. */
-export function completedJobSections(sections: readonly JobSection[]): JobSection[] {
-  return sections.map((section) => ({ ...section, progress: SECTION_PROGRESS_MAX }));
 }
 
 /** Restoring a completed job resets percentages but keeps names and owners. */

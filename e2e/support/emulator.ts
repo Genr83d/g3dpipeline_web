@@ -238,9 +238,11 @@ export async function listDocuments(
  *  using — which shows up as a record mysteriously vanishing mid-test. */
 export async function deleteByName(collection: string, name: string): Promise<void> {
   const documents = await listDocuments(collection);
+  // Hazards are named by their title.
+  const key = collection === 'hazards' ? 'title' : 'name';
   await Promise.all(
     documents
-      .filter((document) => document.data.name === name)
+      .filter((document) => document.data[key] === name)
       .map((document) => deleteDocument(`${collection}/${document.id}`)),
   );
 }

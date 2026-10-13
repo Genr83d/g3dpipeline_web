@@ -126,6 +126,33 @@ export interface Machine {
   updatedByName: string;
 }
 
+/** How bad a shop-floor hazard is, least to most severe. */
+export type HazardSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type HazardStatus = 'open' | 'inProgress' | 'resolved';
+
+/** A hazard someone reported on the shop floor, and who is sorting it out.
+ *  Shared with the Flutter app; the Firestore rules there are authoritative. */
+export interface Hazard {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  severity: HazardSeverity;
+  status: HazardStatus;
+  reportedByUid: string;
+  reportedByName: string;
+  /** '' while unassigned. */
+  assignedToUid: string;
+  assignedToName: string;
+  assignedByName: string;
+  assignedAt: Date | null;
+  resolutionNote: string;
+  resolvedAt: Date | null;
+  resolvedByName: string;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+}
+
 export interface AppUser {
   uid: string;
   name: string;
