@@ -129,7 +129,10 @@ the same source so the identity stays consistent.
   what is left ("8 of 20 units still to finish", "Routing is at 60%");
   `completeJob` re-checks the freshly read job inside its transaction, and the
   Firestore rules refuse a completing write on unfinished work, so no client
-  can skip it. Single-unit jobs record their unit like any other. A job holds
+  can skip it. Only a tagged job reads the completed jobs and inventory its
+  stock deduction needs, so AWF collaborators (whose role cannot read either)
+  complete untagged jobs; a tagged one needs staff, a manager or an admin.
+  Single-unit jobs record their unit like any other. A job holds
   at most 25 sections, the most the rules can check (`src/lib/jobCompletion.ts`).
 - **End-of-day auto-completion** — a started job whose units and sections are
   all done is completed automatically once the day it was finished has ended
@@ -143,7 +146,8 @@ the same source so the identity stays consistent.
   to the end of the day the work was finished and credited to whoever made
   the last update, flagged `autoCompleted: true`, and the rules only accept
   that backdated, re-credited stamp within a day of that update. AWF accounts
-  do not sweep on the web, since completing reads inventory.
+  sweep only untagged jobs, since a tagged job's stock deduction reads
+  inventory.
 - **Order numbers** — every job carries a permanent `orderNumber` such as
   `G3D-ABC123XY`, derived from the first eight characters of its document ID
   when the job is created and never rewritten by a later update. Jobs written

@@ -6,10 +6,11 @@ export interface AutoCompleteUser {
   role: UserRole;
 }
 
-/** Mirrors who completeJob lets complete a job. AWF accounts never sweep on
- *  the web: completing reads inventory, which their role cannot read. */
+/** Mirrors who completeJob lets complete a job. AWF accounts cannot read
+ *  inventory, so they leave tagged jobs, which consume stock, to the rest of
+ *  the shop. */
 export function canAutoComplete(job: Job, user: AutoCompleteUser): boolean {
-  if (user.role === 'awf') return false;
+  if (user.role === 'awf' && job.tags.length > 0) return false;
   return user.role === 'manager' || user.role === 'admin' || job.collaboratorUids.includes(user.uid);
 }
 

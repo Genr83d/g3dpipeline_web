@@ -4,6 +4,7 @@ import {
   setDoc,
   deleteDoc,
   updateDoc,
+  getDoc,
   getDocs,
   onSnapshot,
   query,
@@ -441,6 +442,9 @@ export async function completeJob(actor: Actor, self: Assigner, jobId: string): 
   return completeJobAs(actor, self, jobId, null);
 }
 
+export const AWF_STOCK_COMPLETION_MESSAGE =
+  'This job uses stock, so staff, a manager or an admin must complete it.';
+
 export const NOT_DUE_FOR_AUTO_COMPLETION_MESSAGE =
   'This job was updated today, so it is not due to auto-complete.';
 
@@ -467,22 +471,35 @@ async function completeJobAs(
   const jobRef = doc(db, 'jobs', jobId);
   const byName = actorDisplayName(actor);
 
-  const [completedSnap, inventorySnap] = await Promise.all([
-    getDocs(query(jobsCol, where('status', '==', 'completed'))),
-    getDocs(inventoryCol),
-  ]);
+  const initial = await getDoc(jobRef);
+  if (!initial.exists()) throw new Error('This job no longer exists.');
+
+  // Only a tagged job can move stock, so only a tagged job pays for reading
+  // the completed jobs and inventory. Both reads are denied to AWF accounts,
+  // which must still be able to complete untagged jobs (as in the Flutter
+  // app).
+  const consumesStock = resolveJobTags(initial.data()).length > 0;
+  if (consumesStock && self.role === 'awf') {
+    throw new Error(AWF_STOCK_COMPLETION_MESSAGE);
+  }
+  const [completedSnap, inventorySnap] = consumesStock
+    ? await Promise.all([
+        getDocs(query(jobsCol, where('status', '==', 'completed'))),
+        getDocs(inventoryCol),
+      ])
+    : [null, null];
 
   // The shop's running completed total for a tag, which per-batch rules count
   // boundaries against. Documents written before tags existed contribute
   // through resolveJobTags, so history is not lost and the next Lamina sheet
   // still falls where it always would have.
   const previousCompleted = (tag: JobTag): number =>
-    completedSnap.docs
+    (completedSnap?.docs ?? [])
       .filter((d) => d.id !== jobId && resolveJobTags(d.data()).includes(tag))
       .reduce((sum, d) => sum + storedQuantity(d.data()), 0);
 
   const materialRefs = new Map<string, DocumentReference>(
-    inventorySnap.docs.map((d) => [normalizedName(d.data()), d.ref] as const),
+    (inventorySnap?.docs ?? []).map((d) => [normalizedName(d.data()), d.ref] as const),
   );
 
   await runTransaction(db, async (tx) => {
@@ -536,7 +553,11 @@ async function completeJobAs(
     // transaction cannot read after a write, and a job that cannot pay for all
     // of its materials must not be left having spent some of them.
     const deductions: Array<{ ref: DocumentReference; remaining: number }> = [];
-    for (const demand of materialsConsumed(resolveJobTags(data), quantity, previousCompleted)) {
+    const demands = materialsConsumed(resolveJobTags(data), quantity, previousCompleted);
+    if (demands.length > 0 && !consumesStock) {
+      throw new Error('This job was tagged while it was being completed. Try again.');
+    }
+    for (const demand of demands) {
       const ref = materialRefs.get(demand.material.trim().toLowerCase());
       if (!ref) {
         throw new Error(`No “${demand.material}” material found in inventory.`);

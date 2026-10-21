@@ -79,6 +79,8 @@ vi.mock('firebase/firestore', () => ({
   setDoc: firestore.setDoc,
   deleteDoc: firestore.deleteDoc,
   updateDoc: firestore.updateDoc,
+  // The pre-transaction read sees the same document the transaction does.
+  getDoc: (ref: unknown) => firestore.transactionGet(ref),
   getDocs: firestore.getDocs,
   onSnapshot: firestore.onSnapshot,
   query: firestore.query,
@@ -102,6 +104,7 @@ import {
   completeJob,
   editJob,
   restoreJob,
+  AWF_STOCK_COMPLETION_MESSAGE,
   type Actor,
   type Assigner,
 } from '../services/jobService';
@@ -574,6 +577,50 @@ describe('a restore that cannot return its stock changes nothing', () => {
 
     await expect(restoreJob(actor, JOB_ID)).rejects.toThrow(
       'Only completed jobs can be restored.',
+    );
+    expect(firestore.transactionUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe('completing an untagged job never reads stock', () => {
+  const awf: Assigner = { uid: actor.uid, name: 'Avery Example', role: 'awf' };
+
+  it('skips the completed-jobs and inventory reads', async () => {
+    shop({ job: startedJob() });
+    await completeJob(actor, admin, JOB_ID);
+    expect(firestore.getDocs).not.toHaveBeenCalled();
+    expect(jobPatch()).toMatchObject({ status: 'completed' });
+  });
+
+  it('lets an AWF collaborator complete it, since those reads are denied to AWF', async () => {
+    shop({ job: startedJob({ isAwf: true, collaboratorUids: [actor.uid] }) });
+    await completeJob(actor, awf, JOB_ID);
+    expect(firestore.getDocs).not.toHaveBeenCalled();
+    expect(jobPatch()).toMatchObject({ status: 'completed', completedByUid: actor.uid });
+  });
+
+  it('tells an AWF collaborator a stock-consuming job needs someone else', async () => {
+    shop({
+      job: startedJob({ isAwf: true, tags: ['pins'], collaboratorUids: [actor.uid] }),
+      materials: [{ name: 'Pin Backs', quantity: 100 }],
+    });
+    await expect(completeJob(actor, awf, JOB_ID)).rejects.toThrow(AWF_STOCK_COMPLETION_MESSAGE);
+    expect(firestore.getDocs).not.toHaveBeenCalled();
+    expect(firestore.transactionUpdate).not.toHaveBeenCalled();
+  });
+
+  it('refuses a job tagged between the first read and the transaction', async () => {
+    shop({
+      job: startedJob({ tags: ['pins'] }),
+      materials: [{ name: 'Pin Backs', quantity: 100 }],
+    });
+    // The pre-transaction read still sees the job untagged.
+    firestore.transactionGet.mockImplementationOnce(async () => ({
+      exists: () => true,
+      data: () => startedJob(),
+    }));
+    await expect(completeJob(actor, admin, JOB_ID)).rejects.toThrow(
+      'This job was tagged while it was being completed. Try again.',
     );
     expect(firestore.transactionUpdate).not.toHaveBeenCalled();
   });
