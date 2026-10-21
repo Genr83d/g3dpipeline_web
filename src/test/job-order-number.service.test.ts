@@ -55,6 +55,9 @@ vi.mock('firebase/firestore', () => ({
   setDoc: firestore.setDoc,
   deleteDoc: firestore.deleteDoc,
   updateDoc: firestore.updateDoc,
+  // The pre-transaction read only decides whether the job is tagged; these
+  // jobs never are, and the transaction keeps the document each test queues.
+  getDoc: async () => ({ exists: () => true, data: () => ({}) }),
   getDocs: firestore.getDocs,
   onSnapshot: firestore.onSnapshot,
   query: firestore.query,

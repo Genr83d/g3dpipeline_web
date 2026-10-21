@@ -206,3 +206,37 @@ test.describe('end-of-day auto-completion', () => {
     await expect(card.getByRole('button', { name: 'Complete' })).toBeDisabled();
   });
 });
+
+/** AWF accounts cannot read inventory or other shops' completed jobs, so
+ *  completing must not depend on either unless the job consumes stock. */
+test.describe('AWF completion', () => {
+  test.use({ storageState: storageStatePath('awf') });
+
+  test('an AWF collaborator completes a finished job', async ({ page }) => {
+    const name = uniqueName('E2E AWF Complete');
+    cleanup.track('jobs', name);
+    const users = await listDocuments('users');
+    const awf = users.find((user) => user.data.email === ACCOUNTS.awf.email)!;
+    await seedStartedJob(name, {
+      isAwf: true,
+      completedQuantity: 3,
+      repairProcesses: [{ name: 'Assembly', progress: 100, collaboratorUid: awf.id }],
+      assignedToUid: awf.id,
+      assignedToName: ACCOUNTS.awf.name,
+      assignedToRole: 'awf',
+      collaborators: [{ uid: awf.id, name: ACCOUNTS.awf.name, role: 'awf' }],
+      collaboratorUids: [awf.id],
+    });
+
+    await page.goto('/');
+    await waitForWorkspace(page);
+    const card = jobCard(page, name);
+    await card.getByRole('button', { name: 'Complete' }).click();
+    await page.getByRole('button', { name: 'Mark as Completed' }).click();
+    await expect(jobCard(page, name)).toHaveCount(0);
+
+    await expect
+      .poll(async () => (await listDocuments('jobs')).find((job) => job.data.name === name)?.data)
+      .toMatchObject({ status: 'completed', completedByUid: awf.id });
+  });
+});

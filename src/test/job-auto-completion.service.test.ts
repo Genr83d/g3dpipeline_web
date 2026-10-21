@@ -60,6 +60,8 @@ vi.mock('firebase/firestore', () => ({
   setDoc: firestore.setDoc,
   deleteDoc: firestore.deleteDoc,
   updateDoc: firestore.updateDoc,
+  // The pre-transaction read sees the same document the transaction does.
+  getDoc: (ref: unknown) => firestore.transactionGet(ref),
   getDocs: firestore.getDocs,
   onSnapshot: firestore.onSnapshot,
   query: firestore.query,

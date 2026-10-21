@@ -98,11 +98,14 @@ describe('canAutoComplete', () => {
     expect(canAutoComplete(job(), { uid: 'staff-1', role: 'staff' })).toBe(true);
   });
 
-  it('leaves other staff and AWF accounts out', () => {
+  it('leaves other staff out', () => {
     expect(canAutoComplete(job(), { uid: 'staff-2', role: 'staff' })).toBe(false);
-    expect(
-      canAutoComplete(job({ collaboratorUids: ['awf-1'] }), { uid: 'awf-1', role: 'awf' }),
-    ).toBe(false);
+  });
+
+  it('lets an AWF collaborator sweep only jobs that use no stock', () => {
+    const awf = { uid: 'awf-1', role: 'awf' as const };
+    expect(canAutoComplete(job({ collaboratorUids: ['awf-1'] }), awf)).toBe(true);
+    expect(canAutoComplete(job({ collaboratorUids: ['awf-1'], tags: ['pins'] }), awf)).toBe(false);
   });
 });
 
