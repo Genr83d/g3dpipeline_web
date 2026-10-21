@@ -39,7 +39,11 @@ import {
 import { inventoryCol } from './inventoryService';
 import { isSameCalendarDate } from '../lib/format';
 import { resolvedCompletedQuantity, validateCompletedQuantity } from '../lib/jobProgress';
-import { jobCompletionBlockers } from '../lib/jobCompletion';
+import {
+  autoCompletionTime,
+  isDueForAutoCompletion,
+  jobCompletionBlockers,
+} from '../lib/jobCompletion';
 import { jobOrderNumber, orderNumberFromDocumentId } from '../lib/jobOrderNumber';
 import {
   applySectionProgressUpdates,
@@ -189,6 +193,7 @@ export function parseJob(id: string, data: Record<string, unknown>): Job {
     completedAt: toDate(data.completedAt),
     completedByUid: (data.completedByUid as string) ?? '',
     completedByName: (data.completedByName as string) ?? '',
+    autoCompleted: data.autoCompleted === true,
     updatedByUid: (data.updatedByUid as string) ?? '',
     updatedByName: (data.updatedByName as string) ?? '',
     dueDateChangeNote: typeof data.dueDateChangeNote === 'string' ? data.dueDateChangeNote : '',
@@ -433,6 +438,32 @@ const JOB_NOT_FINISHED_MESSAGE = 'This job is not finished yet:';
  *  re-reads the job and each material, so a lost race surfaces as a retry or a
  *  clean error rather than a double deduction on this job. */
 export async function completeJob(actor: Actor, self: Assigner, jobId: string): Promise<void> {
+  return completeJobAs(actor, self, jobId, null);
+}
+
+export const NOT_DUE_FOR_AUTO_COMPLETION_MESSAGE =
+  'This job was updated today, so it is not due to auto-complete.';
+
+/** The end-of-day sweep's completion: the same gate and stock deduction as
+ *  completeJob, but only once the day the work was finished has ended (see
+ *  isDueForAutoCompletion). It is dated to the end of that day and credited
+ *  to whoever made the job's last update, so on-time figures and per-person
+ *  counts do not depend on when a client happened to sweep. */
+export async function autoCompleteJob(
+  actor: Actor,
+  self: Assigner,
+  jobId: string,
+  now: Date = new Date(),
+): Promise<void> {
+  return completeJobAs(actor, self, jobId, now);
+}
+
+async function completeJobAs(
+  actor: Actor,
+  self: Assigner,
+  jobId: string,
+  autoCompleteAsOf: Date | null,
+): Promise<void> {
   const jobRef = doc(db, 'jobs', jobId);
   const byName = actorDisplayName(actor);
 
@@ -483,6 +514,24 @@ export async function completeJob(actor: Actor, self: Assigner, jobId: string): 
       throw new Error(`${JOB_NOT_FINISHED_MESSAGE} ${blockers.join('; ')}.`);
     }
 
+    const lastUpdatedAt = toDate(data.updatedAt);
+    if (
+      autoCompleteAsOf &&
+      !isDueForAutoCompletion(
+        {
+          status: 'started',
+          updatedAt: lastUpdatedAt,
+          category: parseJobCategory(data.category),
+          quantity,
+          completedQuantity: resolvedCompletedQuantity(data.completedQuantity, quantity, 'started'),
+          repairProcesses: parseJobSections(data.repairProcesses),
+        },
+        autoCompleteAsOf,
+      )
+    ) {
+      throw new Error(NOT_DUE_FOR_AUTO_COMPLETION_MESSAGE);
+    }
+
     // Every material is read and checked before anything is written: a
     // transaction cannot read after a write, and a job that cannot pay for all
     // of its materials must not be left having spent some of them.
@@ -511,6 +560,11 @@ export async function completeJob(actor: Actor, self: Assigner, jobId: string): 
       });
     }
 
+    // An auto-completion credits whoever finished the work; a legacy job with
+    // no recorded updater falls back to the caller.
+    const finisherUid = typeof data.updatedByUid === 'string' ? data.updatedByUid.trim() : '';
+    const creditFinisher = autoCompleteAsOf !== null && finisherUid !== '';
+
     tx.update(jobRef, {
       status: 'completed',
       // Equal to the stored count for every category that counts units;
@@ -518,9 +572,17 @@ export async function completeJob(actor: Actor, self: Assigner, jobId: string): 
       // are already at 100% and are left exactly as stored: the rules refuse
       // a completing write that touches them.
       completedQuantity: quantity,
-      completedAt: serverTimestamp(),
-      completedByUid: actor.uid,
-      completedByName: byName,
+      completedAt:
+        autoCompleteAsOf && lastUpdatedAt
+          ? Timestamp.fromDate(autoCompletionTime(lastUpdatedAt))
+          : serverTimestamp(),
+      completedByUid: creditFinisher ? finisherUid : actor.uid,
+      completedByName: creditFinisher
+        ? typeof data.updatedByName === 'string'
+          ? data.updatedByName.trim()
+          : ''
+        : byName,
+      ...(autoCompleteAsOf ? { autoCompleted: true } : {}),
       updatedAt: serverTimestamp(),
       updatedByUid: actor.uid,
       updatedByName: byName,
@@ -621,6 +683,7 @@ export async function restoreJob(actor: Actor, jobId: string): Promise<void> {
       assignedAt: deleteField(),
       startedAt: deleteField(),
       completedAt: deleteField(),
+      autoCompleted: deleteField(),
       completedByUid: deleteField(),
       completedByName: deleteField(),
       updatedAt: serverTimestamp(),

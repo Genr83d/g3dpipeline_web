@@ -69,6 +69,9 @@ export interface Job {
   completedAt: Date | null;
   completedByUid: string;
   completedByName: string;
+  /** Completed by the end-of-day sweep rather than a click. Absent on jobs
+   *  completed by hand. */
+  autoCompleted?: boolean;
   updatedByUid: string;
   updatedByName: string;
   /** Latest deadline-change reason; legacy jobs without one read as ''. */

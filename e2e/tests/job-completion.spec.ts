@@ -122,3 +122,87 @@ test('a single-unit job records its unit before it can complete', async ({ page 
   await expect(card).toContainText('1/1 units');
   await expect(card.getByRole('button', { name: 'Complete' })).toBeEnabled();
 });
+
+/** End-of-day auto-completion: a started job whose work was all finished on an
+ *  earlier day completes on its own the next time the shop opens the app,
+ *  dated to the end of that day and credited to whoever finished it. */
+test.describe('end-of-day auto-completion', () => {
+  function yesterdayAt(hours: number): Date {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, hours);
+  }
+
+  test('a job finished yesterday completes when the app opens', async ({ page }) => {
+    const name = uniqueName('E2E Auto Complete');
+    cleanup.track('jobs', name);
+    const finishedAt = yesterdayAt(15);
+    const users = await listDocuments('users');
+    const manager = users.find((user) => user.data.email === ACCOUNTS.manager.email)!;
+    await seedStartedJob(name, {
+      completedQuantity: 3,
+      repairProcesses: [
+        { name: 'Printing', progress: 100 },
+        { name: 'Finishing', progress: 100 },
+      ],
+      updatedAt: finishedAt,
+      // The manager recorded the last of the work; the staff member's open
+      // app is what sweeps it.
+      updatedByUid: manager.id,
+      updatedByName: ACCOUNTS.manager.name,
+    });
+
+    await page.goto('/');
+    await waitForWorkspace(page);
+    // Any signed-in client sweeps, and the other worker's pages share this
+    // emulator, so which tab gets there first (and shows the toast) is a
+    // race. What must hold is the stored outcome and an empty card slot.
+    await expect(jobCard(page, name)).toHaveCount(0);
+
+    const stored = async () =>
+      (await listDocuments('jobs')).find((job) => job.data.name === name)?.data;
+    await expect.poll(stored).toMatchObject({
+      status: 'completed',
+      completedQuantity: 3,
+      autoCompleted: true,
+      completedByUid: manager.id,
+      completedByName: ACCOUNTS.manager.name,
+    });
+    const endOfThatDay = new Date(finishedAt);
+    endOfThatDay.setHours(23, 59, 59, 999);
+    expect((await stored())?.completedAt).toEqual(endOfThatDay);
+  });
+
+  test('a job finished today stays open until the day ends', async ({ page }) => {
+    const name = uniqueName('E2E Finished Today');
+    cleanup.track('jobs', name);
+    await seedStartedJob(name, {
+      completedQuantity: 3,
+      repairProcesses: [{ name: 'Printing', progress: 100 }],
+    });
+
+    await page.goto('/');
+    await waitForWorkspace(page);
+    const card = jobCard(page, name);
+    await expect(card.getByRole('button', { name: 'Complete' })).toBeEnabled();
+    // Long enough for a sweep to have run and written.
+    await page.waitForTimeout(1500);
+    await expect(card).toBeVisible();
+    expect((await listDocuments('jobs')).find((job) => job.data.name === name)?.data).toMatchObject({
+      status: 'started',
+    });
+  });
+
+  test('an unfinished job from yesterday is left open', async ({ page }) => {
+    const name = uniqueName('E2E Unfinished Yesterday');
+    cleanup.track('jobs', name);
+    await seedStartedJob(name, { updatedAt: yesterdayAt(15) });
+
+    await page.goto('/');
+    await waitForWorkspace(page);
+    const card = jobCard(page, name);
+    await expect(card).toBeVisible();
+    await page.waitForTimeout(1500);
+    await expect(card).toBeVisible();
+    await expect(card.getByRole('button', { name: 'Complete' })).toBeDisabled();
+  });
+});

@@ -165,7 +165,7 @@ export function tutorialsForRole(role: UserRole): Tutorial[] {
         step('Start the work', 'Choose Start when production actually begins. The job will move to in progress.', '/', '[data-tour="job-card"]'),
         step('Record progress', 'Update the completed quantity during longer jobs so the team can see what remains.', '/', '[data-tour="job-card"]'),
         step('Update repair processes', 'A repair job lists its processes with a bar each. Use Update repair process progress to move a percentage; the overall figure is their average.', '/', '[data-tour="job-card"]'),
-        step('Complete the job', 'Choose Complete only when the work is finished. Every repair process is set to 100% and the job moves to Archive.', '/', '[data-tour="job-card"]'),
+        step('Complete the job', 'Choose Complete only when the work is finished. Every repair process is set to 100% and the job moves to Archive. Finished work left open is completed automatically once the day ends.', '/', '[data-tour="job-card"]'),
       ],
     },
     {

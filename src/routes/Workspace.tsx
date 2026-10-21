@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Link, NavLink, Outlet, useNavigate, useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useJobs, type JobsState } from '../hooks/useJobs';
+import { useJobAutoCompletion } from '../hooks/useJobAutoCompletion';
 import { useInventory, type InventoryState } from '../hooks/useInventory';
 import { useMachines, type MachinesState } from '../hooks/useMachines';
 import { useHazards, type HazardsState } from '../hooks/useHazards';
@@ -37,7 +38,7 @@ export interface WorkspaceOutletState {
 
 /** Signed-in shell and the single owner of all role-dependent data streams. */
 export function Workspace() {
-  const { isActive, profile } = useAuth();
+  const { isActive, profile, actor, assigner } = useAuth();
   const { motionReduced } = useAppearance();
   const navigate = useNavigate();
   const role = profile?.role ?? 'staff';
@@ -45,6 +46,7 @@ export function Workspace() {
   const isAwf = role === 'awf';
   const nonAwfEnabled = isActive && !isAwf;
   const jobsState = useJobs(isActive, role, roleKey);
+  useJobAutoCompletion(jobsState.jobs, actor, assigner);
   const inventoryState = useInventory(nonAwfEnabled, roleKey);
   const machinesState = useMachines(nonAwfEnabled, roleKey);
   const hazardsState = useHazards(isActive, roleKey);

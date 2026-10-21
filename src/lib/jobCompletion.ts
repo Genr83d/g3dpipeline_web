@@ -25,3 +25,40 @@ export function jobCompletionBlockers(job: CompletionGateInput): string[] {
 export function isJobReadyToComplete(job: CompletionGateInput): boolean {
   return jobCompletionBlockers(job).length === 0;
 }
+
+/** A started job is auto-completed once the day its work was finished has
+ *  ended: every unit and section is done and it was last updated on an
+ *  earlier calendar day than `now`. A job finished today waits until
+ *  tomorrow, so it can still be corrected before it closes. The same rule as
+ *  the Flutter app. */
+export function isDueForAutoCompletion(
+  job: CompletionGateInput & Pick<Job, 'status' | 'updatedAt'>,
+  now: Date,
+): boolean {
+  if (job.status !== 'started' || !job.updatedAt || !isJobReadyToComplete(job)) return false;
+  const finished = job.updatedAt;
+  return (
+    new Date(finished.getFullYear(), finished.getMonth(), finished.getDate()) <
+    new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  );
+}
+
+/** When an end-of-day auto-completion is dated: the end of the calendar day
+ *  the job was last updated on, which is when its work was finished.
+ *  Firestore rules accept a stamp from that update to a day after it, so it
+ *  is held inside that window (only a long daylight-saving day, or an update
+ *  in the day's final millisecond, reaches either edge). */
+export function autoCompletionTime(lastUpdatedAt: Date): Date {
+  const endOfDay = new Date(
+    lastUpdatedAt.getFullYear(),
+    lastUpdatedAt.getMonth(),
+    lastUpdatedAt.getDate(),
+    23,
+    59,
+    59,
+    999,
+  );
+  const cap = new Date(lastUpdatedAt.getTime() + 24 * 60 * 60 * 1000);
+  if (endOfDay > cap) return cap;
+  return endOfDay < lastUpdatedAt ? lastUpdatedAt : endOfDay;
+}

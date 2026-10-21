@@ -131,6 +131,19 @@ the same source so the identity stays consistent.
   Firestore rules refuse a completing write on unfinished work, so no client
   can skip it. Single-unit jobs record their unit like any other. A job holds
   at most 25 sections, the most the rules can check (`src/lib/jobCompletion.ts`).
+- **End-of-day auto-completion** — a started job whose units and sections are
+  all done is completed automatically once the day it was finished has ended
+  (its last update was on an earlier calendar day), so finished work does not
+  sit open because nobody tapped Complete. There is no server on the Spark
+  plan, so every signed-in client sweeps: when the job list changes, a minute
+  past each local midnight, and when the tab becomes visible again
+  (`src/lib/jobAutoCompleter.ts`, `src/hooks/useJobAutoCompletion.ts`). The
+  completion runs through the same transaction as a click, so the gate and
+  stock deduction apply and concurrent sweeps finish a job once. It is dated
+  to the end of the day the work was finished and credited to whoever made
+  the last update, flagged `autoCompleted: true`, and the rules only accept
+  that backdated, re-credited stamp within a day of that update. AWF accounts
+  do not sweep on the web, since completing reads inventory.
 - **Order numbers** — every job carries a permanent `orderNumber` such as
   `G3D-ABC123XY`, derived from the first eight characters of its document ID
   when the job is created and never rewritten by a later update. Jobs written
