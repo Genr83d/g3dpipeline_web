@@ -2,7 +2,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AuthState } from '../context/AuthProvider';
-import type { Job, Machine, UserRole } from '../types';
+import type { AppUser, Job, Machine, UserRole } from '../types';
 import { JobCard } from '../components/JobCard';
 import { FLOATING_ADD_CLEARANCE, FloatingAddButton } from '../components/FloatingAddButton';
 import Inventory from '../pages/Inventory';
@@ -50,6 +50,15 @@ vi.mock('../services/machineService', () => ({
   removeProcedure: vi.fn(),
   reportMachineDown: vi.fn(),
   setProcedureDone: vi.fn(),
+}));
+
+vi.mock('../services/userService', () => ({
+  watchActiveUsers: (onUsers: (users: AppUser[]) => void) => {
+    onUsers([
+      { uid: 'staff-2', name: 'Sam Staff', email: 'sam@test.dev', role: 'staff', status: 'active', createdAt: null, updatedAt: null },
+    ]);
+    return () => undefined;
+  },
 }));
 
 vi.mock('../services/inventoryService', () => ({
@@ -293,12 +302,17 @@ describe('maintenance notes', () => {
     expect(field).toHaveAttribute('placeholder', 'Add notes about this maintenance');
     expect(field).toHaveAttribute('autocapitalize', 'sentences');
     await user.type(field, '  Cleaned the lens.  ');
+    await user.selectOptions(
+      within(dialog).getByLabelText('Who did the maintenance?'),
+      'Me (Alex Worker)',
+    );
     await user.click(within(dialog).getByRole('button', { name: 'Confirm' }));
 
     await waitFor(() =>
       expect(testState.logCheckedMaintenance).toHaveBeenCalledWith(
         expect.objectContaining({ uid: 'current-user' }),
         'machine-1',
+        { uid: 'current-user', name: 'Alex Worker' },
         'Cleaned the lens.',
       ),
     );
@@ -324,6 +338,9 @@ describe('maintenance notes', () => {
             completedAt: new Date('2026-07-01T10:00:00'),
             procedureTitles: ['Clean lens', 'Check alignment'],
             completedByName: 'Technician Name',
+            completedByUid: '',
+            loggedByUid: '',
+            loggedByName: '',
             notes: 'Cleaned the lens and checked alignment.',
           },
         ],
@@ -343,6 +360,9 @@ describe('maintenance notes', () => {
             completedAt: new Date('2025-01-05T09:00:00'),
             procedureTitles: ['Check belts'],
             completedByName: 'Old Tech',
+            completedByUid: '',
+            loggedByUid: '',
+            loggedByName: '',
             notes: '',
           },
         ],
@@ -350,6 +370,8 @@ describe('maintenance notes', () => {
     ]);
     render(<Maintenance />);
     expect(screen.getByText('Check belts')).toBeInTheDocument();
-    expect(screen.getByText(/Completed by Old Tech/)).toBeInTheDocument();
+    // Before the apps asked who did the work, the name saved was the logger's.
+    expect(screen.getByText('Logged by Old Tech')).toBeInTheDocument();
+    expect(screen.queryByText(/Completed by Old Tech/)).not.toBeInTheDocument();
   });
 });

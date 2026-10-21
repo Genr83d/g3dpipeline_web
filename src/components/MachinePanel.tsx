@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import type { Machine, MaintenanceHistoryRecord, MaintenanceProcedure } from '../types';
 import { formatDate } from '../lib/format';
+import { maintenanceAttribution } from '../lib/maintenanceLog';
 import { SidePanel, PanelTabs } from './SidePanel';
 import { DimRule } from './Drafting';
 import { IconEdit, IconNote, IconPlus, IconTrash } from './icons';
@@ -127,9 +128,9 @@ function HistoryTimeline({ history }: { history: MaintenanceHistoryRecord[] }) {
                   <p className="readout text-sm font-semibold text-ink dark:text-slate-100">
                     {formatDate(record.completedAt)}
                   </p>
-                  {record.completedByName && (
+                  {maintenanceAttribution(record) && (
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Completed by {record.completedByName}
+                      {maintenanceAttribution(record)}
                     </p>
                   )}
                 </div>
