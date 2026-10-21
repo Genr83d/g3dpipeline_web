@@ -422,6 +422,7 @@ export function JobCard({
         {isCompleted && (
           <SpecRow icon={<IconCheck className="h-4 w-4 shrink-0 text-secondary dark:text-emerald-300" />} label="Completed by">
             {job.completedByName || '—'}
+            {job.autoCompleted && ' (auto, end of day)'}
           </SpecRow>
         )}
         {isCompleted && (
