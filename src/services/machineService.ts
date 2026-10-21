@@ -25,6 +25,7 @@ import {
 } from '../types';
 import { actorDisplayName, type Actor } from './jobService';
 import { userDisplayName } from '../lib/userName';
+import type { MaintenanceWorker } from '../lib/maintenanceLog';
 import {
   canAssignMachineRepair,
   canMarkMachineRepaired,
@@ -58,7 +59,10 @@ function parseHistoryRecord(value: unknown): MaintenanceHistoryRecord {
     procedureTitles: Array.isArray(data.procedureTitles)
       ? data.procedureTitles.filter((title): title is string => typeof title === 'string')
       : [],
-    completedByName: typeof data.completedByName === 'string' ? data.completedByName : '',
+    completedByName: text(data.completedByName),
+    completedByUid: text(data.completedByUid),
+    loggedByUid: text(data.loggedByUid),
+    loggedByName: text(data.loggedByName),
     notes: typeof data.notes === 'string' ? data.notes : '',
   };
 }
@@ -336,15 +340,20 @@ export async function setProcedureDone(
   );
 }
 
+/** Logs the checked procedures as done by `doneBy`, who need not be the
+ *  person logging them. */
 export async function logCheckedMaintenance(
   actor: Actor,
   machineId: string,
+  doneBy: MaintenanceWorker,
   notes = '',
 ): Promise<string[]> {
   const ref = doc(db, 'machines', machineId);
-  const byName = actorDisplayName(actor);
+  const doneByName = doneBy.name.trim();
   const trimmedNotes = notes.trim();
   let completedTitles: string[] = [];
+
+  if (!doneByName) throw new Error('Say who did the maintenance.');
 
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
@@ -362,24 +371,20 @@ export async function logCheckedMaintenance(
       ...procedure,
       isDone: false,
     }));
-    const previousHistory = machine.maintenanceHistory.map((record) => ({
-      completedAt: record.completedAt,
-      procedureTitles: record.procedureTitles,
-      completedByName: record.completedByName,
-      notes: record.notes,
-    }));
 
     tx.update(ref, {
       procedures: resetProcedures,
-      maintenanceHistory: [
-        {
-          completedAt: Timestamp.now(),
-          procedureTitles: completedTitles,
-          completedByName: byName,
-          notes: trimmedNotes,
-        },
-        ...previousHistory,
-      ],
+      // Appended rather than rewritten, so fields this version does not know
+      // about survive. Readers sort the history by date.
+      maintenanceHistory: arrayUnion({
+        completedAt: Timestamp.now(),
+        procedureTitles: completedTitles,
+        completedByName: doneByName,
+        completedByUid: doneBy.uid,
+        loggedByUid: actor.uid,
+        loggedByName: actorDisplayName(actor),
+        notes: trimmedNotes,
+      }),
       ...audit(actor),
     });
   });

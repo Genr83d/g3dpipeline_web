@@ -9,7 +9,7 @@ import { PageHeader } from '../components/PageHeader';
 import { FloatingAddButton } from '../components/FloatingAddButton';
 import { MachineCardSkeleton, Skeleton } from '../components/Skeleton';
 import { DimRule, Led } from '../components/Drafting';
-import { AssignUserModal } from '../components/AssignUserModal';
+import { AssignUserModal, useActiveUsers } from '../components/AssignUserModal';
 import { MachineDownPill, MarkRepairedModal, ReportDownModal } from '../components/MachineStatus';
 import {
   InlineSpinner,
@@ -59,8 +59,13 @@ import {
   setProcedureDone,
   type MachineInput,
 } from '../services/machineService';
-import { userDisplayName } from '../lib/userName';
+import { actorDisplayName, userDisplayName } from '../lib/userName';
+import { maintenanceAttribution, type MaintenanceWorker } from '../lib/maintenanceLog';
 import type { AppUser, Machine, MaintenanceProcedure } from '../types';
+
+/** The "Who did the maintenance?" choice for someone outside the team. Account
+ *  uids never contain a colon. */
+const SOMEONE_ELSE = ':someone-else';
 
 function checkedProcedures(machine: Machine): MaintenanceProcedure[] {
   return machine.procedures.filter((procedure) => procedure.isDone);
@@ -359,9 +364,9 @@ function MachineCard({
         />
         {latest ? (
           <div className="space-y-1 text-sm">
-            {latest.completedByName && (
+            {maintenanceAttribution(latest) && (
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Completed by {latest.completedByName}
+                {maintenanceAttribution(latest)}
               </p>
             )}
             <p className="text-slate-600 dark:text-slate-300">{latest.procedureTitles.join(', ')}</p>
@@ -408,6 +413,10 @@ export default function Maintenance() {
   const [deleting, setDeleting] = useState<Machine | null>(null);
   const [confirming, setConfirming] = useState<Machine | null>(null);
   const [maintenanceNotes, setMaintenanceNotes] = useState('');
+  // Nobody is picked up front, so the logger is never credited by default.
+  const [doneByChoice, setDoneByChoice] = useState('');
+  const [doneByOther, setDoneByOther] = useState('');
+  const team = useActiveUsers(confirming !== null);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [panel, setPanel] = useState<MachinePanelState | null>(null);
   const [reporting, setReporting] = useState<Machine | null>(null);
@@ -502,19 +511,38 @@ export default function Maintenance() {
 
   function openConfirmLog(machine: Machine) {
     setMaintenanceNotes('');
+    setDoneByChoice('');
+    setDoneByOther('');
     setConfirming(machine);
   }
 
   function closeConfirmLog() {
     setConfirming(null);
     setMaintenanceNotes('');
+    setDoneByChoice('');
+    setDoneByOther('');
   }
 
+  // The logger first, as "Me", then everyone else who is active.
+  const me: MaintenanceWorker = { uid: actor.uid, name: actorDisplayName(actor) };
+  const teammates = team.users.filter((person) => person.uid !== actor.uid);
+
+  function chosenWorker(): MaintenanceWorker | null {
+    if (doneByChoice === SOMEONE_ELSE) {
+      const name = doneByOther.trim();
+      return name ? { uid: '', name } : null;
+    }
+    if (doneByChoice === me.uid) return me;
+    const person = teammates.find((p) => p.uid === doneByChoice);
+    return person ? { uid: person.uid, name: userDisplayName(person) } : null;
+  }
+  const doneBy = chosenWorker();
+
   async function handleConfirmLog() {
-    if (!confirming) return;
+    if (!confirming || !doneBy) return;
     const saved = await runAction(
       `maintenance-log:${confirming.id}`,
-      () => logCheckedMaintenance(actor!, confirming.id, maintenanceNotes.trim()),
+      () => logCheckedMaintenance(actor!, confirming.id, doneBy, maintenanceNotes.trim()),
       `Maintenance logged for ${confirming.name}.`,
     );
     if (saved) closeConfirmLog();
@@ -792,6 +820,55 @@ export default function Maintenance() {
             </div>
             <div className="space-y-1.5">
               <label
+                htmlFor={`maintenance-done-by-${confirming.id}`}
+                className="text-sm font-semibold text-slate-700 dark:text-slate-200"
+              >
+                Who did the maintenance?
+              </label>
+              <select
+                id={`maintenance-done-by-${confirming.id}`}
+                className="field"
+                value={doneByChoice}
+                onChange={(e) => setDoneByChoice(e.target.value)}
+              >
+                <option value="" disabled>
+                  Choose who did the work
+                </option>
+                <option value={me.uid}>Me ({me.name})</option>
+                {teammates.map((person) => (
+                  <option key={person.uid} value={person.uid}>
+                    {userDisplayName(person)}
+                  </option>
+                ))}
+                <option value={SOMEONE_ELSE}>Someone else</option>
+              </select>
+              {team.error && (
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Unable to load the team. Check your connection.
+                </p>
+              )}
+            </div>
+            {doneByChoice === SOMEONE_ELSE && (
+              <div className="space-y-1.5">
+                <label
+                  htmlFor={`maintenance-done-by-name-${confirming.id}`}
+                  className="text-sm font-semibold text-slate-700 dark:text-slate-200"
+                >
+                  Their name
+                </label>
+                <input
+                  id={`maintenance-done-by-name-${confirming.id}`}
+                  className="field"
+                  autoFocus
+                  autoCapitalize="words"
+                  placeholder="For example, an outside technician"
+                  value={doneByOther}
+                  onChange={(e) => setDoneByOther(e.target.value)}
+                />
+              </div>
+            )}
+            <div className="space-y-1.5">
+              <label
                 htmlFor={`maintenance-notes-${confirming.id}`}
                 className="text-sm font-semibold text-slate-700 dark:text-slate-200"
               >
@@ -813,7 +890,7 @@ export default function Maintenance() {
               </button>
               <button
                 className="btn-primary"
-                disabled={busyKey === `maintenance-log:${confirming.id}`}
+                disabled={!doneBy || busyKey === `maintenance-log:${confirming.id}`}
                 onClick={() => void handleConfirmLog()}
               >
                 {busyKey === `maintenance-log:${confirming.id}` && <InlineSpinner />}

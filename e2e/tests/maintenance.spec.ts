@@ -19,6 +19,14 @@ function machineCard(page: import('@playwright/test').Page, name: string) {
   return page.locator('article').filter({ hasText: name });
 }
 
+/** Picks the signed-in person, listed first as "Me (...)", as the one who
+ *  did the work. */
+async function creditMe(confirm: import('@playwright/test').Locator) {
+  const doneBy = confirm.getByLabel('Who did the maintenance?');
+  await expect(doneBy.locator('option').nth(1)).toHaveText(/^Me \(/);
+  await doneBy.selectOption({ index: 1 });
+}
+
 async function addMachine(page: import('@playwright/test').Page, name: string) {
   await page.goto('/maintenance');
   await page.getByRole('button', { name: 'Add machine', exact: true }).first().click();
@@ -80,6 +88,9 @@ test('adds procedures, checks them, and logs the maintenance', async ({ page }) 
   await logButton.click();
   const confirm = page.getByRole('dialog');
   await expect(confirm.getByRole('heading', { name: 'Confirm Maintenance' })).toBeVisible();
+  // Nobody is credited until someone is picked.
+  await expect(confirm.getByRole('button', { name: 'Confirm' })).toBeDisabled();
+  await creditMe(confirm);
   await confirm.getByLabel(/notes/i).fill('Checked during the E2E run');
   await confirm.getByRole('button', { name: /Log Maintenance|Confirm/ }).click();
 
@@ -134,6 +145,7 @@ test('keeps only the latest log on the card and the full history in the panel', 
     await expect(procedure).toBeChecked();
     await card.getByRole('button', { name: /Log Checked Maintenance/ }).click();
     const confirm = page.getByRole('dialog');
+    await creditMe(confirm);
     await confirm.getByLabel(/notes/i).fill(note);
     await confirm.getByRole('button', { name: /Log Maintenance|Confirm/ }).click();
     await expect(page.getByRole('dialog')).toBeHidden();
@@ -147,6 +159,53 @@ test('keeps only the latest log on the card and the full history in the panel', 
   const panel = page.getByRole('dialog');
   await expect(panel.getByText('Second E2E service')).toBeVisible();
   await expect(panel.getByText('First E2E service')).toBeVisible();
+});
+
+test('credits the person who did the work, not the one who logged it', async ({ page }) => {
+  const name = uniqueName(CREATED_PREFIX);
+  cleanup.track('machines', name);
+  await addMachine(page, name);
+  const card = machineCard(page, name);
+
+  await card.getByLabel('Add procedure').fill('Replace the filter');
+  await card.getByRole('button', { name: 'Add', exact: true }).click();
+  const procedure = card.getByRole('checkbox').first();
+  await procedure.click();
+  await expect(procedure).toBeChecked();
+
+  // The admin logs work that Sam did.
+  await card.getByRole('button', { name: /Log Checked Maintenance/ }).click();
+  const confirm = page.getByRole('dialog');
+  await confirm.getByLabel('Who did the maintenance?').selectOption({ label: 'Sam Staff' });
+  await confirm.getByLabel(/notes/i).fill('Sam swapped the filter');
+  await confirm.getByRole('button', { name: 'Confirm' }).click();
+  await expect(page.getByRole('dialog')).toBeHidden();
+
+  await expect(card).toContainText('Sam swapped the filter');
+  await expect(card.getByText(/^Completed by Sam Staff · logged by /)).toBeVisible();
+
+  // A second log, by someone outside the team.
+  await procedure.click();
+  await expect(procedure).toBeChecked();
+  await card.getByRole('button', { name: /Log Checked Maintenance/ }).click();
+  await confirm.getByLabel('Who did the maintenance?').selectOption({ label: 'Someone else' });
+  await expect(confirm.getByRole('button', { name: 'Confirm' })).toBeDisabled();
+  await confirm.getByLabel('Their name').fill('Dale from Epson');
+  await confirm.getByRole('button', { name: 'Confirm' }).click();
+  await expect(page.getByRole('dialog')).toBeHidden();
+  await expect(card.getByText(/^Completed by Dale from Epson · logged by /)).toBeVisible();
+
+  // Both records are stored with who did it and who logged it.
+  const saved = (await listDocuments('machines')).find((m) => m.data.name === name)!;
+  const history = saved.data.maintenanceHistory as Record<string, unknown>[];
+  expect(history).toHaveLength(2);
+  const [bySam, byDale] = history;
+  expect(bySam).toMatchObject({ completedByName: 'Sam Staff', notes: 'Sam swapped the filter' });
+  expect(bySam.completedByUid).toBeTruthy();
+  expect(bySam.loggedByUid).toBeTruthy();
+  expect(bySam.loggedByUid).not.toBe(bySam.completedByUid);
+  expect(byDale).toMatchObject({ completedByName: 'Dale from Epson', completedByUid: '' });
+  expect(byDale.loggedByUid).toBe(bySam.loggedByUid);
 });
 
 test('search filters machines and reports no matches', async ({ page }) => {

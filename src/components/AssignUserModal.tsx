@@ -8,7 +8,7 @@ import { watchActiveUsers } from '../services/userService';
 import type { AppUser } from '../types';
 
 /** Active accounts something can be handed to, live while the picker is open. */
-function useActiveUsers(enabled: boolean): {
+export function useActiveUsers(enabled: boolean): {
   users: AppUser[];
   loading: boolean;
   error: boolean;

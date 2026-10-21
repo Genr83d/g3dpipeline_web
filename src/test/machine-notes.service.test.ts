@@ -18,6 +18,7 @@ const firestore = vi.hoisted(() => {
     orderBy: vi.fn(),
     serverTimestamp: vi.fn(() => ({ kind: 'serverTimestamp' })),
     timestampNow: vi.fn(() => ({ kind: 'timestamp-now' })),
+    arrayUnion: vi.fn((...items: unknown[]) => ({ kind: 'arrayUnion', items })),
     transactionGet,
     transactionUpdate,
     runTransaction: vi.fn(
@@ -43,12 +44,14 @@ vi.mock('firebase/firestore', () => ({
   orderBy: firestore.orderBy,
   serverTimestamp: firestore.serverTimestamp,
   runTransaction: firestore.runTransaction,
+  arrayUnion: firestore.arrayUnion,
   Timestamp: { now: firestore.timestampNow },
 }));
 
 vi.mock('../lib/firebase', () => ({ db: {} }));
 
 import { logCheckedMaintenance, parseMachine } from '../services/machineService';
+import { maintenanceAttribution } from '../lib/maintenanceLog';
 
 const actor = {
   uid: 'tech-1',
@@ -60,6 +63,15 @@ const actor = {
 function updatePatch(): Record<string, unknown> {
   return firestore.transactionUpdate.mock.calls[0][1] as Record<string, unknown>;
 }
+
+/** The records a log appends with arrayUnion. */
+function appended(): Array<Record<string, unknown>> {
+  const history = updatePatch().maintenanceHistory as { kind: string; items: unknown[] };
+  expect(history.kind).toBe('arrayUnion');
+  return history.items as Array<Record<string, unknown>>;
+}
+
+const sam = { uid: 'staff-2', name: 'Sam Staff' };
 
 beforeEach(() => {
   firestore.transactionGet.mockClear();
@@ -104,18 +116,22 @@ describe('maintenance history notes data model', () => {
       }),
     });
 
-    const titles = await logCheckedMaintenance(actor, 'machine-1', '  Cleaned and aligned.  ');
+    const titles = await logCheckedMaintenance(actor, 'machine-1', sam, '  Cleaned and aligned.  ');
     expect(titles).toEqual(['Clean lens', 'Check alignment']);
 
     const patch = updatePatch();
-    const history = patch.maintenanceHistory as Array<Record<string, unknown>>;
-    expect(history[0]).toMatchObject({
-      procedureTitles: ['Clean lens', 'Check alignment'],
-      completedByName: 'Technician Name',
-      notes: 'Cleaned and aligned.',
-    });
-    // Legacy record stays valid with empty-string notes.
-    expect(history[1]).toMatchObject({ procedureTitles: ['Check belts'], notes: '' });
+    // Only the new record is sent; the stored history is left as it is.
+    expect(appended()).toEqual([
+      {
+        completedAt: { kind: 'timestamp-now' },
+        procedureTitles: ['Clean lens', 'Check alignment'],
+        completedByName: 'Sam Staff',
+        completedByUid: 'staff-2',
+        loggedByUid: 'tech-1',
+        loggedByName: 'Technician Name',
+        notes: 'Cleaned and aligned.',
+      },
+    ]);
     // Checked procedures reset after logging.
     expect(patch.procedures).toEqual([
       { id: 'p1', title: 'Clean lens', isDone: false },
@@ -137,8 +153,91 @@ describe('maintenance history notes data model', () => {
       }),
     });
 
-    await logCheckedMaintenance(actor, 'machine-1');
-    const history = updatePatch().maintenanceHistory as Array<Record<string, unknown>>;
-    expect(history[0].notes).toBe('');
+    await logCheckedMaintenance(actor, 'machine-1', sam);
+    expect(appended()[0].notes).toBe('');
+  });
+});
+
+describe('who did the maintenance', () => {
+  it('credits someone outside the team by name, with no uid', async () => {
+    firestore.transactionGet.mockResolvedValueOnce({
+      exists: () => true,
+      id: 'machine-1',
+      data: () => ({
+        name: 'Laser cutter',
+        procedures: [{ id: 'p1', title: 'Clean lens', isDone: true }],
+        maintenanceHistory: [],
+      }),
+    });
+
+    await logCheckedMaintenance(actor, 'machine-1', { uid: '', name: '  Dale (Epson)  ' });
+    expect(appended()[0]).toMatchObject({
+      completedByName: 'Dale (Epson)',
+      completedByUid: '',
+      loggedByUid: 'tech-1',
+    });
+  });
+
+  it('refuses a log that does not say who did the work', async () => {
+    await expect(
+      logCheckedMaintenance(actor, 'machine-1', { uid: '', name: '   ' }),
+    ).rejects.toThrow('Say who did the maintenance.');
+    expect(firestore.transactionUpdate).not.toHaveBeenCalled();
+  });
+
+  it('reads who did it and who logged it, and treats older records as logger-only', () => {
+    const machine = parseMachine('machine-1', {
+      name: 'Laser cutter',
+      maintenanceHistory: [
+        {
+          completedAt: new Date('2026-10-20T09:00:00'),
+          procedureTitles: ['Clean lens'],
+          completedByName: 'Sam Staff',
+          completedByUid: 'staff-2',
+          loggedByUid: 'manager-1',
+          loggedByName: 'Mia Manager',
+        },
+        {
+          completedAt: new Date('2025-01-05T09:00:00'),
+          procedureTitles: ['Check belts'],
+          completedByName: 'Old Tech',
+        },
+      ],
+    });
+    const [latest, older] = machine.maintenanceHistory;
+    expect(latest).toMatchObject({
+      completedByUid: 'staff-2',
+      loggedByUid: 'manager-1',
+      loggedByName: 'Mia Manager',
+    });
+    expect(maintenanceAttribution(latest)).toBe('Completed by Sam Staff · logged by Mia Manager');
+    expect(older).toMatchObject({ completedByUid: '', loggedByUid: '', loggedByName: '' });
+    expect(maintenanceAttribution(older)).toBe('Logged by Old Tech');
+  });
+});
+
+describe('maintenanceAttribution', () => {
+  const record = (overrides: Partial<Parameters<typeof maintenanceAttribution>[0]>) => ({
+    completedByName: 'Sam Staff',
+    completedByUid: 'staff-2',
+    loggedByUid: 'staff-2',
+    loggedByName: 'Sam Staff',
+    ...overrides,
+  });
+
+  it('names one person when they logged their own work', () => {
+    expect(maintenanceAttribution(record({}))).toBe('Completed by Sam Staff');
+  });
+
+  it('names an outside technician and who logged them', () => {
+    expect(maintenanceAttribution(record({ completedByName: 'Dale (Epson)', completedByUid: '' }))).toBe(
+      'Completed by Dale (Epson) · logged by Sam Staff',
+    );
+  });
+
+  it('says nothing for an older record with no name', () => {
+    expect(
+      maintenanceAttribution(record({ completedByName: '', loggedByUid: '', loggedByName: '' })),
+    ).toBe('');
   });
 });

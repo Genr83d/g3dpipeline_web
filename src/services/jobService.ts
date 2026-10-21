@@ -70,6 +70,7 @@ import {
   type JobTag,
   type UserRole,
 } from '../types';
+import { actorDisplayName } from '../lib/userName';
 
 export interface Actor {
   uid: string;
@@ -78,9 +79,9 @@ export interface Actor {
   email: string;
 }
 
-export function actorDisplayName(actor: Actor): string {
-  return actor.displayName?.trim() || actor.firstName || actor.email || 'User';
-}
+// Lives with the other name helpers so pages can use it without loading this
+// module's Firestore references.
+export { actorDisplayName };
 
 /** Caller identity as stored in their live /users doc — rules verify these exactly. */
 export interface Assigner {

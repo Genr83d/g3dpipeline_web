@@ -106,7 +106,15 @@ export interface MaintenanceProcedure {
 export interface MaintenanceHistoryRecord {
   completedAt: Date | null;
   procedureTitles: string[];
+  /** Who did the maintenance. Reports and older app versions read this. */
   completedByName: string;
+  /** '' for someone outside the team, and on records from before the apps
+   *  asked who did the work. */
+  completedByUid: string;
+  /** Who entered the record. '' on records from before the apps asked who
+   *  did the work: on those, completedByName is whoever logged it. */
+  loggedByUid: string;
+  loggedByName: string;
   /** Optional maintenance-specific notes; legacy records without one read as ''. */
   notes: string;
 }

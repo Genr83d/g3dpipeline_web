@@ -99,7 +99,14 @@ export const fixtureMachines: Machine[] = fixture.machines.map((m) => {
     location: m.location,
     notes: '',
     procedures: [],
-    maintenanceHistory: m.maintenanceHistory.map((r) => ({ ...r, completedAt: date(r.completedAt) })),
+    maintenanceHistory: m.maintenanceHistory.map((r) => ({
+      // The fixture holds records from before the apps asked who did the work.
+      completedByUid: '',
+      loggedByUid: '',
+      loggedByName: '',
+      ...r,
+      completedAt: date(r.completedAt),
+    })),
     createdAt: null,
     createdByUid: '',
     createdByName: '',
