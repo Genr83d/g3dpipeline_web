@@ -14,8 +14,8 @@ const faqs = [
     a: 'Every job carries a permanent reference such as G3D-ABC123XY, shown at the top of its card and in the Summary urgent list. It is set when the job is created and never changes when the job is edited, assigned, completed, or restored, so it is safe to quote in messages and paperwork. Jobs created before order numbers existed show one derived from their record, and it is just as stable.',
   },
   {
-    q: 'How do repair jobs track progress?',
-    a: 'A repair job lists its own processes — for example Cleaning, Welding, Machining, and Spraying — and each one keeps its own percentage. Open the card to see a bar per process; the figure beside the heading is their average. A collaborator, manager, or admin can choose “Update repair process progress” while the job is pending or in progress. Completing the job sets every process to 100%, and restoring it from the Archive returns them to 0% without losing the list.',
+    q: 'How do job sections track progress?',
+    a: 'Every job is split into sections — such as Design, Routing, or Metalworking — and each one keeps its own percentage. Repair jobs call them processes, such as Cleaning or Welding. Open the card to see a bar per section; the figure beside the heading is their average. A collaborator, manager, or admin can choose “Update section progress” while the job is pending or in progress, and Complete unlocks once every unit and section is finished. Restoring a job from the Archive returns its sections to 0% without losing the list.',
   },
   {
     q: 'Why can two people not start the same job?',

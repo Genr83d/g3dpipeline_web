@@ -66,7 +66,7 @@ describe('interactive onboarding', () => {
     renderProvider();
 
     expect(await screen.findByText('Welcome to GENR8 Pipeline', {}, { timeout: 1500 })).toBeInTheDocument();
-    expect(screen.getByText('Step 1 of 11')).toBeInTheDocument();
+    expect(screen.getByText('Step 1 of 12')).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Next' }));
     await userEvent.click(screen.getByRole('button', { name: 'Exit tutorial' }));
@@ -86,7 +86,7 @@ describe('interactive onboarding', () => {
     renderProvider();
 
     expect(await screen.findByText('Find the right work', {}, { timeout: 1500 })).toBeInTheDocument();
-    expect(screen.getByText('Step 4 of 11')).toBeInTheDocument();
+    expect(screen.getByText('Step 4 of 12')).toBeInTheDocument();
   });
 
   it('marks a skipped application tour complete so it will not auto-open again', async () => {

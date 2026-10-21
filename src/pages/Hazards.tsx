@@ -365,7 +365,7 @@ export default function Hazards() {
   }
 
   const reportButton = (
-    <button className="btn-primary" onClick={() => setReporting(true)}>
+    <button className="btn-primary" onClick={() => setReporting(true)} data-tour="report-hazard">
       <IconPlus className="h-4 w-4" /> Report hazard
     </button>
   );
@@ -386,7 +386,7 @@ export default function Hazards() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-tour="hazards-page">
       <PageHeader
         title="Hazards"
         eyebrow="Shop floor safety"
