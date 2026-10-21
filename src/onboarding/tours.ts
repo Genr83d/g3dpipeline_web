@@ -8,7 +8,9 @@ export type TutorialId =
   | 'assign-job'
   | 'inventory'
   | 'maintenance'
+  | 'hazards'
   | 'reports'
+  | 'operations-report'
   | 'manage-account';
 
 export interface TutorialStep {
@@ -16,6 +18,15 @@ export interface TutorialStep {
   body: string;
   route?: string;
   target?: string;
+  /** The step asks the user to do something, such as open a form, and moves
+   *  on by itself once `selector` appears. Until then `hint` stands in for
+   *  the Next button. */
+  waitFor?: { selector: string; hint: string };
+  /** The step explains something inside `selector`, such as a form. If that
+   *  closes, the tour goes `back` to the step that opened it, or on to the
+   *  `next` step (used once the form has done its job). With a `hint`, the
+   *  step waits for that instead of offering Next. */
+  within?: { selector: string; ifClosed: 'back' | 'next'; hint?: string };
 }
 
 export interface Tutorial {
@@ -30,7 +41,15 @@ const step = (
   body: string,
   route?: string,
   target?: string,
-): TutorialStep => ({ title, body, route, target });
+  extra: Pick<TutorialStep, 'waitFor' | 'within'> = {},
+): TutorialStep => ({ title, body, route, target, ...extra });
+
+const isManagement = (role: UserRole) => role === 'manager' || role === 'admin';
+
+/** The Add job form. Its parts are scoped to it, so the Edit panel, which
+ *  reuses the same form, is never mistaken for it. */
+const JOB_FORM = '[data-tour="job-form"]';
+const inJobForm = (part: string) => `${JOB_FORM} [data-tour="${part}"]`;
 
 function applicationSteps(role: UserRole): TutorialStep[] {
   const roleIntro: Record<UserRole, string> = {
@@ -65,15 +84,15 @@ function applicationSteps(role: UserRole): TutorialStep[] {
     ),
     step(
       'Create a job',
-      'Add a job when new work enters the shop. Include the customer, due date, and work details.',
+      'Add job opens the form for new work. The Create a job guide in Help walks through it field by field.',
       '/',
       '[data-tour="add-job"]',
     ),
     step(
-      role === 'manager' || role === 'admin' ? 'Manage the work' : 'Work from each card',
-      role === 'manager' || role === 'admin'
-        ? 'Open a job card to edit details, choose its team, start work, or record progress. Repair jobs also track each process, such as Cleaning or Welding.'
-        : 'Each card shows the deadline, team, and progress. Use its actions when you start work, record progress, or finish. Repair jobs track each process separately.',
+      isManagement(role) ? 'Manage the work' : 'Work from each card',
+      isManagement(role)
+        ? 'Open a job card to edit details, choose its team, start work, or record progress. Every job is split into sections, such as Design or Welding, and each tracks its own percentage.'
+        : 'Each card shows the deadline, team, and progress. Use its actions when you start work, record progress, or finish. Every job is split into sections that each track their own percentage.',
       '/',
       '[data-tour="job-card"]',
     ),
@@ -89,7 +108,7 @@ function applicationSteps(role: UserRole): TutorialStep[] {
       ),
       step(
         'Keep machines ready',
-        'Use Maintenance to follow checks and record service work so equipment stays ready.',
+        'Use Maintenance to tick off checks, log who did the work, and report a machine that is down.',
         '/maintenance',
         '[data-tour="maintenance-page"] h1',
       ),
@@ -97,6 +116,12 @@ function applicationSteps(role: UserRole): TutorialStep[] {
   }
 
   steps.push(
+    step(
+      'Report hazards',
+      'Spotted something unsafe on the floor? Report it on Hazards so the right person can sort it out. Urgent ones show a count on the tab.',
+      '/hazards',
+      '[data-tour="hazards-page"] h1',
+    ),
     step(
       'See the bigger picture',
       role === 'awf'
@@ -112,6 +137,17 @@ function applicationSteps(role: UserRole): TutorialStep[] {
       '[data-tour="archive-page"] h1',
     ),
   );
+
+  if (isManagement(role)) {
+    steps.push(
+      step(
+        'Download reports',
+        'Reports, in your account menu, turns any month, quarter, year, or date range into a PDF covering jobs, stock, maintenance, and hazards.',
+        '/reports',
+        '[data-tour="reports-page"] h1',
+      ),
+    );
+  }
 
   if (role === 'admin') {
     steps.push(
@@ -136,6 +172,64 @@ function applicationSteps(role: UserRole): TutorialStep[] {
   return steps;
 }
 
+/** Follows the user through the real Add job form: it waits for them to open
+ *  it, points at each part while they fill it in, and moves on when they save
+ *  or cancel. */
+function createJobSteps(role: UserRole): TutorialStep[] {
+  return [
+    step('Open Jobs', 'New work starts on the Jobs page.', '/', '[data-tour="nav-jobs"]'),
+    step(
+      'Choose Add job',
+      'Use this when a confirmed piece of work needs to enter the pipeline. Click Add job now and this guide follows you into the form.',
+      '/',
+      '[data-tour="add-job"]',
+      { waitFor: { selector: JOB_FORM, hint: 'Click Add job to continue' } },
+    ),
+    step(
+      'Describe the job',
+      'Give the job a clear name, who it is for, its type, and a realistic deadline. Types that count units, such as Manufacturing, also ask how many.',
+      '/',
+      inJobForm('job-form-basics'),
+      { within: { selector: JOB_FORM, ifClosed: 'back' } },
+    ),
+    step(
+      'Split it into sections',
+      'Enter one section per line, such as Design, Routing, or Metalworking. Repair jobs call them processes, such as Cleaning or Welding. Each one tracks its own percentage and can be given an owner later.',
+      '/',
+      inJobForm('job-form-sections'),
+      { within: { selector: JOB_FORM, ifClosed: 'back' } },
+    ),
+    step(
+      'Tag what it uses',
+      isManagement(role)
+        ? 'Tick a tag when the job uses stock: a Pins job deducts Pin Backs and Lamina from Inventory when it is completed. Tick AWF job to put it in the AWF Staff pipeline.'
+        : 'Tick a tag when the job uses stock: a Pins job deducts Pin Backs and Lamina from Inventory when it is completed.',
+      '/',
+      inJobForm('job-form-tags'),
+      { within: { selector: JOB_FORM, ifClosed: 'back' } },
+    ),
+    step(
+      'Save the job',
+      'Choose Add job to save it. It gets a permanent order number, such as G3D-ABC123XY, to quote whenever the job comes up. Cancel if you are only practising.',
+      '/',
+      inJobForm('job-form-actions'),
+      {
+        within: {
+          selector: JOB_FORM,
+          ifClosed: 'next',
+          hint: 'Save or cancel to continue',
+        },
+      },
+    ),
+    step(
+      'Find it on the board',
+      'A saved job joins the board as waiting, with its order number on the card. The Start and complete work guide picks up from here.',
+      '/',
+      '[data-tour="job-board"]',
+    ),
+  ];
+}
+
 export function tutorialsForRole(role: UserRole): Tutorial[] {
   const tutorials: Tutorial[] = [
     {
@@ -147,14 +241,8 @@ export function tutorialsForRole(role: UserRole): Tutorial[] {
     {
       id: 'create-job',
       title: 'Create a job',
-      description: 'Learn when and how to add new work.',
-      steps: [
-        step('Open Jobs', 'New work starts on the Jobs page.', '/', '[data-tour="nav-jobs"]'),
-        step('Choose Add job', 'Use this when a confirmed piece of work needs to enter the pipeline.', '/', '[data-tour="add-job"]'),
-        step('Add the details', 'Enter clear work details and a realistic due date so everyone knows what is needed.', '/', '[data-tour="add-job"]'),
-        step('List repair processes', 'Choosing the Repair job type adds a process list. Enter one process per line, such as Cleaning, Welding, Machining, or Spraying, and each one tracks its own percentage.', '/', '[data-tour="add-job"]'),
-        step('Save the job', 'Saving gives the job its permanent order number, such as G3D-ABC123XY. Share that number when the job comes up later.', '/', '[data-tour="add-job"]'),
-      ],
+      description: 'Add new work, following along in the real form.',
+      steps: createJobSteps(role),
     },
     {
       id: 'work-job',
@@ -162,16 +250,32 @@ export function tutorialsForRole(role: UserRole): Tutorial[] {
       description: 'Follow a job from waiting to finished.',
       steps: [
         step('Choose a job', 'Check the order number, due date, and team before starting. This helps avoid taking the wrong work.', '/', '[data-tour="job-board"] > *:first-child'),
-        step('Start the work', 'Choose Start when production actually begins. The job will move to in progress.', '/', '[data-tour="job-card"]'),
-        step('Record progress', 'Update the completed quantity during longer jobs so the team can see what remains.', '/', '[data-tour="job-card"]'),
-        step('Update repair processes', 'A repair job lists its processes with a bar each. Use Update repair process progress to move a percentage; the overall figure is their average.', '/', '[data-tour="job-card"]'),
-        step('Complete the job', 'Choose Complete only when the work is finished. Every repair process is set to 100% and the job moves to Archive. Finished work left open is completed automatically once the day ends.', '/', '[data-tour="job-card"]'),
+        step('Start the work', 'Choose Start when production actually begins. The job moves to in progress. If the job has a team, only its collaborators can start it.', '/', '[data-tour="job-card"]'),
+        step('Record progress', 'Use Update job progress to record finished units, and Update section progress to move each section’s percentage. The overall figure is their average.', '/', '[data-tour="job-card"]'),
+        step('Complete the job', 'Complete unlocks once every unit and section is finished, and the job moves to Archive. Finished work left open is completed automatically once the day ends.', '/', '[data-tour="job-card"]'),
+      ],
+    },
+    {
+      id: 'hazards',
+      title: 'Report a hazard',
+      description: 'Flag something unsafe so it gets sorted out.',
+      steps: [
+        step('Open Hazards', 'Hazards lists everything unsafe that has been reported, with the most severe first.', '/hazards', '[data-tour="nav-hazards"]'),
+        step('Report it', 'Choose Report hazard, describe what you saw and where, and pick how severe it is. High and critical reports show as urgent on the tab.', '/hazards', '[data-tour="report-hazard"]'),
+        step(
+          'Follow it up',
+          isManagement(role)
+            ? 'Assign each report to the person who will sort it out. They, or any manager, resolve it with a note of what was done.'
+            : 'A manager assigns each report to someone. If it is assigned to you, resolve it with a note of what was done.',
+          '/hazards',
+          '[data-tour="hazards-page"] h1',
+        ),
       ],
     },
     {
       id: 'reports',
-      title: 'View reports',
-      description: 'Read workload and progress at a glance.',
+      title: 'Read the Summary',
+      description: 'See workload and progress at a glance.',
       steps: [
         step('Open Summary', 'Use Summary when you need a quick status update without opening every job.', '/summary', '[data-tour="nav-summary"]'),
         step('Read the overview', 'Compare waiting, active, completed, and overdue work to find areas that need attention.', '/summary', '[data-tour="summary-page"] h1'),
@@ -184,12 +288,14 @@ export function tutorialsForRole(role: UserRole): Tutorial[] {
       description: 'Find profile, security, and display settings.',
       steps: [
         step('Open your account menu', 'Your profile and settings live here.', '/', '[data-tour="account-menu"]'),
-        step('Update your profile', 'Keep your contact and work information current so teammates know who you are.', '/settings/profile', '[data-tour="settings-page"] h1'),
+        step('Check your profile', 'Profile shows your role, account status, and details as the team sees them.', '/settings/profile', '[data-tour="settings-page"] h1'),
+        step('Personal information', 'Keep your name, phone number, job title, and department current so teammates know who you are.', '/settings/personal', '[data-tour="settings-page"] h1'),
+        step('Make it comfortable', 'Appearance sets light, dark, or system theme and text size, and can raise contrast or reduce motion.', '/settings/appearance', '[data-tour="settings-page"] h1'),
       ],
     },
   ];
 
-  if (role === 'manager' || role === 'admin') {
+  if (isManagement(role)) {
     tutorials.splice(2, 0,
       {
         id: 'edit-job',
@@ -198,7 +304,7 @@ export function tutorialsForRole(role: UserRole): Tutorial[] {
         steps: [
           step('Find the job', 'Open the job that needs a correction or updated deadline.', '/', '[data-tour="job-board"] > *:first-child'),
           step('Open the job panel', 'Edit opens one panel for the whole job: Details, Units, Sections and Team, each in its own tab. Add a reason when changing a deadline; the job order number stays the same.', '/', '[data-tour="job-card"]'),
-          step('Keep repair processes current', 'On a repair job, add or remove processes on the Details tab. Every process you keep holds the percentage it already had, and the panel warns before a change would clear one.', '/', '[data-tour="job-card"]'),
+          step('Keep sections current', 'Add or remove sections on the Details tab. Every section you keep holds the percentage it already had, and the panel warns before a change would clear one.', '/', '[data-tour="job-card"]'),
         ],
       },
       {
@@ -211,6 +317,16 @@ export function tutorialsForRole(role: UserRole): Tutorial[] {
         ],
       },
     );
+    tutorials.push({
+      id: 'operations-report',
+      title: 'Download a report',
+      description: 'Turn a month, quarter, or year into a PDF.',
+      steps: [
+        step('Open Reports', 'Reports lives in your account menu.', '/', '[data-tour="account-menu"]'),
+        step('Choose the period', 'Pick a month, quarter, year, or your own date range. The preview below updates to match.', '/reports', '[data-tour="report-period"]'),
+        step('Download the PDF', 'The report covers jobs, team output, stock, maintenance, downtime, and hazards for that period, ready to share.', '/reports', '[data-tour="report-download"]'),
+      ],
+    });
   }
 
   if (role !== 'awf') {
@@ -220,8 +336,9 @@ export function tutorialsForRole(role: UserRole): Tutorial[] {
         title: 'Manage inventory',
         description: 'Track materials and low-stock warnings.',
         steps: [
-          step('Check stock', 'Visit Inventory before scheduling material-heavy work.', '/inventory', '[data-tour="inventory-page"] h1'),
-          step('Add a material', 'Record a material when the shop starts keeping it in stock.', '/inventory', '[data-tour="add-material"]'),
+          step('Check stock', 'Visit Inventory before scheduling material-heavy work. A material is flagged low once it falls under 30% of its full stock.', '/inventory', '[data-tour="inventory-page"] h1'),
+          step('Add a material', 'Record a material when the shop starts keeping it in stock, with its current stock and what a full stock is.', '/inventory', '[data-tour="add-material"]'),
+          step('Stock follows the jobs', 'Completing a tagged job, such as Pins, deducts its materials here, and restoring the job from Archive puts them back.', '/inventory', '[data-tour="inventory-page"] h1'),
         ],
       },
       {
@@ -229,8 +346,11 @@ export function tutorialsForRole(role: UserRole): Tutorial[] {
         title: 'Record maintenance',
         description: 'Keep machine checks and service history current.',
         steps: [
-          step('Check machine readiness', 'Visit Maintenance before using equipment or planning service.', '/maintenance', '[data-tour="maintenance-page"] h1'),
-          step('Add a machine', 'Add equipment that needs regular procedures or a shared service record. Each card shows its checklist and latest log; History opens the full service record.', '/maintenance', '[data-tour="add-machine"]'),
+          step('Check machine readiness', 'Visit Maintenance before using equipment. Machines that are down are listed first.', '/maintenance', '[data-tour="maintenance-page"] h1'),
+          step('Tick off the checks', 'Each machine card has its own checklist. Tick each procedure as it is done.', '/maintenance', '[data-tour="machine-card"]'),
+          step('Log the maintenance', 'Log Checked Maintenance records the ticked procedures and asks who did the work, which need not be you. History on the card opens the full service record.', '/maintenance', '[data-tour="machine-card"]'),
+          step('Report a machine down', 'Report down when a machine stops working, saying what is wrong. A manager assigns the repair, and Mark repaired puts it back in service.', '/maintenance', '[data-tour="machine-card"]'),
+          step('Add a machine', 'Add equipment that needs regular procedures or a shared service record.', '/maintenance', '[data-tour="add-machine"]'),
         ],
       },
     );

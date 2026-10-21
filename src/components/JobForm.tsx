@@ -230,8 +230,15 @@ export function JobForm({
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} className="flex flex-1 flex-col gap-5" noValidate>
-      <div className="grid gap-4 sm:grid-cols-2">
+    <form
+      ref={formRef}
+      onSubmit={handleSubmit}
+      className="flex flex-1 flex-col gap-5"
+      noValidate
+      // The Create a job guide follows the Add job form, not the edit panel.
+      data-tour={initial ? undefined : 'job-form'}
+    >
+      <div className="grid gap-4 sm:grid-cols-2" data-tour="job-form-basics">
         <div>
           <label htmlFor="job-name" className={labelClass}>
             Job Name
@@ -358,7 +365,7 @@ export function JobForm({
         )}
       </div>
 
-      <div>
+      <div data-tour="job-form-sections">
         <label htmlFor="job-sections" className={labelClass}>
           {sectionLabel}
         </label>
@@ -387,7 +394,7 @@ export function JobForm({
         )}
       </div>
 
-      <fieldset>
+      <fieldset data-tour="job-form-tags">
         <legend className={labelClass}>Tags</legend>
         <div className="grid gap-2 sm:grid-cols-2">
           {JOB_TAG_OPTIONS.map((option) => (
@@ -442,7 +449,10 @@ export function JobForm({
 
       {/* Pinned to the bottom of the scrolling dialog body, so Save is always
           in reach however long the form grows. */}
-      <div className="sticky -bottom-5 z-10 -mx-5 mt-auto flex items-center justify-end gap-2 border-t border-[var(--surface-border)] bg-[var(--surface-bg-strong)] px-5 py-3">
+      <div
+        className="sticky -bottom-5 z-10 -mx-5 mt-auto flex items-center justify-end gap-2 border-t border-[var(--surface-border)] bg-[var(--surface-bg-strong)] px-5 py-3"
+        data-tour="job-form-actions"
+      >
         {initial && dirty && !busy && (
           <span className="technical-label mr-auto text-amber-700 dark:text-amber-300">
             Unsaved changes

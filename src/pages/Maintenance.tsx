@@ -148,6 +148,7 @@ function MachineCard({
 
   return (
     <article
+      data-tour="machine-card"
       className={`surface surface-hover drafting-frame relative flex flex-col gap-4 p-4 ${
         down
           ? '[--tick:var(--color-danger)] dark:[--tick:var(--color-red-400)]'

@@ -173,6 +173,7 @@ export default function Reports() {
       onClick={handleDownload}
       disabled={!report || busy}
       data-testid="download-report"
+      data-tour="report-download"
     >
       {busy ? (
         <>
@@ -214,7 +215,11 @@ export default function Reports() {
         />
       ) : (
         <>
-          <section aria-labelledby="report-period-heading" className="surface space-y-4 p-4 sm:p-5">
+          <section
+            aria-labelledby="report-period-heading"
+            className="surface space-y-4 p-4 sm:p-5"
+            data-tour="report-period"
+          >
             <h2 id="report-period-heading" className="technical-label">
               Report period
             </h2>
